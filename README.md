@@ -77,6 +77,20 @@ rmdir /s /q build
 cmake -S src/vfp/sqlite -B build -A Win32
 cmake --build build --config Release
 
+### 🌐 Compilación para Arquitecturas Específicas (Win32 vs x64)
+
+Por defecto, Visual FoxPro requiere binarios de **32 bits (Win32)**. Si deseas compilar el conector genérico (DLL) para aplicaciones modernas de **64 bits**, utiliza el modificador `-A x64` en CMake.
+
+#### Generar DLL en 64 bits (x64)
+```bash
+rmdir /s /q build
+cmake -S src/sqlite -B build -A x64
+cmake --build build --config Release
+rmdir /s /q build
+```
+
+> ⚠️ **Nota importante sobre la FLL:** La extensión de FoxPro (`src/vfp/sqlite`) **debe permanecer siempre en `-A Win32`**. Compilar la FLL en x64 romperá la compatibilidad con Visual FoxPro y causará errores de carga en el IDE.
+
 # Limpieza final de residuos temporales
 rmdir /s /q build
 ```

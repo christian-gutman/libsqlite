@@ -99,6 +99,8 @@ rmdir /s /q build
 
 ## 🐧 Compilación en Linux (Solo Shared Library `.so`)
 
+### En proceso de implementacion
+
 El núcleo del proyecto es compatible con entornos Linux (como Ubuntu, Debian o Fedora). Dado que los archivos FLL son exclusivos del entorno Windows y de Visual FoxPro, bajo plataformas Linux el código se compila únicamente como una biblioteca compartida estándar nativa (`libsqlite3.so`).
 
 ### Requisitos previos en Linux
@@ -110,7 +112,7 @@ sudo apt install build-essential cmake
 ```
 
 ### Proceso de Construcción
-Ejecuta la secuencia estándar de CMake desde la raíz de tu proyecto para compilar la biblioteca en configuración de liberación:
+Ejecuta la secuencia estándar de CMake desde la raíz de tu proyecto para compilar la biblioteca 
 
 ```bash
 # Limpiar directorios de compilación previos

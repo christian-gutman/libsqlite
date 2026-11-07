@@ -97,18 +97,33 @@ cmake --build build --config Release
 rmdir /s /q build
 ```
 
-## 🐧 Compilación en Linux (Solo DLL / Shared Library)
+## 🐧 Compilación en Linux (Solo Shared Library `.so`)
 
-Para compilar el núcleo del conector como una biblioteca compartida (`.so`) en sistemas basados en Linux, utiliza el compilador GCC y CMake de la siguiente manera:
+El núcleo del proyecto es compatible con entornos Linux (como Ubuntu, Debian o Fedora). Dado que los archivos FLL son exclusivos del entorno Windows y de Visual FoxPro, bajo plataformas Linux el código se compila únicamente como una biblioteca compartida estándar nativa (`libsqlite3.so`).
+
+### Requisitos previos en Linux
+Asegúrate de contar con las herramientas esenciales de desarrollo, GCC y CMake instalados:
+```bash
+# En sistemas basados en Ubuntu/Debian:
+sudo apt update
+sudo apt install build-essential cmake
+```
+
+### Proceso de Construcción
+Ejecuta la secuencia estándar de CMake desde la raíz de tu proyecto para compilar la biblioteca en configuración de liberación:
 
 ```bash
-# Limpiar compilaciones previas si existen
+# Limpiar directorios de compilación previos
 rm -rf build
 
-# Configurar y compilar la biblioteca compartida
-cmake -S src/sqlite -B build
+# Configurar el entorno de generación y compilar
+cmake -S src/sqlite -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 
-# Limpieza final de residuos temporales
+# El archivo binario generado se ubicará en la carpeta centralizada de binarios:
+# bin/x64-Linux/Release/libsqlite3.so
+
+# Opcional: Limpiar temporales de la compilación
 rm -rf build
 ```
+

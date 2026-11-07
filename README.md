@@ -63,7 +63,7 @@ Puedes compilar los componentes de manera manual siguiendo estos comandos en la 
 
 ### Paso 1: Clonar el repositorio
 ```bash
-git clone https://github.com
+git clone https://github.com/christian-gutman/libsqlite.git
 cd libsqlite
 ```
 

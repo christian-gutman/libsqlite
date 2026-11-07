@@ -1,3 +1,16 @@
 /bin/
 **/bin/
-.git/ 
+.git/  
+
+**/bin/
+ 
+build/
+dist/
+ 
+node_modules/
+vendor/
+ 
+.DS_Store
+Thumbs.db
+ 
+*.log'

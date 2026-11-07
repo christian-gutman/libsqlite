@@ -1,0 +1,5 @@
+    SqlLite_Core_OpenEx
+    SqlLite_Core_BindParameters
+    SqlLite_Core_ProcessOutputParameters
+    SqlLite_Core_IsForbiddenTransactionalText
+    SqlLite_Core_ExecuteCommand

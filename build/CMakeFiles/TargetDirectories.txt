@@ -1,0 +1,3 @@
+C:/Users/Chris/Desktop/librerias/libsqlite3/build/CMakeFiles/libsqlite3.dir
+C:/Users/Chris/Desktop/librerias/libsqlite3/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Chris/Desktop/librerias/libsqlite3/build/CMakeFiles/ZERO_CHECK.dir

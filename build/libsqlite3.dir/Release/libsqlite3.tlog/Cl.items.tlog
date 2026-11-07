@@ -1,0 +1,11 @@
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\core.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\core.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\encoding\core\core_encoding.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\core_encoding.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\engine\sqlite3.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite3.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_error.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_error.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_string.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_string.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_cnx.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_cnx.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_parameter.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_parameter.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_command.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_command.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_transaction.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_transaction.obj
+C:\Users\Chris\Desktop\librerias\libsqlite3\src\sqlite\core\sqlite_core_builder.c;C:\Users\Chris\Desktop\librerias\libsqlite3\build\libsqlite3.dir\Release\sqlite_core_builder.obj

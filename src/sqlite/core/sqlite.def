@@ -1,0 +1,29 @@
+LIBRARY "libsqlite3.dll"
+EXPORTS
+SqlLite_Core_GetLastErrorCode  ; sqlite_core_error
+    SqlLite_Core_GetLastErrorCodeExtended  ; sqlite_core_error
+    SqlLite_Core_GetLastErrorMsg  ; sqlite_core_error
+    SqlLite_Core_Format ; sqlite_core_string
+    SqlLite_Core_Concat ; sqlite_core_string
+    SqlLite_Core_FreeString ; sqlite_core_string
+    SqlLite_Core_UTF8ToAnsi ; sqlite_core_string
+    SqlLite_Core_AnsiToUTF8 ; sqlite_core_string
+    SqlLite_Core_Open_ReadOnly ; sqlite_core_cnx
+    SqlLite_Core_Open_Or_Create ; sqlite_core_cnx
+    SqlLite_Core_Open ; sqlite_core_cnx
+    SqlLite_Core_Open_Uri_ReadOnly ; sqlite_core_cnx
+    SqlLite_Core_Close ; sqlite_core_cnx
+    SqlLite_Core_IsReadonly ; sqlite_core_cnx
+    SqlLite_Core_SetBusyTimeout ; sqlite_core_cnx
+    SqlLite_Core_CleanPrefix ; sqlite_core_parameter
+    SqlLite_Core_ExecuteTransaction ; sqlite_core_command
+    SqlLite_Core_ExecuteNonQuery ; sqlite_core_command
+    SqlLite_Core_ExecuteScalar ; sqlite_core_command
+    SqlLite_Core_ExecuteReader ; sqlite_core_command
+    SqlLite_Core_ExecuteCommand ; sqlite_core_command
+    SqlLite_Core_BeginTransaction ; sqlite_core_transaction
+    SqlLite_Core_Commit ; sqlite_core_transaction
+    SqlLite_Core_Rollback ; sqlite_core_transaction
+    SqlLite_Core_Version  ; sqlite_core.h
+    SqlLite_Core_JsonWriterCallback ; sqlite_core_builder
+    

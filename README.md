@@ -38,4 +38,48 @@ Las funciones están organizadas modularmente en los archivos fuente del proyect
 * **Parámetros (`sqlite_core_parameter`):** Sanitización y limpieza de prefijos en variables de consulta con `CleanPrefix`.
 * **Diagnóstico (`sqlite_core_error`):** Extracción de mensajes textuales (`GetLastErrorMsg`) y códigos internos extendidos (`GetLastErrorCodeExtended`).
 
+## 🛠️ Requisitos de Compilación
+
+Para generar los binarios del proyecto (tanto la DLL como la FLL de FoxPro), el entorno requiere las siguientes herramientas en Windows:
+
+* **IDE / Compilador:** [Visual Studio 2022](https://learn.microsoft.com/es-es/visualstudio/releases/2026/release-notes "Visual Studio Releases") con la carga de trabajo de desarrollo para el escritorio con C++.
+* **SDK del Sistema:** [Windows 11 SDK (Versión 10.0.28000)](https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads "Windows SDK Downloads").
+* **Generador:** [CMake](https://learn.microsoft.com/es-es/vcpkg/get_started/get-started-vs "CMake Visual Studio Integration") (versión 3.15 o superior).
+
+---
+
+## 🏗️ Proceso de Build (Generación de Binarios)
+
+Puedes compilar los componentes de manera manual siguiendo estos comandos en la terminal desde la raíz del proyecto, o bien ejecutando directamente los archivos por lotes automatizados incluidos en el repositorio: `cmp_dll.bat` y `cmp_fll.bat`.
+
+### Paso 1: Clonar el repositorio
+```bash
+git clone https://github.com
+cd libsqlite
+```
+
+### Paso 2: Compilar el Conector Genérico (DLL x86/Win32)
+```bash
+# Limpiar compilaciones previas si existen
+rmdir /s /q build
+
+# Configurar y compilar la DLL dinámica
+cmake -S src/sqlite -B build -A Win32
+cmake --build build --config Release
+```
+
+### Paso 3: Compilar la Extensión para FoxPro (FLL x86/Win32)
+```bash
+# Limpiar el directorio temporal de build
+rmdir /s /q build
+
+# Configurar y compilar la FLL nativa
+cmake -S src/vfp/sqlite -B build -A Win32
+cmake --build build --config Release
+
+# Limpieza final de residuos temporales
+rmdir /s /q build
+```
+
+*Nota: La arquitectura configurada es `-A Win32` debido a la naturaleza nativa de 32 bits de Visual FoxPro.*
 

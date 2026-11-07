@@ -76,6 +76,8 @@ rmdir /s /q build
 # Configurar y compilar la FLL nativa
 cmake -S src/vfp/sqlite -B build -A Win32
 cmake --build build --config Release
+rmdir /s /q build
+```
 
 ### 🌐 Compilación para Arquitecturas Específicas (Win32 vs x64)
 
@@ -93,4 +95,20 @@ rmdir /s /q build
 cmake -S src/sqlite -B build -A x64
 cmake --build build --config Release
 rmdir /s /q build
-``` 
+```
+
+## 🐧 Compilación en Linux (Solo DLL / Shared Library)
+
+Para compilar el núcleo del conector como una biblioteca compartida (`.so`) en sistemas basados en Linux, utiliza el compilador GCC y CMake de la siguiente manera:
+
+```bash
+# Limpiar compilaciones previas si existen
+rm -rf build
+
+# Configurar y compilar la biblioteca compartida
+cmake -S src/sqlite -B build
+cmake --build build --config Release
+
+# Limpieza final de residuos temporales
+rm -rf build
+```

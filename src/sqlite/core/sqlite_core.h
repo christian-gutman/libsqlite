@@ -6,24 +6,19 @@ extern "C" {
 #endif
 
 #define SQLITE_CORE_VERSION_MAJOR 3
-#define SQLITE_CORE_VERSION_MINOR 53
+#define SQLITE_CORE_VERSION_MINOR 54
 #define SQLITE_CORE_VERSION_PATCH 1
 #define SQLITE_CORE_REVISION 1
 #define SQLITE_CORE_SUBREVISION 0
-#define SQLITE_CORE_VERSION_STR "3.53.1"
-#define SQLITE_CORE_VERNUM 0x1000
+#define SQLITE_CORE_VERSION_STR "3.54.1"
+#define SQLITE_CORE_VERNUM 0x3541
 
 #include "engine/sqlite3.h"
 #include "../../core.h"
 #include "../../encoding/core/core_encoding.h"
 
 CORE_API const char *SqlLite_Core_Version();
-
-
-//#include "../../io/core/core_io.h"
-//#include "../../strings/core/core_string.h"
-//#include "../../crypto/core/core_crypto.h"
-
+ 
 typedef struct sqlite3 sqlite3;
 typedef struct sqlite3_stmt sqlite3_stmt;
  

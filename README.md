@@ -80,7 +80,10 @@ cmake --build build --config Release
 ### 🌐 Compilación para Arquitecturas Específicas (Win32 vs x64)
 
 Por defecto, Visual FoxPro requiere binarios de **32 bits (Win32)**. Si deseas compilar el conector genérico (DLL) para aplicaciones modernas de **64 bits**, utiliza el modificador `-A x64` en CMake.
-⚠️ **Nota importante sobre la FLL:** La extensión de FoxPro (`src/vfp/sqlite`) **debe permanecer siempre en `-A Win32`**. Compilar la FLL en x64 romperá la compatibilidad con Visual FoxPro y causará errores de carga en el IDE.
+
+⚠️**Nota importante sobre la FLL:** La extensión de FoxPro (`src/vfp/sqlite`)
+**debe permanecer siempre en `-A Win32`**. Compilar la FLL en x64 romperá la compatibilidad
+ con Visual FoxPro y causará errores de carga en el IDE.
 
 #### Generar DLL en 64 bits (x64)
 ```bash

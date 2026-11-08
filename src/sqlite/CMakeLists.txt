@@ -22,16 +22,45 @@ if(NOT ARQUITECTURE_DIR)
 endif()
 
 set(DIR_BUILD "${PLATFORM_DIR}-${ARQUITECTURE_DIR}")
- 
+
+
+set(LIBSTRING_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../external/libstring)
+set(CORESDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../external/core-c-sdk)
+
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "No buscar actualizaciones en GitHub si ya existe")
+
+# Descargar el proyecto de GitHub
+FetchContent_Declare(
+  libstring
+  GIT_REPOSITORY https://github.com/christian-gutman/libstring.git
+  GIT_TAG        v2.6.0.0
+  SOURCE_DIR     ${LIBSTRING_DIR}
+)
+FetchContent_MakeAvailable(libstring)
+
+# Descargar el proyecto de GitHub
+FetchContent_Declare(
+  coresdk
+  GIT_REPOSITORY https://github.com/christian-gutman/core-c-sdk
+  GIT_TAG        v2.6.0.0
+  SOURCE_DIR     ${CORESDK_DIR}
+)
+FetchContent_MakeAvailable(coresdk)
+
+
+
 set(SRC_libsqlite3
-    "${CMAKE_CURRENT_SOURCE_DIR}/../core.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../core.c"
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/../encoding/core/core_encoding.h"    
-    "${CMAKE_CURRENT_SOURCE_DIR}/../encoding/core/core_encoding.c"    
+    "${CORESDK_DIR}/src/core/core.h"   
+    "${CORESDK_DIR}/src/core/core.c"    
 
-    #"${CMAKE_CURRENT_SOURCE_DIR}/../strings/core/core_string.h"    
-    #"${CMAKE_CURRENT_SOURCE_DIR}/../strings/core/core_string.c"    
+    "${LIBSTRING_DIR}/src/strings/core/core_encoding.h"    
+    "${LIBSTRING_DIR}/src/strings/core/core_encoding.c"    
+
+    "${LIBSTRING_DIR}/src/strings/core/core_string.h"    
+    "${LIBSTRING_DIR}/src/strings/core/core_string.c"    
+    
  
     "${CMAKE_CURRENT_SOURCE_DIR}/core/engine/sqlite3.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/engine/sqlite3.c"  
@@ -66,7 +95,15 @@ set(SRC_libsqlite3
 )
  
 add_library(libsqlite3 SHARED ${SRC_libsqlite3})
+
+target_include_directories(libsqlite3 PRIVATE
+    "${CORESDK_DIR}/src/core"                             # Para resolver rutas relativas del SDK
+    "${LIBSTRING_DIR}/src/strings/core"                   # Para resolver los headers de libstring
+    "${CMAKE_CURRENT_SOURCE_DIR}/core"               # Para tus headers locales (sqlite_core.h, etc.)
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/engine"        # Para sqlite3.h
+)
  
+
 set_target_properties(libsqlite3 PROPERTIES LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite.def")
  
 set_target_properties(libsqlite3 PROPERTIES

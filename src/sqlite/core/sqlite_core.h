@@ -14,8 +14,9 @@ extern "C" {
 #define SQLITE_CORE_VERNUM 0x3541
 
 #include "engine/sqlite3.h"
-#include "../../core.h"
-#include "../../encoding/core/core_encoding.h"
+
+#include "core.h"
+#include "core_encoding.h"
 
 CORE_API const char *SqlLite_Core_Version();
  

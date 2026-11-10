@@ -38,8 +38,7 @@ FetchContent_Declare(
   SOURCE_DIR     ${LIBSTRING_DIR}
 )
 FetchContent_MakeAvailable(libstring)
-
-# Descargar el proyecto de GitHub
+ 
 FetchContent_Declare(
   coresdk
   GIT_REPOSITORY https://github.com/christian-gutman/core-c-sdk

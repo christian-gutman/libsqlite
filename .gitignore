@@ -18,6 +18,7 @@ bin/
 
 # Database files produced by tests and examples
 *.db
+*.bin
 
 # External dependencies (absorbed into the project on next milestone;
 # kept ignored until they are vendored under third_party/)

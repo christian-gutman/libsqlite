@@ -38,6 +38,7 @@ static const char *kPublicSymbols[] = {
     "sqlite_core_open_uri_readonly",
     "sqlite_core_close",
     "sqlite_core_is_readonly",
+    "sqlite_core_last_insert_rowid",
     "sqlite_core_set_busy_timeout",
     /* parameters */
     "sqlite_core_param_clean_prefix",
@@ -60,6 +61,8 @@ static const char *kPublicSymbols[] = {
     "sqlite_core_insert_json",
     /* fields */
     "sqlite_core_get_blob",
+    "sqlite_core_insert_blob",
+    "sqlite_core_update_blob",
 };
 
 #define SYMBOL_COUNT (int)(sizeof(kPublicSymbols) / sizeof(kPublicSymbols[0]))

@@ -1,4 +1,5 @@
 #include "sqlite_core_builder.h"
+#include "sqlite_core_internal.h"
 
 /* SIZE_MAX lives in <stdint.h>; MSVC pulls it in transitively through other
  * headers, but glibc and macOS do not. */
@@ -317,37 +318,6 @@ static void StrList_Free(StrList *list)
     list->items = NULL;
     list->count = 0;
     list->cap = 0;
-}
-
-/* Quotes a value as a SQL identifier: "name" with internal quotes doubled.
- * Returns a SQLite-allocated string (release with sqlite3_free). */
-static char *QuoteIdentifierSqlite(const char *name)
-{
-    if (name == NULL)
-        return NULL;
-
-    size_t len = strlen(name);
-    char *out = (char *)sqlite3_malloc(len * 2 + 3);
-    if (out == NULL)
-        return NULL;
-
-    char *p = out;
-    *p++ = '"';
-    for (size_t i = 0; i < len; i++)
-    {
-        if (name[i] == '"')
-        {
-            *p++ = '"';
-            *p++ = '"';
-        }
-        else
-        {
-            *p++ = name[i];
-        }
-    }
-    *p++ = '"';
-    *p = '\0';
-    return out;
 }
 
 /* Quotes a key as a JSON path selector: $."key" with JSON-string escapes.

@@ -62,6 +62,22 @@ documento es el contrato de aceptación para las correcciones y los tests.
   de SQLite; las rutas de extracción se enlazan como parámetros, así que los
   nombres de clave nunca pueden alterar la sentencia.
 
+## Escritura de BLOBs
+
+- `sqlite_core_insert_blob` / `sqlite_core_update_blob` escriben un
+  **fichero** en una columna BLOB con la API incremental de blobs, por
+  chunks (64 KiB por defecto, configurable; memoria constante sin
+  importar el tamaño del fichero).
+- `insert_blob` con `rowid == 0` inserta una fila nueva dimensionada con
+  `zeroblob()`; con un `rowid` distinto de cero es un upsert (actualiza la
+  fila si existe, la crea con ese `rowid` si no).
+- `update_blob` requiere una fila existente y nunca agranda la columna en
+  silencio: un fichero mayor que el blob guardado falla con
+  `SQLITE_CORE_BLOB_TOO_SMALL` (-3).
+- Valor devuelto: número de bytes escritos (`>= 0`); `SQLITE_MISUSE` con
+  argumentos inválidos; `SQLITE_CANTOPEN` si el fichero no se puede abrir
+  o leer; en otro caso, el código del motor con el mensaje en `err_buf`.
+
 ## Detección de codificación
 
 - `sqlite_core_detect_encoding` devuelve `ENCODING_UNKNOWN` para entrada
@@ -78,6 +94,7 @@ Contrato unificado para todas las funciones públicas:
 | `0` | Resultado booleano "falso" (`is_readonly` sobre una base escribible, fallo de `set_busy_timeout`). |
 | `-1` | Error genérico (no se pudo iniciar/confirmar la transacción). Detalles en `err_buf`. |
 | `-2` | `SQLITE_CORE_BUFFER_TOO_SMALL`: buffer de destino demasiado pequeño (`get_blob`). |
+| `-3` | `SQLITE_CORE_BLOB_TOO_SMALL`: el blob existente de la columna es más pequeño que el fichero que se está escribiendo (`update_blob` y el upsert de `insert_blob`). |
 | Código SQLite negativo | Fallo del motor (p. ej. `-SQLITE_CONSTRAINT`); refleja `SqlException.Number` negado. |
 | Código SQLite positivo | Las funciones `execute_*` conservan los códigos nativos de resultado de SQLite (`SQLITE_MISUSE`, `SQLITE_CANTOPEN`, ...) por convención del motor. |
 

@@ -11,6 +11,23 @@ separately by `sqlite_core_sqlite_version()`.
 
 ## [Unreleased]
 
+### Added
+
+- **Chunked BLOB writes**: `sqlite_core_insert_blob` and
+  `sqlite_core_update_blob` stream a file into a BLOB column through the
+  incremental blob I/O API in chunks (64 KiB default, configurable;
+  constant memory). `insert_blob` inserts a new row (`zeroblob`) or upserts
+  an existing `rowid`; `update_blob` writes onto an existing row and never
+  grows the column silently (`SQLITE_CORE_BLOB_TOO_SMALL`, -3).
+- **`sqlite_core_last_insert_rowid`**: exported wrapper for the rowid of
+  the last insert (the engine call is not exported in shared builds, so
+  consumers had to run `SELECT last_insert_rowid()` through
+  `sqlite_core_execute_scalar`).
+- Shared internals moved to a private header
+  (`core/sqlite_core_internal.h`): single-statement guard, UTF-8 prepare
+  helper, identifier quoting and error copying now live in
+  `sqlite_core.c`, so the modules cannot drift apart.
+
 ### Fixed
 
 - **Linux/Unix compilation**: `sqlite_core_builder.c` now includes

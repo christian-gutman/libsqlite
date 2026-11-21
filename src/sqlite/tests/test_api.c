@@ -249,6 +249,102 @@ static void test_encoding_roundtrip(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+static void write_blob_fixture(const char *path, unsigned char seed, int size)
+{
+    FILE *f = fopen(path, "wb");
+    if (!f)
+        return;
+    for (int i = 0; i < size; i++)
+    {
+        unsigned char b = (unsigned char)(seed + i); /* includes 0x00 and 0xFF */
+        fwrite(&b, 1, 1, f);
+    }
+    fclose(f);
+}
+
+static void test_blob_write(void)
+{
+    printf("BLOB writes from a file (chunked streaming)\n");
+    const char *file_a = "blob_fixture_a.bin";
+    const char *file_b = "blob_fixture_b.bin";
+    const int size_a = 200000; /* forces several 64 KiB chunks */
+    const int size_b = 100000;
+    write_blob_fixture(file_a, 0x00, size_a);
+    write_blob_fixture(file_b, 0x37, size_b);
+
+    remove(DB_FILE);
+    int rc = 0;
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(db != NULL && rc == SQLITE_OK, "db opened");
+    if (!db)
+    {
+        remove(file_a);
+        remove(file_b);
+        return;
+    }
+
+    char err[256] = "";
+    CHECK(sqlite_core_execute_command(db,
+              "CREATE TABLE files(rowid INTEGER PRIMARY KEY, name TEXT, data BLOB)",
+              err, sizeof(err)) == SQLITE_OK,
+          "table created");
+
+    /* insert: new row, streamed in chunks */
+    int written = -1;
+    rc = sqlite_core_insert_blob(db, "files", "data", 0, file_a, 0,
+                                 &written, err, sizeof(err));
+    CHECK(rc == size_a && written == size_a, "insert_blob streams the file (chunked)");
+    printf("  (rc=%d written=%d err='%s')\n", rc, written, err);
+
+    /* read it back with get_blob and compare byte by byte */
+    static unsigned char sink[200000];
+    int copied = -1;
+    rc = sqlite_core_get_blob(db, "SELECT data FROM files ORDER BY rowid DESC LIMIT 1",
+                              sink, sizeof(sink), &copied);
+    CHECK(rc == SQLITE_OK && copied == size_a, "get_blob reads back the size");
+    CHECK(memcmp(sink, "\x00\x01\x02", 3) == 0 &&
+          sink[size_a - 1] == (unsigned char)(0x00 + size_a - 1),
+          "byte-for-byte round trip (NUL included)");
+
+    /* the rowid through the exported wrapper (works on shared builds) */
+    sqlite3_int64 rowid = sqlite_core_last_insert_rowid(db);
+    CHECK(rowid > 0, "inserted rowid reported via sqlite_core_last_insert_rowid");
+
+    /* upsert: same rowid, different content (smaller) */
+    rc = sqlite_core_insert_blob(db, "files", "data", rowid, file_b, 0,
+                                 &written, err, sizeof(err));
+    CHECK(rc == size_b && written == size_b, "insert_blob upserts an existing rowid");
+
+    /* update: plain streaming update of the same row with the same size */
+    rc = sqlite_core_update_blob(db, "files", "data", rowid, file_b, 0,
+                                 &written, err, sizeof(err));
+    CHECK(rc == size_b && written == size_b, "update_blob streams the file");
+
+    /* a file larger than the column is reported, never grown silently */
+    rc = sqlite_core_update_blob(db, "files", "data", rowid, file_a, 0,
+                                 &written, err, sizeof(err));
+    CHECK(rc == SQLITE_CORE_BLOB_TOO_SMALL && written == 0,
+          "update_blob refuses to exceed the column size");
+
+    /* error paths */
+    CHECK(sqlite_core_insert_blob(NULL, "files", "data", 0, file_a, 0,
+                                  &written, err, sizeof(err)) == SQLITE_MISUSE,
+          "NULL db rejected by insert_blob");
+    CHECK(sqlite_core_update_blob(db, "files", "data", 0, file_a, 0,
+                                  &written, err, sizeof(err)) == SQLITE_MISUSE,
+          "rowid 0 rejected by update_blob");
+    CHECK(sqlite_core_insert_blob(db, "files", "data", 0, "no_such_file.bin", 0,
+                                  &written, err, sizeof(err)) == SQLITE_CANTOPEN,
+          "missing file reports SQLITE_CANTOPEN");
+
+    sqlite_core_close(db);
+    remove(DB_FILE);
+    remove(file_a);
+    remove(file_b);
+}
+
+/* ------------------------------------------------------------------ */
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -260,6 +356,7 @@ int main(void)
     test_reader_callback();
     test_error_paths();
     test_encoding_roundtrip();
+    test_blob_write();
 
     remove(DB_FILE);
 

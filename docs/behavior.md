@@ -58,6 +58,21 @@ contract for bug fixes and tests.
 - Table and column identifiers are quoted as SQLite identifiers; extraction
   paths are bound parameters, so key names can never alter the statement.
 
+## BLOB writes
+
+- `sqlite_core_insert_blob` / `sqlite_core_update_blob` stream a **file**
+  into a BLOB column through the incremental blob I/O API in chunks
+  (default 64 KiB, configurable; constant memory regardless of file size).
+- `insert_blob` with `rowid == 0` inserts a new row sized with
+  `zeroblob()`; with a non-zero `rowid` it is an upsert (the row is
+  updated when it exists, created with that `rowid` otherwise).
+- `update_blob` requires an existing row and never grows the column
+  silently: a file larger than the stored blob fails with
+  `SQLITE_CORE_BLOB_TOO_SMALL` (-3).
+- Return value: number of bytes written (`>= 0`); `SQLITE_MISUSE` for
+  invalid arguments; `SQLITE_CANTOPEN` when the file cannot be opened or
+  read; otherwise the engine code with the message in `err_buf`.
+
 ## Encoding detection
 
 - `sqlite_core_detect_encoding` returns `ENCODING_UNKNOWN` for empty or NULL input,
@@ -73,6 +88,7 @@ Unified contract for every public function:
 | `0` | Boolean "false" result (`is_readonly` on a writable database, `set_busy_timeout` failure). |
 | `-1` | Generic error (transaction could not be started/committed). Details in `err_buf`. |
 | `-2` | `SQLITE_CORE_BUFFER_TOO_SMALL`: destination buffer too small (`get_blob`). |
+| `-3` | `SQLITE_CORE_BLOB_TOO_SMALL`: an existing column blob is smaller than the file being streamed into it (`update_blob`, `insert_blob` upsert path). |
 | negative SQLite code | Engine failure (e.g. `-SQLITE_CONSTRAINT`); mirrors `SqlException.Number` negated. |
 | positive SQLite code | `execute_*` functions keep the native SQLite result codes (`SQLITE_MISUSE`, `SQLITE_CANTOPEN`, ...) for compatibility with engine conventions. |
 

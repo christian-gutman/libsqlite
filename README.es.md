@@ -319,6 +319,7 @@ convierte internamente.
 | `sqlite3 *sqlite_core_open_ex(const char *path, int flags, int *out_rc)` | Control total con flags `SQLITE_OPEN_*` crudos. |
 | `int sqlite_core_close(sqlite3 *db)` | Cierre idempotente; seguro con `NULL`; `1` en éxito. |
 | `int sqlite_core_is_readonly(sqlite3 *db)` | `1` si es solo lectura, `0` si es escribible, `-1` en error. |
+| `sqlite3_int64 sqlite_core_last_insert_rowid(sqlite3 *db)` | Rowid del último INSERT exitoso (`0` si no hubo o si `db` es NULL). |
 | `int sqlite_core_set_busy_timeout(sqlite3 *db, int ms)` | Acepta 0..30000 ms, saturando valores fuera de rango. |
 
 ### Parámetros — `sqlite_core_parameter`
@@ -360,7 +361,9 @@ SQL simplemente no se enlaza, igual que en ADO.NET.
 
 | Función | Descripción |
 |---------|-------------|
-| `int sqlite_core_get_blob(sqlite3 *db, const char *sql, void *dest, int max_len, int *copied)` | Copia un BLOB al buffer del llamante; `SQLITE_CORE_BUFFER_TOO_SMALL` si no cabe. |
+| `int sqlite_core_get_blob(sqlite3 *db, const char *sql, void *dest, int max_len, int *copied)` | Copia un BLOB al buffer del llamante; `SQLITE_CORE_BUFFER_TOO_SMALL` (-2) si no cabe. |
+| `int sqlite_core_insert_blob(sqlite3 *db, const char *table, const char *column, sqlite3_int64 rowid, const char *file_path, int chunk_size, int *written, char *err, int max)` | Escribe un **fichero** en una columna BLOB por chunks (64 KiB por defecto). `rowid == 0` inserta; `rowid > 0` hace upsert de ese rowid. Devuelve los bytes escritos, o `SQLITE_CORE_BLOB_TOO_SMALL` (-3) si el blob destino es más pequeño que el fichero. |
+| `int sqlite_core_update_blob(sqlite3 *db, const char *table, const char *column, sqlite3_int64 rowid, const char *file_path, int chunk_size, int *written, char *err, int max)` | El mismo streaming por chunks sobre una fila existente; nunca agranda la columna en silencio. |
 
 ### Versión
 

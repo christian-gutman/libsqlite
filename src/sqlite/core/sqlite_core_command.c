@@ -1,41 +1,9 @@
 #include "sqlite_core_command.h"
+#include "sqlite_core_internal.h"
 
 /* .NET parity: one statement per command (ADO.NET CommandText semantics).
- * Tracks single-quote state so semicolons inside string literals are ignored. */
-static int sqlite_core_is_single_statement(const char *sql)
-{
-    if (sql == NULL)
-        return 0;
-
-    int inside_quote = 0;
-    const char *p = sql;
-
-    while (*p)
-    {
-        if (*p == '\'')
-        {
-            inside_quote = !inside_quote;
-            p++;
-            continue;
-        }
-
-        if (!inside_quote && *p == ';')
-        {
-            const char *next = p + 1;
-            while (*next && isspace((unsigned char)*next))
-            {
-                next++;
-            }
-
-            if (*next != '\0')
-            {
-                return 0;
-            }
-        }
-        p++;
-    }
-    return 1;
-}
+ * Tracks single-quote state so semicolons inside string literals are ignored.
+ * The definition now lives in sqlite_core.c (shared with other modules). */
 
 /* .NET parity: transaction control goes through BeginTransaction/Commit/
  * Rollback, never through plain command text. */
@@ -67,49 +35,8 @@ int sqlite_core_is_forbidden_transaction_text(const char *sql)
     return 0;
 }
 
-/* Prepares the statement converting ANSI SQL to UTF-8 first (returns the
- * prepared statement; *must_free tells the caller whether to release it). */
-static int PrepareUtf8Sql(
-    sqlite3 *db,
-    const char *sql,
-    sqlite3_stmt **out_stmt,
-    int *must_free_sql)
-{
-    *must_free_sql = 0;
-    *out_stmt = NULL;
-
-    const char *final_sql = sql;
-    char *converted_sql = sqlite_core_string_ansi_to_utf8(sql);
-    if (converted_sql != NULL)
-    {
-        final_sql = converted_sql;
-        *must_free_sql = 1;
-    }
-
-    sqlite3_stmt *stmt = NULL;
-    int rc = sqlite3_prepare_v2(db, final_sql, -1, &stmt, NULL);
-
-    if (*must_free_sql)
-    {
-        sqlite_core_string_free((void *)converted_sql);
-    }
-
-    *out_stmt = stmt;
-    return rc;
-}
-
-/* Copies an SQLite error message into the caller buffer (bounded). */
-static void CopyErrorMessage(char *err_buf, int err_buf_max, const char *zErrMsg)
-{
-    if (zErrMsg == NULL || err_buf == NULL || err_buf_max <= 0)
-        return;
-
-    size_t len = strlen(zErrMsg);
-    if ((int)len > err_buf_max - 1)
-        len = (size_t)err_buf_max - 1;
-    memcpy(err_buf, zErrMsg, len);
-    err_buf[len] = '\0';
-}
+/* PrepareUtf8Sql is shared with the other modules and defined in
+ * sqlite_core.c; CopyErrorMessage now lives there too. */
 
 /* Raw execution of DDL/DML text (one or more statements allowed). */
 int sqlite_core_execute_command(

@@ -15,6 +15,7 @@ sqlite_core_error_code  ; sqlite_core_error
     sqlite_core_open_uri_readonly ; sqlite_core_cnx
     sqlite_core_close ; sqlite_core_cnx
     sqlite_core_is_readonly ; sqlite_core_cnx
+    sqlite_core_last_insert_rowid ; sqlite_core_cnx
     sqlite_core_set_busy_timeout ; sqlite_core_cnx
     sqlite_core_param_clean_prefix ; sqlite_core_parameter
     sqlite_core_execute_transaction ; sqlite_core_command
@@ -31,4 +32,6 @@ sqlite_core_error_code  ; sqlite_core_error
     sqlite_core_execute_reader_to_json ; sqlite_core_builder
     sqlite_core_insert_json ; sqlite_core_builder
     sqlite_core_get_blob ; sqlite_core_field
+    sqlite_core_insert_blob ; sqlite_core_field
+    sqlite_core_update_blob ; sqlite_core_field
     

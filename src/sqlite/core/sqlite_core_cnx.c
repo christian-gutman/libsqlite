@@ -119,3 +119,12 @@ int sqlite_core_set_busy_timeout(sqlite3 *db, int ms)
     int rc = sqlite3_busy_timeout(db, ms);
     return (rc == SQLITE_OK) ? 1 : 0;
 }
+
+sqlite3_int64 sqlite_core_last_insert_rowid(sqlite3 *db)
+{
+    if (db == NULL)
+    {
+        return 0;
+    }
+    return sqlite3_last_insert_rowid(db);
+}

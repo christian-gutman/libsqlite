@@ -231,3 +231,9 @@ if(LIBSQLITE3_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# Usage examples (also registered as CTest smoke tests).
+option(LIBSQLITE3_BUILD_EXAMPLES "Build the usage examples (also run as CTest)" ON)
+if(LIBSQLITE3_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()

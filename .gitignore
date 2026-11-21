@@ -1,5 +1,6 @@
 # Build output
 build/
+build*/
 cmake-build*/
 
 # Binaries and build artifacts
@@ -14,6 +15,9 @@ bin/
 *.exp
 *.pdb
 *.ilk
+
+# Database files produced by tests and examples
+*.db
 
 # External dependencies (absorbed into the project on next milestone;
 # kept ignored until they are vendored under third_party/)

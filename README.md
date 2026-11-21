@@ -140,11 +140,21 @@ int main(void)
 {
     int rc = 0;
     sqlite3 *db = sqlite_core_open_or_create("demo.db", &rc);
-    if (!db) return 1;
+    if (db == NULL || rc != SQLITE_OK)
+    {
+        fprintf(stderr, "cannot open demo.db (rc=%d)\n", rc);
+        return 1;
+    }
 
-    sqlite_core_execute_command(db,
-        "CREATE TABLE IF NOT EXISTS person(id INTEGER PRIMARY KEY, name TEXT)",
-        NULL, 0);
+    char err[128] = "";
+    if (sqlite_core_execute_command(db,
+            "CREATE TABLE IF NOT EXISTS person(id INTEGER PRIMARY KEY, name TEXT)",
+            err, sizeof(err)) != SQLITE_OK)
+    {
+        fprintf(stderr, "ddl failed: %s\n", err);
+        sqlite_core_close(db);
+        return 1;
+    }
 
     sqlite_core_param_t p[2];
     memset(&p, 0, sizeof(p));

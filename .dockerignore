@@ -1,0 +1,11 @@
+# Keep the Docker context small and reproducible.
+.git
+.github
+bin/
+build*/
+external/
+*.db
+docs/
+.vscode/
+Dockerfile
+.dockerignore

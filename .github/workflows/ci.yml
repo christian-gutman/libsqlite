@@ -68,6 +68,13 @@ jobs:
             exit 1
           fi
 
+      - name: Upload artifacts (shared)
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsqlite-shared-${{ matrix.os }}-${{ matrix.arch }}
+          path: bin/
+          if-no-files-found: error
+
   build-static:
     name: static / ${{ matrix.os }} / ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
@@ -106,3 +113,10 @@ jobs:
           else
             ctest --test-dir build --output-on-failure
           fi
+
+      - name: Upload artifacts (static)
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsqlite-static-${{ matrix.os }}-${{ matrix.arch }}
+          path: bin/
+          if-no-files-found: error

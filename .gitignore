@@ -1,16 +1,27 @@
-/bin/
-**/bin/
-.git/  
-
-**/bin/
- 
+# Build output
 build/
-dist/
- 
-node_modules/
-vendor/
- 
+cmake-build*/
+
+# Binaries and build artifacts
+bin/
+*.obj
+*.o
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.exp
+*.pdb
+*.ilk
+
+# External dependencies (absorbed into the project on next milestone;
+# kept ignored until they are vendored under third_party/)
+external/
+
+# OS files
 .DS_Store
 Thumbs.db
- 
-*.log'
+
+# Logs
+*.log

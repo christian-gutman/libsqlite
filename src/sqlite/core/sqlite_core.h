@@ -5,13 +5,18 @@
 extern "C" {     
 #endif
 
-#define SQLITE_CORE_VERSION_MAJOR 3
-#define SQLITE_CORE_VERSION_MINOR 54
-#define SQLITE_CORE_VERSION_PATCH 1
-#define SQLITE_CORE_REVISION 1
+// Library version (this connector wrapper). The SQLite engine version is
+// exposed separately through SQLITE_CORE_SQLITE_VERSION_STR.
+#define SQLITE_CORE_VERSION_MAJOR 1
+#define SQLITE_CORE_VERSION_MINOR 0
+#define SQLITE_CORE_VERSION_PATCH 0
+#define SQLITE_CORE_REVISION 0
 #define SQLITE_CORE_SUBREVISION 0
-#define SQLITE_CORE_VERSION_STR "3.54.1"
-#define SQLITE_CORE_VERNUM 0x3541
+#define SQLITE_CORE_VERSION_STR "1.0.0"
+#define SQLITE_CORE_VERNUM 0x10000
+
+// Embedded engine version, taken from the vendored amalgamation.
+#define SQLITE_CORE_SQLITE_VERSION_STR SQLITE_VERSION
 
 #include "engine/sqlite3.h"
 
@@ -19,6 +24,8 @@ extern "C" {
 #include "core_encoding.h"
 
 CORE_API const char *SqlLite_Core_Version();
+
+CORE_API const char *SqlLite_Core_SqliteVersion();
  
 typedef struct sqlite3 sqlite3;
 typedef struct sqlite3_stmt sqlite3_stmt;

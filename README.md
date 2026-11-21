@@ -1,6 +1,6 @@
 # libsqlite
 
-### SQLite Connector | Visual FoxPro Connector Library
+### High-performance SQLite connector library for C
 
 > ⚠️ **Nota de migración y estado del proyecto:** 
 > Este desarrollo pertenecía originalmente a la cuenta `@christiangutman`. Lamentablemente, debido a un robo de hardware, se perdió el acceso definitivo a dicha cuenta y a su repositorio original. 
@@ -10,17 +10,14 @@
 > A partir de ahora, **este repositorio será el hogar oficial y definitivo** para el mantenimiento, actualizaciones y evolución de **libsqlite**. ¡Las contribuciones y reportes de bugs son más que bienvenidos aquí!
 
 
-**libsqlite** es un conector y cliente de alto rendimiento desarrollado en **C** basado directamente en el núcleo oficial de `sqlite3.c`. Está diseñado bajo una arquitectura híbrida para servir a dos propósitos principales en entornos Windows:
-
-1. **DLL Dinámica Estándar (`.dll`):** Funciona como un conector de uso general compatible con cualquier lenguaje de programación que soporte llamadas a la API de Windows (C#, C++, Delphi, VB.NET, etc.).
-2. **Biblioteca de Enlace de FoxPro (`.fll`):** Proporciona una integración 100% nativa y directa para **Visual FoxPro** mediante la instrucción `SET LIBRARY TO`.
+**libsqlite** es un conector y cliente de alto rendimiento desarrollado en **C** basado directamente en el núcleo oficial de `sqlite3.c`. Expone una API compartida (DLL/.so) con semántica equivalente a su par en .NET (`ExecuteReader`, `ExecuteScalar`, `ExecuteNonQuery`, parámetros con dirección, transacciones), compatible con cualquier lenguaje que pueda hacer llamadas a C (C#, C++, Delphi, VB.NET, Python vía ctypes, etc.).
 
 El proyecto elimina la necesidad de depender de controladores ODBC, proveedores OLE DB o capas ADO pesadas, ofreciendo un acceso directo, ultrarrápido y portable a bases de datos SQLite.
 
 ## 🚀 Características principales
 
 * **Núcleo Embebido:** Utiliza `sqlite3.c` internamente. No requiere instalaciones ni configuraciones previas en el sistema operativo.
-* **Formato Dual Integrado:** Un único diseño de funciones mapeado tanto para exportación de DLL estándar como para el API de extensiones de FoxPro.
+* **Semántica .NET:** La API replica el comportamiento de sus equivalentes en .NET (ADO.NET-style), reduciendo la curva de aprendizaje.
 * **Soporte Unicode/ANSI:** Resuelve de forma nativa la conversión de codificación de texto (`UTF8ToAnsi` y `AnsiToUTF8`), asegurando la compatibilidad de caracteres especiales entre SQLite y lenguajes tradicionales.
 * **Salida JSON Dinámica:** Incluye un escritor de JSON integrado (`JsonWriterCallback`) que permite transformar los resultados de las consultas en texto estructurado directamente desde el núcleo en C.
 * **Ligero y Portable:** Ideal para aplicaciones que se distribuyen sin instalador (*XCOPY deployment*).
@@ -49,7 +46,7 @@ Las funciones están organizadas modularmente en los archivos fuente del proyect
 
 ## 🛠️ Requisitos de Compilación
 
-Para generar los binarios del proyecto (tanto la DLL como la FLL de FoxPro), el entorno requiere las siguientes herramientas en Windows:
+Para generar los binarios del proyecto, el entorno requiere las siguientes herramientas en Windows:
 
 * **IDE / Compilador:** [Visual Studio 2022](https://learn.microsoft.com/es-es/visualstudio/releases/2026/release-notes "Visual Studio Releases") con la carga de trabajo de desarrollo para el escritorio con C++.
 * **SDK del Sistema:** [Windows 11 SDK (Versión 10.0.28000)](https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads "Windows SDK Downloads").
@@ -59,7 +56,7 @@ Para generar los binarios del proyecto (tanto la DLL como la FLL de FoxPro), el 
 
 ## 🏗️ Proceso de Build (Generación de Binarios)
 
-Puedes compilar los componentes de manera manual siguiendo estos comandos en la terminal desde la raíz del proyecto, o bien ejecutando directamente los archivos por lotes automatizados incluidos en el repositorio: `cmp_dll.bat` y `cmp_fll.bat`.
+Puedes compilar el componente de manera manual siguiendo estos comandos en la terminal desde la raíz del proyecto, o bien ejecutando directamente el archivo por lotes automatizado incluido en el repositorio: `cmp_dll.bat`.
 
 ### Paso 1: Clonar el repositorio
 ```bash
@@ -67,50 +64,21 @@ git clone https://github.com/christian-gutman/libsqlite.git
 cd libsqlite
 ```
 
-### Paso 2: Compilar el Conector Genérico (DLL x86/Win32)
+### Paso 2: Compilar la biblioteca (DLL Win32 o x64)
 ```bash
 # Limpiar compilaciones previas si existen
 rmdir /s /q build
 
-# Configurar y compilar la DLL dinámica
+# Configurar y compilar (Win32; usar -A x64 para 64 bits)
 cmake -S src/sqlite -B build -A Win32
 cmake --build build --config Release
-```
-
-### Paso 3: Compilar la Extensión para FoxPro (FLL x86/Win32)
-```bash
-# Limpiar el directorio temporal de build
-rmdir /s /q build
-
-# Configurar y compilar la FLL nativa
-cmake -S src/vfp/sqlite -B build -A Win32
-cmake --build build --config Release
-rmdir /s /q build
-```
-
-### 🌐 Compilación para Arquitecturas Específicas (Win32 vs x64)
-
-Por defecto, Visual FoxPro requiere binarios de **32 bits (Win32)**.
-Si deseas compilar el conector genérico (DLL) para aplicaciones modernas de **64 bits**,
- utiliza el modificador `-A x64` en CMake.
-
-⚠️**Nota importante sobre la FLL:** La extensión de FoxPro (`src/vfp/sqlite`)
-**debe permanecer siempre en `-A Win32`**. Compilar la FLL en x64 romperá la compatibilidad
- con Visual FoxPro y causará errores de carga en el IDE.
-
-#### Generar DLL en 64 bits (x64)
-```bash
-rmdir /s /q build
-cmake -S src/sqlite -B build -A x64
-cmake --build build --config Release
-rmdir /s /q build
 ```
 
 ## 🐧 Compilación en Linux (Solo Shared Library `.so`)
 
 ### En proceso de implementacion
 
-El núcleo del proyecto es compatible con entornos Linux (como Ubuntu, Debian o Fedora). Dado que los archivos FLL son exclusivos del entorno Windows y de Visual FoxPro, bajo plataformas Linux el código se compila únicamente como una biblioteca compartida estándar nativa (`libsqlite3.so`).
+El núcleo del proyecto es compatible con entornos Linux (como Ubuntu, Debian o Fedora), donde el código se compila como una biblioteca compartida estándar nativa (`libsqlite3.so`).
 
 ### Requisitos previos en Linux
 Asegúrate de contar con las herramientas esenciales de desarrollo, GCC y CMake instalados:

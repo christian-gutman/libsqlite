@@ -1,5 +1,33 @@
 cmake_minimum_required(VERSION 3.15)
-project(libsqlite3 VERSION 4.2 LANGUAGES C CXX)
+project(libsqlite3 LANGUAGES C CXX)
+
+# ---------------------------------------------------------------------------
+# Version: single source of truth is core/sqlite_core.h
+# ---------------------------------------------------------------------------
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h" _v_major REGEX "^#define SQLITE_CORE_VERSION_MAJOR")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h" _v_minor REGEX "^#define SQLITE_CORE_VERSION_MINOR")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h" _v_patch REGEX "^#define SQLITE_CORE_VERSION_PATCH")
+
+string(REGEX REPLACE "^#define SQLITE_CORE_VERSION_MAJOR +([0-9]+).*" "\\1" SQLITE_CORE_VERSION_MAJOR "${_v_major}")
+string(REGEX REPLACE "^#define SQLITE_CORE_VERSION_MINOR +([0-9]+).*" "\\1" SQLITE_CORE_VERSION_MINOR "${_v_minor}")
+string(REGEX REPLACE "^#define SQLITE_CORE_VERSION_PATCH +([0-9]+).*" "\\1" SQLITE_CORE_VERSION_PATCH "${_v_patch}")
+
+set(SQLITE_CORE_VERSION "${SQLITE_CORE_VERSION_MAJOR}.${SQLITE_CORE_VERSION_MINOR}.${SQLITE_CORE_VERSION_PATCH}")
+set(SQLITE_CORE_RC_FILEVERSION "${SQLITE_CORE_VERSION_MAJOR},${SQLITE_CORE_VERSION_MINOR},${SQLITE_CORE_VERSION_PATCH},0")
+set(SQLITE_CORE_RC_PRODUCTVERSION "${SQLITE_CORE_RC_FILEVERSION}")
+set(SQLITE_CORE_RC_FILEVERSION_STR "${SQLITE_CORE_VERSION}.0")
+set(SQLITE_CORE_RC_PRODUCTVERSION_STR "${SQLITE_CORE_VERSION}.0")
+set(SQLITE_CORE_COMPANY "libsqlite3 contributors")
+set(SQLITE_CORE_COPYRIGHT "(C) 2026. Christian Gutman All rights reserved.")
+
+message(STATUS "libsqlite3 version: ${SQLITE_CORE_VERSION} (from core/sqlite_core.h)")
+
+# Windows resource file is generated so the version always matches the header.
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/sqlite.rc"
+    @ONLY
+)
  
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -90,7 +118,7 @@ set(SRC_libsqlite3
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_builder.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_builder.c"
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/sqlite.rc"
 )
  
 add_library(libsqlite3 SHARED ${SRC_libsqlite3})
@@ -133,7 +161,7 @@ target_compile_definitions(libsqlite3 PRIVATE
 ) 
 
 
-target_link_libraries(libsqlite3 PRIVATE winhttp crypt32 bcrypt ncrypt ${VFP_LIB})
+target_link_libraries(libsqlite3 PRIVATE winhttp crypt32 bcrypt ncrypt)
 
 set(DIR_BIN "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${DIR_BUILD}")
 

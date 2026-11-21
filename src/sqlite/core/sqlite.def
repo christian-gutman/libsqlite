@@ -24,6 +24,7 @@ SqlLite_Core_GetLastErrorCode  ; sqlite_core_error
     SqlLite_Core_BeginTransaction ; sqlite_core_transaction
     SqlLite_Core_Commit ; sqlite_core_transaction
     SqlLite_Core_Rollback ; sqlite_core_transaction
-    SqlLite_Core_Version  ; sqlite_core.h
+    SqlLite_Core_Version  ; sqlite_core
+    SqlLite_Core_SqliteVersion  ; sqlite_core
     SqlLite_Core_JsonWriterCallback ; sqlite_core_builder
     

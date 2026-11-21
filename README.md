@@ -13,7 +13,7 @@
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=flat-square)
 ![CTest](https://img.shields.io/badge/CTest-3%20suites-brightgreen?style=flat-square)
 
-**[Documentación en español](README.es.md)** · **[Behavior contract](docs/behavior.md)** · **[Changelog](CHANGELOG.md)** · **[License](LICENSE)**
+**[Documentación en español](README.es.md)** · **[Behavior contract](docs/behavior.md)** · **[Roadmap](docs/ROADMAP.md)** · **[Changelog](CHANGELOG.md)** · **[License](LICENSE)**
 
 </div>
 

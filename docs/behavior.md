@@ -28,7 +28,7 @@ contract for bug fixes and tests.
 
 ## Parameters
 
-- Naming follows the .NET pattern (`:name`, `@name`, `?name`); `CleanPrefix`
+- Naming follows the .NET pattern (`:name`, `@name`, `?name`); `sqlite_core_param_clean_prefix`
   strips the sigil so callers may bind by bare name.
 - `Direction` mirrors `ParameterDirection`: `Input`, `Output`,
   `InputOutput`. Output parameters are populated from result columns whose
@@ -48,10 +48,10 @@ contract for bug fixes and tests.
 
 ## JSON
 
-- `ExecuteReaderToJSON` returns a UTF-8 JSON array of objects (RFC 8259
+- `sqlite_core_execute_reader_to_json` returns a UTF-8 JSON array of objects (RFC 8259
   escaped) and `[]` for an empty result set; the string is heap-allocated by
-  the SQLite allocator and released with `FreeString`.
-- `Insert_Json` parses server-side via SQLite JSON1 (nested documents,
+  the SQLite allocator and released with `sqlite_core_string_free`.
+- `sqlite_core_insert_json` parses server-side via SQLite JSON1 (nested documents,
   escaped strings and numeric formats handled natively), inserts inside a
   transaction it owns only when no transaction is active, and returns the
   number of inserted rows or a **negative** SQLite error code.

@@ -129,23 +129,23 @@ con la biblioteca generada:
 #include <sqlite_core.h>
 #include <stdio.h>
 
+/* Una llamada por fila; las contamos (los builds DLL exportan solo los 31
+ * símbolos sqlite_core_*, por eso más abajo las filas se muestran como JSON). */
 static int on_row(sqlite3_stmt *stmt, int columns, int hasrows, void *ctx)
 {
-    if (!hasrows) return 0;                       /* conjunto vacío */
-    (void)columns; (void)ctx;
-    printf("  id=%lld name=%s\n",
-           sqlite3_column_int64(stmt, 0),
-           sqlite3_column_text(stmt, 1));
-    return 0;
+    (void)stmt; (void)columns;
+    if (hasrows)
+        (*(int *)ctx)++;
+    return 0; /* distinto de cero aborta la iteración */
 }
 
 int main(void)
 {
-    int rc = 0;
-    sqlite3 *db = sqlite_core_open_or_create("demo.db", &rc);
-    if (db == NULL || rc != SQLITE_OK)
+    int open_rc = 0;
+    sqlite3 *db = sqlite_core_open_or_create("demo.db", &open_rc);
+    if (db == NULL || open_rc != SQLITE_OK)
     {
-        fprintf(stderr, "no se pudo abrir demo.db (rc=%d)\n", rc);
+        fprintf(stderr, "no se pudo abrir demo.db (rc=%d)\n", open_rc);
         return 1;
     }
 
@@ -172,14 +172,45 @@ int main(void)
     p[1].value.blob_or_text.ptr = "Ada";
     p[1].value.blob_or_text.len = -1;              /* terminada en NUL */
 
-    sqlite_core_execute_non_query(db,
-        "INSERT INTO person(id, name) VALUES (:id, :name)", p, 2, NULL, 0);
+    int rc = sqlite_core_execute_non_query(db,
+        "INSERT INTO person(id, name) VALUES (:id, :name)", p, 2, err, sizeof(err));
+    if (rc != 1) /* las funciones con valor devuelven las filas afectadas */
+    {
+        fprintf(stderr, "falló el insert (rc=%d): %s\n", rc, err);
+        sqlite_core_close(db);
+        return 1;
+    }
 
-    sqlite_core_execute_reader(db,
+    int vistas = 0;
+    rc = sqlite_core_execute_reader(db,
         "SELECT id, name FROM person ORDER BY id", NULL, 0,
-        on_row, NULL, NULL, 0);
+        on_row, &vistas, err, sizeof(err));
+    if (rc < 0)
+    {
+        fprintf(stderr, "falló el select (rc=%d): %s\n", rc, err);
+        sqlite_core_close(db);
+        return 1;
+    }
+    printf("el reader vio %d filas\n", vistas);
 
-    sqlite_core_close(db);
+    /* Mismas filas como JSON (funciona en DLL y en estático). */
+    char *json = NULL;
+    rc = sqlite_core_execute_reader_to_json(db,
+        "SELECT id, name FROM person ORDER BY id", NULL, 0, &json, err, sizeof(err));
+    if (rc < 0 || json == NULL)
+    {
+        fprintf(stderr, "falló el json (rc=%d): %s\n", rc, err);
+        sqlite_core_close(db);
+        return 1;
+    }
+    printf("json: %s\n", json);
+    sqlite_core_string_free(json);
+
+    if (sqlite_core_close(db) != 1)
+    {
+        fprintf(stderr, "falló el cierre\n");
+        return 1;
+    }
     return 0;
 }
 ```
@@ -359,6 +390,53 @@ if (sqlite_core_execute_reader_to_json(
 `sqlite_core_insert_json` es la operación inversa: le pasas ese mismo
 documento y el nombre de la tabla, y las filas se insertan con sentencias
 parseadas y enlazadas por parámetros (sin concatenar cadenas, sin inyección).
+
+## Documentación
+
+| Documento | Contenido |
+|-----------|-----------|
+| [docs/behavior.es.md](docs/behavior.es.md) | Contrato de comportamiento con .NET: correspondencia por función, códigos de retorno, JSON, codificación (el contrato de aceptación) |
+| [docs/behavior.md](docs/behavior.md) | El mismo contrato, en inglés |
+| [README.md](README.md) | Este README en inglés |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Qué queda pendiente: Android/Flutter, iOS, WASM, FLL de FoxPro, release |
+| [CHANGELOG.md](CHANGELOG.md) | Historial de versiones y cambios incompatibles |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Flujo de build/tests, reglas para ampliar la API congelada |
+| [SECURITY.md](SECURITY.md) | Cómo reportar vulnerabilidades |
+
+## Ejemplos
+
+Hay cuatro programas validados en
+[`src/sqlite/examples/`](src/sqlite/examples/). Se compilan por defecto y
+se ejecutan como smoke tests de CTest (`ctest -R example`), así que la CI
+los verifica en todas las plataformas:
+
+| Archivo | Qué muestra |
+|---------|-------------|
+| [basic.c](src/sqlite/examples/basic.c) | Apertura, DDL, insert, callback del reader, filas impresas como JSON |
+| [parameters.c](src/sqlite/examples/parameters.c) | Parámetros nombrados, `clean_prefix`, escalares, parámetros OUTPUT vía `RETURNING` |
+| [transaction.c](src/sqlite/examples/transaction.c) | `begin` / `commit` / `rollback` y sus rutas de fallo |
+| [json.c](src/sqlite/examples/json.c) | `execute_reader_to_json` e `insert_json` en ambos sentidos |
+
+> Los builds compartidos de Windows exportan exactamente los 31 símbolos
+> `sqlite_core_*` (`sqlite.def`): las llamadas directas al motor
+> (`sqlite3_column_*`, ...) requieren enlace **estático**, y por eso los
+> ejemplos se quedan en la API del wrapper.
+
+## Compilar en un contenedor (Docker)
+
+Build local sin instalar toolchains en el host
+([`docker/Dockerfile`](docker/Dockerfile)):
+
+```bash
+# Construye la imagen y corre toda la suite CTest (tests + ejemplos).
+docker build -f docker/Dockerfile -t libsqlite:local .
+
+# Extrae los binarios de Linux (shared + static) cuando pase.
+docker run --rm -v "$(pwd)/bin-local:/bin-local" \
+    libsqlite:local bash -c "cp -r bin/* /bin-local/"
+```
+
+(PowerShell: `docker run --rm -v "${PWD}/bin-local:/bin-local" ...`.)
 
 ## Contribuir y seguridad
 

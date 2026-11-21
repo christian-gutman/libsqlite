@@ -126,23 +126,23 @@ against the produced library:
 #include <sqlite_core.h>
 #include <stdio.h>
 
+/* One call per row; count them (DLL builds export only the 31
+ * sqlite_core_* symbols, so this example prints rows as JSON below). */
 static int on_row(sqlite3_stmt *stmt, int columns, int hasrows, void *ctx)
 {
-    if (!hasrows) return 0;                       /* empty result set */
-    (void)columns; (void)ctx;
-    printf("  id=%lld name=%s\n",
-           sqlite3_column_int64(stmt, 0),
-           sqlite3_column_text(stmt, 1));
-    return 0;
+    (void)stmt; (void)columns;
+    if (hasrows)
+        (*(int *)ctx)++;
+    return 0; /* non-zero aborts the iteration */
 }
 
 int main(void)
 {
-    int rc = 0;
-    sqlite3 *db = sqlite_core_open_or_create("demo.db", &rc);
-    if (db == NULL || rc != SQLITE_OK)
+    int open_rc = 0;
+    sqlite3 *db = sqlite_core_open_or_create("demo.db", &open_rc);
+    if (db == NULL || open_rc != SQLITE_OK)
     {
-        fprintf(stderr, "cannot open demo.db (rc=%d)\n", rc);
+        fprintf(stderr, "cannot open demo.db (rc=%d)\n", open_rc);
         return 1;
     }
 
@@ -169,14 +169,45 @@ int main(void)
     p[1].value.blob_or_text.ptr = "Ada";
     p[1].value.blob_or_text.len = -1;              /* NUL-terminated */
 
-    sqlite_core_execute_non_query(db,
-        "INSERT INTO person(id, name) VALUES (:id, :name)", p, 2, NULL, 0);
+    int rc = sqlite_core_execute_non_query(db,
+        "INSERT INTO person(id, name) VALUES (:id, :name)", p, 2, err, sizeof(err));
+    if (rc != 1) /* value functions return the affected rows */
+    {
+        fprintf(stderr, "insert failed (rc=%d): %s\n", rc, err);
+        sqlite_core_close(db);
+        return 1;
+    }
 
-    sqlite_core_execute_reader(db,
+    int seen = 0;
+    rc = sqlite_core_execute_reader(db,
         "SELECT id, name FROM person ORDER BY id", NULL, 0,
-        on_row, NULL, NULL, 0);
+        on_row, &seen, err, sizeof(err));
+    if (rc < 0)
+    {
+        fprintf(stderr, "select failed (rc=%d): %s\n", rc, err);
+        sqlite_core_close(db);
+        return 1;
+    }
+    printf("reader saw %d rows\n", seen);
 
-    sqlite_core_close(db);
+    /* Print the same rows as JSON (works on DLL and static builds). */
+    char *json = NULL;
+    rc = sqlite_core_execute_reader_to_json(db,
+        "SELECT id, name FROM person ORDER BY id", NULL, 0, &json, err, sizeof(err));
+    if (rc < 0 || json == NULL)
+    {
+        fprintf(stderr, "json failed (rc=%d): %s\n", rc, err);
+        sqlite_core_close(db);
+        return 1;
+    }
+    printf("json: %s\n", json);
+    sqlite_core_string_free(json);
+
+    if (sqlite_core_close(db) != 1)
+    {
+        fprintf(stderr, "close failed\n");
+        return 1;
+    }
     return 0;
 }
 ```
@@ -354,6 +385,51 @@ if (sqlite_core_execute_reader_to_json(
 `sqlite_core_insert_json` is the mirror image: feed it the same document and
 a table name, and the rows are inserted through parsed, parameter-bound
 statements (no string concatenation, no injection).
+
+## Documentation
+
+| Document | Contents |
+|----------|----------|
+| [docs/behavior.md](docs/behavior.md) | Behavioral contract with .NET: mapping per function, return codes, JSON, encoding (the acceptance contract) |
+| [docs/behavior.es.md](docs/behavior.es.md) | Same contract, in Spanish |
+| [README.es.md](README.es.md) | This README in Spanish |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | What is pending: Android/Flutter, iOS, WASM, FoxPro FLL, release |
+| [CHANGELOG.md](CHANGELOG.md) | Release history and breaking changes |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Build/test workflow, rules for extending the frozen API |
+| [SECURITY.md](SECURITY.md) | How to report vulnerabilities |
+
+## Examples
+
+Four validated programs live in [`src/sqlite/examples/`](src/sqlite/examples/).
+They are built by default and run as CTest smoke tests
+(`ctest -R example`), so they are verified on every platform in CI:
+
+| File | What it shows |
+|------|---------------|
+| [basic.c](src/sqlite/examples/basic.c) | Open, DDL, insert, reader callback, rows printed as JSON |
+| [parameters.c](src/sqlite/examples/parameters.c) | Named parameters, `clean_prefix`, scalar reads, output parameters via `RETURNING` |
+| [transaction.c](src/sqlite/examples/transaction.c) | `begin` / `commit` / `rollback` and their failure paths |
+| [json.c](src/sqlite/examples/json.c) | `execute_reader_to_json` and `insert_json` in both directions |
+
+> Windows shared builds export exactly the 31 `sqlite_core_*` symbols
+> (`sqlite.def`): direct engine calls (`sqlite3_column_*`, ...) need a
+> **static** link, which is why the examples stay on the wrapper API.
+
+## Building in a container (Docker)
+
+Local build without installing toolchains on the host
+([`docker/Dockerfile`](docker/Dockerfile)):
+
+```bash
+# Build the image and run the full CTest suite (tests + examples).
+docker build -f docker/Dockerfile -t libsqlite:local .
+
+# Extract the Linux binaries (shared + static) when it passes.
+docker run --rm -v "$(pwd)/bin-local:/bin-local" \
+    libsqlite:local bash -c "cp -r bin/* /bin-local/"
+```
+
+(PowerShell: `docker run --rm -v "${PWD}/bin-local:/bin-local" ...`.)
 
 ## Contributing & security
 

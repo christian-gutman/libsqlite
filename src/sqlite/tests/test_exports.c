@@ -32,6 +32,7 @@ static const char *kPublicSymbols[] = {
     "sqlite_core_string_ansi_to_utf8",
     /* connections */
     "sqlite_core_open_readonly",
+    "sqlite_core_open_ex",
     "sqlite_core_open_or_create",
     "sqlite_core_open",
     "sqlite_core_open_uri_readonly",

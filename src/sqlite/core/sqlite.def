@@ -9,6 +9,7 @@ sqlite_core_error_code  ; sqlite_core_error
     sqlite_core_string_utf8_to_ansi ; sqlite_core_string
     sqlite_core_string_ansi_to_utf8 ; sqlite_core_string
     sqlite_core_open_readonly ; sqlite_core_cnx
+    sqlite_core_open_ex ; sqlite_core_cnx
     sqlite_core_open_or_create ; sqlite_core_cnx
     sqlite_core_open ; sqlite_core_cnx
     sqlite_core_open_uri_readonly ; sqlite_core_cnx

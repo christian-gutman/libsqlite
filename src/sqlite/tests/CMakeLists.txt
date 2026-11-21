@@ -25,6 +25,20 @@ endif()
 enable_testing()
 add_test(NAME regression COMMAND test_libsqlite3)
 
+# API and .NET parity tests
+add_executable(test_api test_api.c)
+target_link_libraries(test_api PRIVATE libsqlite3)
+if(MSVC)
+    target_compile_options(test_api PRIVATE /utf-8)
+endif()
+if(BUILD_SHARED_LIBS)
+    add_custom_command(TARGET test_api POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:libsqlite3>
+            $<TARGET_FILE_DIR:test_api>)
+endif()
+add_test(NAME api COMMAND test_api)
+
 # Export consistency: every public function must be resolvable in the
 # shared library (keeps sqlite.def / visibility in sync with the headers).
 add_executable(test_exports test_exports.c)

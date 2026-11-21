@@ -3,7 +3,7 @@
 
 #include "sqlite_core.h"
 
-sqlite3* sqlite_core_open_ex(
+SQLITE_CORE_API sqlite3* sqlite_core_open_ex(
     const char *uripath,
     int flags,
     int *out_rc);

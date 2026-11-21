@@ -19,6 +19,9 @@ bin/
 # kept ignored until they are vendored under third_party/)
 external/
 
+# Editor/IDE local settings
+.vscode/
+
 # OS files
 .DS_Store
 Thumbs.db

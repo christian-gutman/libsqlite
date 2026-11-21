@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+# libsqlite3 CMake package configuration.
+# Usage:
+#   find_package(libsqlite3 REQUIRED)
+#   target_link_libraries(myapp PRIVATE libsqlite3::libsqlite3)
+
+include("${CMAKE_CURRENT_LIST_DIR}/libsqlite3Targets.cmake")
+
+check_required_components(libsqlite3)

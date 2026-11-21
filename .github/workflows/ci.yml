@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: Win32
+          - os: windows-latest
+            arch: x64
+          - os: ubuntu-latest
+            arch: x64
+          - os: macos-latest
+            arch: x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Configure
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cmake -S src/sqlite -B build -A "${{ matrix.arch }}"
+          else
+            cmake -S src/sqlite -B build -DCMAKE_BUILD_TYPE=Release
+          fi
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel
+
+      - name: Verify artifacts
+        shell: bash
+        run: |
+          set -e
+          found=0
+          for f in $(find bin -type f \( -name '*.dll' -o -name '*.so' -o -name '*.dylib' \) 2>/dev/null); do
+            echo "artifact: $f"
+            found=1
+          done
+          if [ "$found" -ne 1 ]; then
+            echo "::error::no library artifact produced"
+            exit 1
+          fi

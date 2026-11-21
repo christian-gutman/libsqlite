@@ -20,8 +20,7 @@ extern "C" {
 
 #include "engine/sqlite3.h"
 
-#include "core.h"
-#include "core_encoding.h"
+#include "compat/sqlite_compat.h"
 
 CORE_API const char *SqlLite_Core_Version();
 
@@ -60,7 +59,7 @@ typedef struct {
     } value;
 } SqlLiteCoreParam;
 
-typedef int(CORE_CALL *SqlLiteCoreRowCallback)(
+typedef int(*SqlLiteCoreRowCallback)(
     sqlite3_stmt *stmt,
     int columns,
     int hasrows,

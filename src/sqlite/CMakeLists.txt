@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
-project(libsqlite3 LANGUAGES C CXX)
+project(libsqlite3 LANGUAGES C)
 
-# ---------------------------------------------------------------------------
+# ============================================================================
 # Version: single source of truth is core/sqlite_core.h
-# ---------------------------------------------------------------------------
+# ============================================================================
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h" _v_major REGEX "^#define SQLITE_CORE_VERSION_MAJOR")
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h" _v_minor REGEX "^#define SQLITE_CORE_VERSION_MINOR")
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h" _v_patch REGEX "^#define SQLITE_CORE_VERSION_PATCH")
@@ -28,150 +28,177 @@ configure_file(
     "${CMAKE_CURRENT_BINARY_DIR}/sqlite.rc"
     @ONLY
 )
- 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ============================================================================
+# Language standard and build defaults
+# ============================================================================
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
- 
-if(NOT MSVC)
-    message(FATAL_ERROR "libsqlite3 requiere arquitectura Win y compilador MSVC.")
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configurations" FORCE)
 endif()
- 
+
+option(BUILD_SHARED_LIBS "Build libsqlite3 as a shared library (DLL/.so/.dylib)" ON)
+
+# ============================================================================
+# Output layout: <repo>/bin/<arch>-<os>/<config>/
+# ============================================================================
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(PLATFORM_DIR "x32")
+    set(LIBSQLITE_ARCH_DIR "x32")
 else()
-    set(PLATFORM_DIR "x64")
+    set(LIBSQLITE_ARCH_DIR "x64")
 endif()
-
-set(ARQUITECTURE_DIR ${CMAKE_SYSTEM_PROCESSOR})
-if(NOT ARQUITECTURE_DIR)
-    set(ARQUITECTURE_DIR ${CMAKE_HOST_SYSTEM_NAME})
+if(WIN32)
+    set(LIBSQLITE_SYS_DIR "Windows")
+elseif(APPLE)
+    set(LIBSQLITE_SYS_DIR "Darwin")
+else()
+    set(LIBSQLITE_SYS_DIR "Linux")
 endif()
+set(LIBSQLITE_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${LIBSQLITE_ARCH_DIR}-${LIBSQLITE_SYS_DIR}")
 
-set(DIR_BUILD "${PLATFORM_DIR}-${ARQUITECTURE_DIR}")
-
-
-set(LIBSTRING_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../external/libstring)
-set(CORESDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../external/core-c-sdk)
-
-include(FetchContent)
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "No buscar actualizaciones en GitHub si ya existe")
-
-# Descargar el proyecto de GitHub
-FetchContent_Declare(
-  libstring
-  GIT_REPOSITORY https://github.com/christian-gutman/libstring.git
-  GIT_TAG        v2.6.0.0
-  SOURCE_DIR     ${LIBSTRING_DIR}
-)
-FetchContent_MakeAvailable(libstring)
- 
-FetchContent_Declare(
-  coresdk
-  GIT_REPOSITORY https://github.com/christian-gutman/core-c-sdk
-  GIT_TAG        v2.6.0.0
-  SOURCE_DIR     ${CORESDK_DIR}
-)
-FetchContent_MakeAvailable(coresdk)
-
-
-
+# ============================================================================
+# Sources
+# ============================================================================
 set(SRC_libsqlite3
+    # Absorbed portability layer (former external dependencies)
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/compat/sqlite_compat.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/compat/sqlite_compat.c"
 
-    "${CORESDK_DIR}/src/core/core.h"   
-    "${CORESDK_DIR}/src/core/core.c"    
-
-    "${LIBSTRING_DIR}/src/strings/core/core_encoding.h"    
-    "${LIBSTRING_DIR}/src/strings/core/core_encoding.c"    
-
-    "${LIBSTRING_DIR}/src/strings/core/core_string.h"    
-    "${LIBSTRING_DIR}/src/strings/core/core_string.c"    
-    
- 
+    # Embedded engine (upstream sqlite3.c amalgamation, unmodified)
     "${CMAKE_CURRENT_SOURCE_DIR}/core/engine/sqlite3.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/core/engine/sqlite3.c"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/engine/sqlite3.c"
 
+    # Public API and modules
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core.c"
-
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_error.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_error.c"
-
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_string.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_string.c"
-
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_cnx.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_cnx.c"
-
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_parameter.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_parameter.c"
-
-
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_command.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_command.c"
-
-    
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_transaction.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_transaction.c"
-
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_builder.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_builder.c"
-
-    "${CMAKE_CURRENT_BINARY_DIR}/sqlite.rc"
 )
- 
-add_library(libsqlite3 SHARED ${SRC_libsqlite3})
 
+if(WIN32)
+    list(APPEND SRC_libsqlite3 "${CMAKE_CURRENT_BINARY_DIR}/sqlite.rc")
+    # Windows exports are controlled by core/sqlite.def; pass it as a linker
+    # input only for shared builds (a .def makes no sense for static libs).
+    if(BUILD_SHARED_LIBS)
+        list(APPEND SRC_libsqlite3 "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite.def")
+    endif()
+endif()
+
+# ============================================================================
+# Target
+# ============================================================================
+add_library(libsqlite3 ${SRC_libsqlite3})
+
+target_include_directories(libsqlite3 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core>          # sqlite_core.h and modules
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core/engine>   # sqlite3.h
+)
 target_include_directories(libsqlite3 PRIVATE
-    "${CORESDK_DIR}/src/core"                             # Para resolver rutas relativas del SDK
-    "${LIBSTRING_DIR}/src/strings/core"                   # Para resolver los headers de libstring
-    "${CMAKE_CURRENT_SOURCE_DIR}/core"               # Para tus headers locales (sqlite_core.h, etc.)
-    "${CMAKE_CURRENT_SOURCE_DIR}/core/engine"        # Para sqlite3.h
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/compat"     # absorbed portability layer
 )
- 
 
-set_target_properties(libsqlite3 PROPERTIES LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite.def")
- 
+# Engine configuration (portable across platforms)
+target_compile_definitions(libsqlite3 PRIVATE
+    SQLITE_CORE=1
+    SQLITE_THREADSAFE=1
+    SQLITE_DEFAULT_FOREIGN_KEYS=1
+    SQLITE_OMIT_LOAD_EXTENSION
+    SQLITE_OMIT_DEPRECATED
+    SQLITE_OMIT_PROGRESS_CALLBACK
+    SQLITE_OMIT_SHARED_CACHE
+    SQLITE_OMIT_UTF16
+)
+
+if(MSVC)
+    target_compile_definitions(libsqlite3 PRIVATE
+        _CRT_SECURE_NO_WARNINGS
+        _WINSOCK_DEPRECATED_NO_WARNINGS
+    )
+    target_compile_options(libsqlite3 PRIVATE /W4)
+endif()
+
+if(WIN32)
+    target_link_libraries(libsqlite3 PRIVATE winhttp crypt32 bcrypt ncrypt)
+endif()
+
+# PREFIX "" avoids the doubled "liblibsqlite3.so" on Unix.
+# Default suffixes are correct per library type: .dll/.so/.dylib (shared),
+# .lib (static, Windows).
 set_target_properties(libsqlite3 PROPERTIES
     PREFIX ""
     OUTPUT_NAME "libsqlite3"
-    SUFFIX ".dll"
-    WINDOWS_EXPORT_ALL_SYMBOLS FALSE 
-) 
-
-target_compile_definitions(libsqlite3 PRIVATE
-    WIN32 _WINDOWS _USRDLL UNICODE _UNICODE _CRT_SECURE_NO_WARNINGS TARGET_OS_WIN32 WIN32_LEAN_AND_MEAN _WINSOCK_DEPRECATED_NO_WARNINGS
-            NDEBUG
-# ============================================================================
-# CONFIGURACIÓN DE OPTIMIZACIÓN DE SQLITE (NÚCLEO)
-# ============================================================================
-        SQLITE_CORE=1
-        SQLITE_THREADSAFE=1
-        SQLITE_DEFAULT_FOREIGN_KEYS=1   
-        SQLITE_OMIT_LOAD_EXTENSION  
-        SQLITE_OMIT_DEPRECATED       
-        SQLITE_OMIT_PROGRESS_CALLBACK 
-        SQLITE_OMIT_SHARED_CACHE     
-        SQLITE_OMIT_UTF16
-        #SQLITE_OMIT_ANALYZE           # Descomentada: Ahorra ~10 KB
-        #SQLITE_OMIT_VIRTUALTABLE      # Descomentada: ¡Ahorra de 80 KB a 100 KB!
-        #SQLITE_OMIT_XFER_OPT          # Descomentada: Optimiza espacio de copia
-        #SQLITE_OMIT_WAL 
-) 
-
-
-target_link_libraries(libsqlite3 PRIVATE winhttp crypt32 bcrypt ncrypt)
-
-set(DIR_BIN "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${DIR_BUILD}")
+)
 
 set_target_properties(libsqlite3 PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${DIR_BIN}/$<CONFIG>"
-    LIBRARY_OUTPUT_DIRECTORY "${DIR_BIN}/$<CONFIG>"
-    ARCHIVE_OUTPUT_DIRECTORY "${DIR_BIN}/$<CONFIG>"
+    RUNTIME_OUTPUT_DIRECTORY "${LIBSQLITE_BIN_DIR}/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${LIBSQLITE_BIN_DIR}/$<CONFIG>"
+    ARCHIVE_OUTPUT_DIRECTORY "${LIBSQLITE_BIN_DIR}/$<CONFIG>"
 )
-#    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../build_assets/lib/${DIR_BUILD}/$<CONFIG>"
- 
+
+# ============================================================================
+# Install and CMake package
+# ============================================================================
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(TARGETS libsqlite3
+    EXPORT libsqlite3Targets
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
+
+# Public headers: the whole core/ tree (public modules + engine + compat)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/core/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libsqlite3"
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+
+set(LIBSQLITE3_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libsqlite3")
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libsqlite3Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/libsqlite3Config.cmake"
+    INSTALL_DESTINATION "${LIBSQLITE3_CMAKE_CONFIG_DESTINATION}"
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/libsqlite3ConfigVersion.cmake"
+    VERSION "${SQLITE_CORE_VERSION}"
+    COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/libsqlite3Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/libsqlite3ConfigVersion.cmake"
+    DESTINATION "${LIBSQLITE3_CMAKE_CONFIG_DESTINATION}"
+)
+
+install(EXPORT libsqlite3Targets
+    NAMESPACE libsqlite3::
+    DESTINATION "${LIBSQLITE3_CMAKE_CONFIG_DESTINATION}"
+)
+
+# ============================================================================
+# Examples are copied next to the binaries (post-build convenience)
+# ============================================================================
 add_custom_command(TARGET libsqlite3 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/examples"

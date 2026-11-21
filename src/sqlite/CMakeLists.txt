@@ -147,6 +147,12 @@ endif()
 
 if(WIN32)
     target_link_libraries(libsqlite3 PRIVATE winhttp crypt32 bcrypt ncrypt)
+else()
+    # SQLITE_THREADSAFE needs pthreads; the engine resolves dlopen at
+    # runtime and uses libm. Modern glibc merged these into libc, but the
+    # explicit linkage keeps the build working on older distributions.
+    find_package(Threads REQUIRED)
+    target_link_libraries(libsqlite3 PRIVATE Threads::Threads ${CMAKE_DL_LIBS} m)
 endif()
 
 # PREFIX "" avoids the doubled "liblibsqlite3.so" on Unix.

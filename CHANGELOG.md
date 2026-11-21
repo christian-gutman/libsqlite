@@ -11,7 +11,25 @@ separately by `sqlite_core_sqlite_version()`.
 
 ## [Unreleased]
 
-_None yet._
+### Fixed
+
+- **Linux/Unix compilation**: `sqlite_core_builder.c` now includes
+  `<stdint.h>` explicitly. `SIZE_MAX` was only available through headers
+  MSVC pulls in transitively, so the shared library failed to build with
+  gcc/clang (found by the CI Linux jobs).
+- **Unix linkage**: the library now links `Threads::Threads`,
+  `${CMAKE_DL_LIBS}` and `m` explicitly. Required by `SQLITE_THREADSAFE=1`
+  and by the engine's runtime extension/math use on distributions where
+  glibc has not merged them into libc.
+- **Regression suite on Unix**: the long-string conversion check no longer
+  assumes Windows-only ANSI conversion; on Linux/macOS the documented
+  UTF-8 passthrough is verified instead (this was the CI macOS failure).
+
+### Documentation
+
+- The project is referred to as **libsqlite** in all documentation
+  (the repository name); the produced artifacts keep their historical
+  names (`libsqlite3.dll`, `libsqlite3.so`, `libsqlite3.dylib`).
 
 ## [1.0.0] — 2026-11-21
 

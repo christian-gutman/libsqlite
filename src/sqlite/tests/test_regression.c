@@ -355,8 +355,13 @@ static void test_long_string_no_stack_overflow(void)
         CHECK(ansi != NULL, "long UTF-8 -> ANSI conversion succeeds on the heap");
         if (ansi)
         {
+#if defined(_WIN32) || defined(_WIN64)
             /* every U+00E9 becomes one 0xE9 byte plus alternating 'A' */
             CHECK(strlen(ansi) == src_len - src_len / 3, "converted length is correct");
+#else
+            /* Linux/macOS are UTF-8 native: the input is copied as-is */
+            CHECK(strlen(ansi) == src_len, "passthrough copy keeps the length (UTF-8 native)");
+#endif
             char *utf8 = sqlite_core_string_ansi_to_utf8(ansi);
             CHECK(utf8 != NULL, "long ANSI -> UTF-8 conversion succeeds");
             if (utf8)

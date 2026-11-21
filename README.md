@@ -1,6 +1,6 @@
 <div align="center">
 
-# libsqlite3
+# libsqlite
 
 **High-performance SQLite connector library for C**
 
@@ -21,10 +21,10 @@
 > account. After a hardware theft, access to that account and its original
 > repository was permanently lost. The sources were recovered intact from
 > external backups and are now released publicly. **This repository is the
-> official and permanent home** for libsqlite3 — bug reports and contributions
+> official and permanent home** for libsqlite — bug reports and contributions
 > are welcome here.
 
-libsqlite3 is a connector for SQLite databases written in portable C99/C11 on
+libsqlite is a connector for SQLite databases written in portable C99/C11 on
 top of the official `sqlite3.c` amalgamation. It exports a shared library
 (`.dll` / `.so` / `.dylib`) with ADO.NET-style semantics
 (`ExecuteReader`, `ExecuteScalar`, `ExecuteNonQuery`, parameters with
@@ -365,7 +365,7 @@ suites implement every rule of that document.
 ## Repository layout
 
 ```
-libsqlite3/
+libsqlite/
 ├── src/sqlite/
 │   ├── CMakeLists.txt           Options, version parsing, install/export
 │   ├── cmake/                   CMake package template
@@ -405,4 +405,4 @@ The embedded SQLite engine is public domain, as stated above.
 
 ---
 
-**libsqlite3** · v1.0.0 · [English](README.md) · [Español](README.es.md)
+**libsqlite** · v1.0.0 · [English](README.md) · [Español](README.es.md)

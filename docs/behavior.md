@@ -1,12 +1,12 @@
 # Behavioral Contract — .NET Parity
 
-libsqlite3 exposes an ADO.NET-style C API. **The observable behavior of every
+libsqlite exposes an ADO.NET-style C API. **The observable behavior of every
 function must match its .NET counterpart.** This document is the acceptance
 contract for bug fixes and tests.
 
 ## Connection
 
-| .NET (ADO.NET)               | libsqlite3                        | Required behavior |
+| .NET (ADO.NET)               | libsqlite                          | Required behavior |
 |------------------------------|-----------------------------------|-------------------|
 | `SqlConnection.Open`         | `sqlite_core_open`               | Fails (`SQLITE_CANTOPEN`) if the file does not exist. |
 | `Open` + create semantics    | `sqlite_core_open_or_create`     | Creates the file when missing. |
@@ -17,7 +17,7 @@ contract for bug fixes and tests.
 
 ## Commands
 
-| .NET (ADO.NET)               | libsqlite3                        | Required behavior |
+| .NET (ADO.NET)               | libsqlite                          | Required behavior |
 |------------------------------|-----------------------------------|-------------------|
 | `ExecuteReader`              | `sqlite_core_execute_reader`      | Invokes the callback once per row; when the result set is empty the callback is invoked exactly once with `hasrows == 0` (equivalent to `HasRows == false`). Returns the number of rows processed; aborting from the callback stops iteration. |
 | `ExecuteNonQuery`            | `sqlite_core_execute_non_query`    | Returns rows affected; on error fills `err_buf` and returns the SQLite error code. |

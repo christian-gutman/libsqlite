@@ -1,6 +1,6 @@
 # Examples
 
-Usage examples for the libsqlite3 connector (C API).
+Usage examples for the libsqlite connector (C API).
 
 This folder is copied next to the built binaries by the CMake post-build step.
 

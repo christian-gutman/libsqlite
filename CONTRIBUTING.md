@@ -1,6 +1,6 @@
-# Contributing to libsqlite3
+# Contributing to libsqlite
 
-Thanks for your interest in improving libsqlite3! This document explains how
+Thanks for your interest in improving libsqlite! This document explains how
 to build, test and extend the library so that every change lands consistent
 with the project's contracts.
 

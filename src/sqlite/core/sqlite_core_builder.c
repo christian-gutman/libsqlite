@@ -1,5 +1,9 @@
 #include "sqlite_core_builder.h"
 
+/* SIZE_MAX lives in <stdint.h>; MSVC pulls it in transitively through other
+ * headers, but glibc and macOS do not. */
+#include <stdint.h>
+
 /*
  * JSON output builder and JSON input, built on the SQLite allocator so that
  * every returned buffer can be released with sqlite_core_string_free().

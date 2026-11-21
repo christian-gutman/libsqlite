@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a defect in libsqlite3
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please check
+        [docs/behavior.md](../docs/behavior.md) first: behaviors documented
+        there are intentional (.NET parity contract), not bugs.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      description: Output of sqlite_core_version() and sqlite_core_sqlite_version().
+      placeholder: "libsqlite3 1.0.0 / sqlite 3.54.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform and architecture
+      options:
+        - Windows / x64
+        - Windows / Win32
+        - Linux / x64
+        - Linux / arm64
+        - macOS / x64
+        - macOS / arm64
+    validations:
+      required: true
+  - type: dropdown
+    id: linkage
+    attributes:
+      label: Linkage
+      options:
+        - Shared (.dll / .so / .dylib)
+        - Static (.lib / .a)
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal C snippet or steps that reproduce the issue.
+      render: c
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Build log, return codes, err_buf content.
+    validations:
+      required: false

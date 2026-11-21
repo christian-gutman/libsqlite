@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a change or an addition to libsqlite3
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is the use case? .NET parity matters: mention the
+        ADO.NET equivalent when there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: Suggested function signature, types, return values.
+      render: c
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Does this break the frozen public API?
+      options:
+        - "No"
+        - "Yes (needs a major version discussion)"
+    validations:
+      required: true

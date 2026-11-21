@@ -93,5 +93,5 @@ contract is enforced by tests.
   `SqlLite_Core_*` names no longer exist. Rename your calls to the
   `sqlite_core_*` equivalents listed in `README.md`.
 
-[Unreleased]: https://github.com/christian-gutman/libsqlite3/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/christian-gutman/libsqlite3/releases/tag/v1.0.0
+[Unreleased]: https://github.com/christian-gutman/libsqlite/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/christian-gutman/libsqlite/releases/tag/v1.0.0

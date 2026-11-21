@@ -1,6 +1,21 @@
+<div align="center">
+
 # libsqlite3
 
-High-performance SQLite connector library for C.
+**High-performance SQLite connector library for C**
+
+![CI](https://img.shields.io/github/actions/workflow/status/christian-gutman/libsqlite/ci.yml?branch=main&label=CI&style=flat-square)
+![Release](https://img.shields.io/github/v/release/christian-gutman/libsqlite?style=flat-square)
+![License](https://img.shields.io/github/license/christian-gutman/libsqlite?style=flat-square)
+![SQLite](https://img.shields.io/badge/SQLite-3.54.1-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![C11](https://img.shields.io/badge/C-11-00599C?style=flat-square&logo=c&logoColor=white)
+![CMake](https://img.shields.io/badge/build-CMake-064F8C?style=flat-square&logo=cmake&logoColor=white)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=flat-square)
+![CTest](https://img.shields.io/badge/CTest-3%20suites-brightgreen?style=flat-square)
+
+**[Documentación en español](README.es.md)** · **[Behavior contract](docs/behavior.md)** · **[Changelog](CHANGELOG.md)** · **[License](LICENSE)**
+
+</div>
 
 > **Project note:** this codebase originally belonged to the `@christiangutman`
 > account. After a hardware theft, access to that account and its original
@@ -55,8 +70,8 @@ Clone and build a shared Win32 DLL (or use the included helper
 `cmp_dll.bat`, which does the same and cleans up afterwards):
 
 ```bash
-git clone https://github.com/christian-gutman/libsqlite3.git
-cd libsqlite3
+git clone https://github.com/christian-gutman/libsqlite.git
+cd libsqlite
 
 # Windows x64 (use -A Win32 for 32-bit)
 cmake -S src/sqlite -B build -A x64
@@ -307,6 +322,38 @@ is simply not bound, matching ADO.NET behavior.
 |----------|-------------|
 | `const char *sqlite_core_version(void)` | Wrapper version, `"1.0.0"`. |
 | `const char *sqlite_core_sqlite_version(void)` | Embedded engine version, `"3.54.1"`. |
+
+### JSON in one look
+
+```c
+char *json = NULL;
+if (sqlite_core_execute_reader_to_json(
+        db, "SELECT id, name FROM person ORDER BY id",
+        NULL, 0, &json, NULL, 0) >= 0 && json != NULL)
+{
+    /* json holds:
+     * [
+     *   {"id": 1, "name": "Ada"},
+     *   {"id": 42, "name": "Grace"}
+     * ]
+     */
+    sqlite_core_string_free(json);
+}
+```
+
+`sqlite_core_insert_json` is the mirror image: feed it the same document and
+a table name, and the rows are inserted through parsed, parameter-bound
+statements (no string concatenation, no injection).
+
+## Contributing & security
+
+Bug reports and feature requests use the GitHub issue templates (they ask
+for version, platform, linkage and a minimal reproduction), and pull
+requests follow the checklist in
+[.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
+Contributor build/test workflow and API extension rules:
+[CONTRIBUTING.md](CONTRIBUTING.md). Please report vulnerabilities privately
+as described in [SECURITY.md](SECURITY.md).
 
 ## Behavior contract
 

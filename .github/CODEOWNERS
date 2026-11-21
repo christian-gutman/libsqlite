@@ -1,0 +1,3 @@
+# Default owner for everything in the repository.
+# Individual owners are overridden by later rules (more specific paths).
+* @christian-gutman

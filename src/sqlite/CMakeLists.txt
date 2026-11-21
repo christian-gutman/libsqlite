@@ -18,7 +18,7 @@ set(SQLITE_CORE_RC_PRODUCTVERSION "${SQLITE_CORE_RC_FILEVERSION}")
 set(SQLITE_CORE_RC_FILEVERSION_STR "${SQLITE_CORE_VERSION}.0")
 set(SQLITE_CORE_RC_PRODUCTVERSION_STR "${SQLITE_CORE_VERSION}.0")
 set(SQLITE_CORE_COMPANY "libsqlite3 contributors")
-set(SQLITE_CORE_COPYRIGHT "(C) 2026. Christian Gutman All rights reserved.")
+set(SQLITE_CORE_COPYRIGHT "(C) 2026. Christian Gutman. Licensed under the MIT License.")
 
 message(STATUS "libsqlite3 version: ${SQLITE_CORE_VERSION} (from core/sqlite_core.h)")
 

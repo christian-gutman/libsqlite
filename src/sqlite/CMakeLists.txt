@@ -58,7 +58,16 @@ elseif(APPLE)
 else()
     set(LIBSQLITE_SYS_DIR "Linux")
 endif()
-set(LIBSQLITE_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${LIBSQLITE_ARCH_DIR}-${LIBSQLITE_SYS_DIR}")
+
+# Shared and static artifacts go to distinct folders (both produce
+# libsqlite3.lib on Windows, so they must not collide).
+if(BUILD_SHARED_LIBS)
+    set(LIBSQLITE_KIND_DIR "shared")
+else()
+    set(LIBSQLITE_KIND_DIR "static")
+endif()
+
+set(LIBSQLITE_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${LIBSQLITE_ARCH_DIR}-${LIBSQLITE_SYS_DIR}/${LIBSQLITE_KIND_DIR}")
 
 # ============================================================================
 # Sources

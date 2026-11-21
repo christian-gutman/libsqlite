@@ -5,10 +5,10 @@
  * Portability layer absorbed from the former external dependencies
  * (core-c-sdk / libstring). Contains only the pieces libsqlite3 uses:
  *
- *   - CORE_API          symbol export macro (DLL / shared object visibility)
- *   - str_compare       case-insensitive full string comparison
- *   - str_n_compare     case-insensitive bounded string comparison
- *   - StrDetectEncoding encoding detection family (pure C, portable)
+ *   - SQLITE_CORE_API          symbol export macro (DLL / shared object visibility)
+ *   - sqlite_core_str_compare       case-insensitive full string comparison
+ *   - sqlite_core_str_n_compare     case-insensitive bounded string comparison
+ *   - sqlite_core_detect_encoding encoding detection family (pure C, portable)
  *
  * Everything here is standard C99/C11 plus the narrowest possible platform
  * shims, so the same sources build on Windows, Linux and macOS.
@@ -30,14 +30,14 @@
     #include <windows.h>
     #include <malloc.h>
 
-    #define str_compare   _stricmp
-    #define str_n_compare _strnicmp
+    #define sqlite_core_str_compare   _stricmp
+    #define sqlite_core_str_n_compare _strnicmp
 #else
     #include <strings.h>
     #include <unistd.h>
 
-    #define str_compare   strcasecmp
-    #define str_n_compare strncasecmp
+    #define sqlite_core_str_compare   strcasecmp
+    #define sqlite_core_str_n_compare strncasecmp
 
     /* MSVC-only integer parsing alias (strtoull is C99) */
     #define _strtoui64 strtoull
@@ -45,13 +45,13 @@
 
 /* Symbol visibility: __declspec(dllexport) on Windows,
  * visibility("default") on GCC/Clang 4+, nothing elsewhere. */
-#ifndef CORE_API
+#ifndef SQLITE_CORE_API
     #if defined(_WIN32)
-        #define CORE_API __declspec(dllexport)
+        #define SQLITE_CORE_API __declspec(dllexport)
     #elif defined(__GNUC__) && __GNUC__ >= 4
-        #define CORE_API __attribute__((visibility("default")))
+        #define SQLITE_CORE_API __attribute__((visibility("default")))
     #else
-        #define CORE_API
+        #define SQLITE_CORE_API
     #endif
 #endif
 
@@ -69,17 +69,17 @@ extern "C" {
 
 /* Validates one strict UTF-8 sequence.
  * Returns 1 and sets *charLen when bytes[0..len) starts a valid sequence. */
-int StrHasValidUtf8Sequence(const unsigned char *bytes, int len, int *charLen);
+int sqlite_core_has_valid_utf8_sequence(const unsigned char *bytes, int len, int *charLen);
 
 /* Detects a leading BOM (UTF-8 / UTF-16LE / UTF-16BE).
  * Returns the encoding and sets *startOffset to the BOM length (0 if none). */
-int StrDetectBOM(const unsigned char *bytes, int len, int *startOffset);
+int sqlite_core_detect_bom(const unsigned char *bytes, int len, int *startOffset);
 
 /* Detects the encoding of a byte range; skips the BOM if present. */
-int StrDetectEncodingLen(const char *str, int len, int *contentOffset);
+int sqlite_core_detect_encoding_len(const char *str, int len, int *contentOffset);
 
 /* Detects the encoding of a NUL-terminated string. */
-int StrDetectEncoding(const char *str);
+int sqlite_core_detect_encoding(const char *str);
 
 #ifdef __cplusplus
 }

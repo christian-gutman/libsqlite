@@ -9,7 +9,7 @@
  *   SQLITE_MISUSE   invalid arguments
  *   other SQLite    prepare/step error code
  */
-int SqlLite_Core_GetBlob(
+int sqlite_core_get_blob(
     sqlite3 *db,
     const char *sql,
     void *pDestBuffer,
@@ -27,7 +27,7 @@ int SqlLite_Core_GetBlob(
 
     /* Same ANSI -> UTF-8 SQL conversion as every other Execute* entry */
     const char *final_sql = sql;
-    char *converted_sql = SqlLite_Core_AnsiToUTF8(sql);
+    char *converted_sql = sqlite_core_string_ansi_to_utf8(sql);
     if (converted_sql != NULL)
         final_sql = converted_sql;
 
@@ -35,7 +35,7 @@ int SqlLite_Core_GetBlob(
     int rc = sqlite3_prepare_v2(db, final_sql, -1, &stmt, NULL);
 
     if (converted_sql != NULL)
-        SqlLite_Core_FreeString((void *)converted_sql);
+        sqlite_core_string_free((void *)converted_sql);
 
     if (rc != SQLITE_OK)
     {
@@ -59,7 +59,7 @@ int SqlLite_Core_GetBlob(
             if (blobLen > maxLen)
             {
                 sqlite3_finalize(stmt);
-                return -2;
+                return SQLITE_CORE_BUFFER_TOO_SMALL;
             }
         }
         rc = SQLITE_OK;

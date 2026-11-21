@@ -8,7 +8,7 @@
 /* Validates if the byte range starts with a strict, well-formed UTF-8
  * sequence (no overlong encodings, no surrogates, no out-of-range code
  * points). Returns 1 and stores the sequence length in *charLen. */
-int StrHasValidUtf8Sequence(const unsigned char *bytes, int len, int *charLen)
+int sqlite_core_has_valid_utf8_sequence(const unsigned char *bytes, int len, int *charLen)
 {
     unsigned char b0 = bytes[0];
     int expectedLen = 0;
@@ -72,7 +72,7 @@ int StrHasValidUtf8Sequence(const unsigned char *bytes, int len, int *charLen)
     return 1;
 }
 
-int StrDetectBOM(const unsigned char *bytes, int len, int *startOffset)
+int sqlite_core_detect_bom(const unsigned char *bytes, int len, int *startOffset)
 {
     if (startOffset)
         *startOffset = 0;
@@ -105,7 +105,7 @@ int StrDetectBOM(const unsigned char *bytes, int len, int *startOffset)
     return ENCODING_UNKNOWN;
 }
 
-int StrDetectEncodingLen(const char *str, int len, int *contentOffset)
+int sqlite_core_detect_encoding_len(const char *str, int len, int *contentOffset)
 {
     if (contentOffset)
         *contentOffset = 0;
@@ -117,7 +117,7 @@ int StrDetectEncodingLen(const char *str, int len, int *contentOffset)
 
     /* 1. BOM detection */
     int bomOffset = 0;
-    int bomEnc = StrDetectBOM(bytes, len, &bomOffset);
+    int bomEnc = sqlite_core_detect_bom(bytes, len, &bomOffset);
     if (bomEnc != ENCODING_UNKNOWN)
     {
         if (contentOffset)
@@ -156,7 +156,7 @@ int StrDetectEncodingLen(const char *str, int len, int *contentOffset)
         }
 
         int charLen = 0;
-        if (!StrHasValidUtf8Sequence(bytes + i, len - i, &charLen))
+        if (!sqlite_core_has_valid_utf8_sequence(bytes + i, len - i, &charLen))
         {
             /* Byte invalid for UTF-8 -> assume ANSI */
             return ENCODING_ANSI;
@@ -170,10 +170,10 @@ int StrDetectEncodingLen(const char *str, int len, int *contentOffset)
     return hasHighByte ? ENCODING_UTF8 : ENCODING_ASCII;
 }
 
-int StrDetectEncoding(const char *str)
+int sqlite_core_detect_encoding(const char *str)
 {
     if (!str)
         return ENCODING_UNKNOWN;
     int len = (int)strlen(str);
-    return StrDetectEncodingLen(str, len, NULL);
+    return sqlite_core_detect_encoding_len(str, len, NULL);
 }

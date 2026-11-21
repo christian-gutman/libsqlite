@@ -24,3 +24,21 @@ endif()
 
 enable_testing()
 add_test(NAME regression COMMAND test_libsqlite3)
+
+# Export consistency: every public function must be resolvable in the
+# shared library (keeps sqlite.def / visibility in sync with the headers).
+add_executable(test_exports test_exports.c)
+if(NOT WIN32)
+    target_link_libraries(test_exports PRIVATE ${CMAKE_DL_LIBS})
+endif()
+
+if(BUILD_SHARED_LIBS)
+    add_custom_command(TARGET test_exports POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:libsqlite3>
+            $<TARGET_FILE_DIR:test_exports>)
+    add_test(NAME exports COMMAND test_exports $<TARGET_FILE:libsqlite3>)
+else()
+    # Static builds have no dynamic exports to verify.
+    add_test(NAME exports COMMAND ${CMAKE_COMMAND} -E echo "static build: no dynamic exports to verify")
+endif()

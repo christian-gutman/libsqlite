@@ -5,7 +5,7 @@
 #define CORE_MAX_BUSY_TIMEOUT 30000
 #endif
 
-sqlite3 *SqlLite_Core_OpenEx(
+sqlite3 *sqlite_core_open_ex(
     const char *uripath,
     int flags,
     int *out_rc)
@@ -59,30 +59,30 @@ sqlite3 *SqlLite_Core_OpenEx(
     return db;
 }
 
-sqlite3 *SqlLite_Core_Open_ReadOnly(const char *uripath, int *out_rc)
+sqlite3 *sqlite_core_open_readonly(const char *uripath, int *out_rc)
 {
-    return SqlLite_Core_OpenEx(uripath, SQLITE_OPEN_READONLY, out_rc);
+    return sqlite_core_open_ex(uripath, SQLITE_OPEN_READONLY, out_rc);
 }
 
-sqlite3 *SqlLite_Core_Open_Or_Create(const char *uripath, int *out_rc)
+sqlite3 *sqlite_core_open_or_create(const char *uripath, int *out_rc)
 {
-    return SqlLite_Core_OpenEx(uripath, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, out_rc);
+    return sqlite_core_open_ex(uripath, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, out_rc);
 }
 
-sqlite3 *SqlLite_Core_Open(const char *uripath, int *out_rc)
+sqlite3 *sqlite_core_open(const char *uripath, int *out_rc)
 {
-    return SqlLite_Core_OpenEx(uripath, SQLITE_OPEN_READWRITE, out_rc);
+    return sqlite_core_open_ex(uripath, SQLITE_OPEN_READWRITE, out_rc);
 }
 
-sqlite3 *SqlLite_Core_Open_Uri_ReadOnly(const char *uripath, int *out_rc)
+sqlite3 *sqlite_core_open_uri_readonly(const char *uripath, int *out_rc)
 {
     /* URI interpretation is requested per-connection via SQLITE_OPEN_URI
      * (the global sqlite3_config(SQLITE_CONFIG_URI) call is process-wide
      * and must run before the library is initialized, so it is not used). */
-    return SqlLite_Core_OpenEx(uripath, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, out_rc);
+    return sqlite_core_open_ex(uripath, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, out_rc);
 }
 
-int SqlLite_Core_Close(sqlite3 *db)
+int sqlite_core_close(sqlite3 *db)
 {
     if (db == NULL)
         return SQLITE_MISUSE;
@@ -94,7 +94,7 @@ int SqlLite_Core_Close(sqlite3 *db)
 /* .NET parity: returns 1 only when the database is truly read-only,
  * 0 when it is writable, -1 on error. sqlite3_db_readonly() already
  * returns exactly these values. */
-int SqlLite_Core_IsReadonly(sqlite3 *db)
+int sqlite_core_is_readonly(sqlite3 *db)
 {
     if (db == NULL)
         return -1;
@@ -102,7 +102,7 @@ int SqlLite_Core_IsReadonly(sqlite3 *db)
     return sqlite3_db_readonly(db, "main");
 }
 
-int SqlLite_Core_SetBusyTimeout(sqlite3 *db, int ms)
+int sqlite_core_set_busy_timeout(sqlite3 *db, int ms)
 {
     if (db == NULL)
     {

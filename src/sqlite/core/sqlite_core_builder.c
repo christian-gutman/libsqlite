@@ -2,15 +2,15 @@
 
 /*
  * JSON output builder and JSON input, built on the SQLite allocator so that
- * every returned buffer can be released with SqlLite_Core_FreeString().
+ * every returned buffer can be released with sqlite_core_string_free().
  */
 
 /* ------------------------------------------------------------------ */
-/* Dynamic buffer helpers (SqlLiteStringContext)                       */
+/* Dynamic buffer helpers (sqlite_core_json_builder_t)                       */
 /* ------------------------------------------------------------------ */
 
 /* Ensures the buffer can hold `extra` more bytes plus the NUL terminator. */
-static int JsonCtx_Ensure(SqlLiteStringContext *ctx, size_t extra)
+static int JsonCtx_Ensure(sqlite_core_json_builder_t *ctx, size_t extra)
 {
     if (ctx->has_error)
         return 0;
@@ -48,7 +48,7 @@ static int JsonCtx_Ensure(SqlLiteStringContext *ctx, size_t extra)
 }
 
 /* Appends raw bytes. Sets has_error on out-of-memory. */
-static void JsonCtx_Append(SqlLiteStringContext *ctx, const char *data, size_t len)
+static void JsonCtx_Append(sqlite_core_json_builder_t *ctx, const char *data, size_t len)
 {
     if (len == 0)
         return;
@@ -61,13 +61,13 @@ static void JsonCtx_Append(SqlLiteStringContext *ctx, const char *data, size_t l
 }
 
 /* Appends a string literal (compile-time constant). */
-static void JsonCtx_AppendLit(SqlLiteStringContext *ctx, const char *lit)
+static void JsonCtx_AppendLit(sqlite_core_json_builder_t *ctx, const char *lit)
 {
     JsonCtx_Append(ctx, lit, strlen(lit));
 }
 
 /* Appends a JSON string literal: RFC 8259 escaping, UTF-8 passthrough. */
-static void JsonCtx_AppendJsonString(SqlLiteStringContext *ctx, const char *text, size_t len)
+static void JsonCtx_AppendJsonString(sqlite_core_json_builder_t *ctx, const char *text, size_t len)
 {
     JsonCtx_AppendLit(ctx, "\"");
 
@@ -119,13 +119,13 @@ static void JsonCtx_AppendJsonString(SqlLiteStringContext *ctx, const char *text
 /* JSON writer callback                                                */
 /* ------------------------------------------------------------------ */
 
-int SqlLite_Core_JsonWriterCallback(
+int sqlite_core_json_writer_callback(
     sqlite3_stmt *stmt,
     int columns,
     int hasrows,
     void *pUserContext)
 {
-    SqlLiteStringContext *ctx = (SqlLiteStringContext *)pUserContext;
+    sqlite_core_json_builder_t *ctx = (sqlite_core_json_builder_t *)pUserContext;
     if (ctx == NULL || ctx->has_error)
     {
         return 1;
@@ -214,10 +214,10 @@ int SqlLite_Core_JsonWriterCallback(
 /* Reader -> JSON array driver                                         */
 /* ------------------------------------------------------------------ */
 
-int SqlLite_Core_ExecuteReaderToJSON(
+int sqlite_core_execute_reader_to_json(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
     char **out_json,
     char *err_buf,
@@ -234,7 +234,7 @@ int SqlLite_Core_ExecuteReaderToJSON(
         err_buf[0] = '\0';
     *out_json = NULL;
 
-    SqlLiteStringContext ctx;
+    sqlite_core_json_builder_t ctx;
     memset(&ctx, 0, sizeof(ctx));
 
     if (!JsonCtx_Ensure(&ctx, 2))
@@ -244,9 +244,9 @@ int SqlLite_Core_ExecuteReaderToJSON(
     }
     JsonCtx_AppendLit(&ctx, "[\n");
 
-    int rows = SqlLite_Core_ExecuteReader(
+    int rows = sqlite_core_execute_reader(
         db, sql, params, paramCount,
-        SqlLite_Core_JsonWriterCallback, &ctx,
+        sqlite_core_json_writer_callback, &ctx,
         err_buf, err_buf_max);
 
     if (rows < 0 || ctx.has_error)
@@ -513,7 +513,7 @@ static char *BuildJsonInsertSql(sqlite3 *db, const char *table_name, const StrLi
     return buf;
 }
 
-int SqlLite_Core_Insert_Json(
+int sqlite_core_insert_json(
     sqlite3 *db,
     const char *table_name,
     const char *json_str,
@@ -552,7 +552,7 @@ int SqlLite_Core_Insert_Json(
     int started = 0;
     if (sqlite3_get_autocommit(db) == 1)
     {
-        int btrc = SqlLite_Core_BeginTransaction(db, err_buf, err_buf_max);
+        int btrc = sqlite_core_begin_transaction(db, err_buf, err_buf_max);
         if (btrc != 1)
         {
             StrList_Free(&keys);
@@ -567,7 +567,7 @@ int SqlLite_Core_Insert_Json(
     {
         StrList_Free(&keys);
         if (started)
-            SqlLite_Core_Rollback(db, NULL, 0);
+            sqlite_core_rollback_transaction(db, NULL, 0);
         return (build_rc > 0) ? -build_rc : build_rc;
     }
 
@@ -581,7 +581,7 @@ int SqlLite_Core_Insert_Json(
             snprintf(err_buf, err_buf_max, "%s", sqlite3_errmsg(db));
         StrList_Free(&keys);
         if (started)
-            SqlLite_Core_Rollback(db, NULL, 0);
+            sqlite_core_rollback_transaction(db, NULL, 0);
         return -rc;
     }
 
@@ -608,16 +608,16 @@ int SqlLite_Core_Insert_Json(
     if (rows < 0)
     {
         if (started)
-            SqlLite_Core_Rollback(db, NULL, 0);
+            sqlite_core_rollback_transaction(db, NULL, 0);
         return (rc > 0) ? -rc : rc;
     }
 
     if (started)
     {
-        int crc = SqlLite_Core_Commit(db, err_buf, err_buf_max);
+        int crc = sqlite_core_commit_transaction(db, err_buf, err_buf_max);
         if (crc != 1)
         {
-            SqlLite_Core_Rollback(db, NULL, 0);
+            sqlite_core_rollback_transaction(db, NULL, 0);
             return -1;
         }
     }

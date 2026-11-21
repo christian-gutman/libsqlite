@@ -3,8 +3,8 @@
 
 #include "sqlite_core.h"
  
-CORE_API int SqlLite_Core_GetLastErrorCode(sqlite3 *db);
-CORE_API int SqlLite_Core_GetLastErrorCodeExtended(sqlite3 *db);
-CORE_API const char* SqlLite_Core_GetLastErrorMsg(sqlite3 *db);
+SQLITE_CORE_API int sqlite_core_error_code(sqlite3 *db);
+SQLITE_CORE_API int sqlite_core_error_code_extended(sqlite3 *db);
+SQLITE_CORE_API const char* sqlite_core_error_message(sqlite3 *db);
 
 #endif // SQLITE_CORE_ERROR_H

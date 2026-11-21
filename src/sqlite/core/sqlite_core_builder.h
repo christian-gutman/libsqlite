@@ -4,12 +4,12 @@
 #include "sqlite_core.h"
 
 /**
- * @struct SqlLiteStringContext
+ * @struct sqlite_core_json_builder_t
  * @brief Opaque memory context for the dynamic JSON string builder.
  *
  * Holds the heap buffer that accumulates the JSON output. It travels through
  * the generic 'pUserContext' parameter required by the
- * SqlLiteCoreRowCallback signature.
+ * sqlite_core_row_callback_fn signature.
  */
 typedef struct {
     char *string_ptr;         /**< Base pointer to the accumulated JSON buffer (heap). */
@@ -17,12 +17,12 @@ typedef struct {
     size_t current_len;       /**< Current string length, excluding the NUL terminator. */
     int rows_processed;       /**< Number of rows successfully processed. */
     int has_error;            /**< Error flag: set to 1 on out-of-memory. */
-} SqlLiteStringContext;
+} sqlite_core_json_builder_t;
 
 
 /**
  * @brief Specialized callback that builds a JSON array from a result set.
- *        Matches the SqlLiteCoreRowCallback signature.
+ *        Matches the sqlite_core_row_callback_fn signature.
  *
  * Values are emitted as UTF-8 and properly escaped (RFC 8259): quotes,
  * backslashes and control characters are escaped. NULL becomes JSON null.
@@ -31,11 +31,11 @@ typedef struct {
  * @param[in] stmt          Active SQLite statement positioned on a row.
  * @param[in] columns       Number of columns in the result set.
  * @param[in] hasrows       1 when a valid row is current, 0 for an empty set.
- * @param[in] pUserContext  Pointer to the caller's SqlLiteStringContext.
+ * @param[in] pUserContext  Pointer to the caller's sqlite_core_json_builder_t.
  *
  * @return 0 to continue with the next row, 1 to abort (out of memory).
  */
-CORE_API int SqlLite_Core_JsonWriterCallback(
+SQLITE_CORE_API int sqlite_core_json_writer_callback(
     sqlite3_stmt *stmt,
     int columns,
     int hasrows,
@@ -55,17 +55,17 @@ CORE_API int SqlLite_Core_JsonWriterCallback(
  * @param[in]  params        Optional named parameters (may be NULL).
  * @param[in]  paramCount    Number of entries in params.
  * @param[out] out_json      Receives the heap-allocated JSON string
- *                           (release with SqlLite_Core_FreeString).
+ *                           (release with sqlite_core_string_free).
  *                           Set to NULL on failure.
  * @param[out] err_buf       Optional error message buffer.
  * @param[in]  err_buf_max   Capacity of err_buf.
  *
  * @return Number of rows (>= 0) on success, or a SQLite error code.
  */
-CORE_API int SqlLite_Core_ExecuteReaderToJSON(
+SQLITE_CORE_API int sqlite_core_execute_reader_to_json(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
     char **out_json,
     char *err_buf,
@@ -99,7 +99,7 @@ CORE_API int SqlLite_Core_ExecuteReaderToJSON(
  *         (-SQLITE_MISUSE for invalid input, -1 when the transaction
  *         cannot be started or committed).
  */
-CORE_API int SqlLite_Core_Insert_Json(
+SQLITE_CORE_API int sqlite_core_insert_json(
     sqlite3 *db,
     const char *table_name,
     const char *json_str,

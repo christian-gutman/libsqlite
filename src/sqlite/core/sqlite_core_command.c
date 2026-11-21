@@ -2,7 +2,7 @@
 
 /* .NET parity: one statement per command (ADO.NET CommandText semantics).
  * Tracks single-quote state so semicolons inside string literals are ignored. */
-static int SqlLite_Core_IsSingleStatement(const char *sql)
+static int sqlite_core_is_single_statement(const char *sql)
 {
     if (sql == NULL)
         return 0;
@@ -39,7 +39,7 @@ static int SqlLite_Core_IsSingleStatement(const char *sql)
 
 /* .NET parity: transaction control goes through BeginTransaction/Commit/
  * Rollback, never through plain command text. */
-int SqlLite_Core_IsForbiddenTransactionalText(const char *sql)
+int sqlite_core_is_forbidden_transaction_text(const char *sql)
 {
     if (sql == NULL)
         return 0;
@@ -49,13 +49,13 @@ int SqlLite_Core_IsForbiddenTransactionalText(const char *sql)
         sql++;
     }
 
-    if (str_n_compare(sql, "BEGIN", 5) == 0)
+    if (sqlite_core_str_n_compare(sql, "BEGIN", 5) == 0)
         return 1;
-    if (str_n_compare(sql, "COMMIT", 6) == 0)
+    if (sqlite_core_str_n_compare(sql, "COMMIT", 6) == 0)
         return 1;
-    if (str_n_compare(sql, "ROLLBACK", 8) == 0)
+    if (sqlite_core_str_n_compare(sql, "ROLLBACK", 8) == 0)
         return 1;
-    if (str_n_compare(sql, "END", 3) == 0)
+    if (sqlite_core_str_n_compare(sql, "END", 3) == 0)
     {
         char next = *(sql + 3);
         if (next == '\0' || next == ' ' || next == '\t' || next == '\r' || next == '\n' || next == ';')
@@ -79,7 +79,7 @@ static int PrepareUtf8Sql(
     *out_stmt = NULL;
 
     const char *final_sql = sql;
-    char *converted_sql = SqlLite_Core_AnsiToUTF8(sql);
+    char *converted_sql = sqlite_core_string_ansi_to_utf8(sql);
     if (converted_sql != NULL)
     {
         final_sql = converted_sql;
@@ -91,7 +91,7 @@ static int PrepareUtf8Sql(
 
     if (*must_free_sql)
     {
-        SqlLite_Core_FreeString((void *)converted_sql);
+        sqlite_core_string_free((void *)converted_sql);
     }
 
     *out_stmt = stmt;
@@ -112,7 +112,7 @@ static void CopyErrorMessage(char *err_buf, int err_buf_max, const char *zErrMsg
 }
 
 /* Raw execution of DDL/DML text (one or more statements allowed). */
-int SqlLite_Core_ExecuteCommand(
+int sqlite_core_execute_command(
     sqlite3 *db,
     const char *sql_command,
     char *err_buf,
@@ -144,7 +144,7 @@ int SqlLite_Core_ExecuteCommand(
 
 /* Guarded transaction command execution. txexpected is the autocommit
  * state required before the command runs (1 = begin, 0 = commit/rollback). */
-CORE_API int SqlLite_Core_ExecuteTransaction(
+SQLITE_CORE_API int sqlite_core_execute_transaction(
     sqlite3 *db,
     const char *sql_command,
     int txexpected,
@@ -178,16 +178,16 @@ CORE_API int SqlLite_Core_ExecuteTransaction(
         return -1;
     }
 
-    int rc = SqlLite_Core_ExecuteCommand(db, sql_command, err_buf, err_buf_max);
+    int rc = sqlite_core_execute_command(db, sql_command, err_buf, err_buf_max);
     return (rc == SQLITE_OK ? 1 : 0);
 }
 
 /* .NET ExecuteNonQuery parity: returns the number of affected rows, or the
  * SQLite error code on failure. */
-int SqlLite_Core_ExecuteNonQuery(
+int sqlite_core_execute_non_query(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
     char *err_buf,
     int err_buf_max)
@@ -202,18 +202,18 @@ int SqlLite_Core_ExecuteNonQuery(
         err_buf[0] = '\0';
     }
 
-    if (!SqlLite_Core_IsSingleStatement(sql))
+    if (!sqlite_core_is_single_statement(sql))
     {
         if (err_buf && err_buf_max > 0)
             snprintf(err_buf, err_buf_max, "ERROR CORE: Only one statement per execution is allowed.");
         return SQLITE_MISUSE;
     }
 
-    if (SqlLite_Core_IsForbiddenTransactionalText(sql))
+    if (sqlite_core_is_forbidden_transaction_text(sql))
     {
         if (err_buf && err_buf_max > 0)
         {
-            snprintf(err_buf, err_buf_max, "ERROR CORE: Plain-text transaction statements are forbidden. Use SqlLite_Core_BeginTransaction/Commit/Rollback.");
+            snprintf(err_buf, err_buf_max, "ERROR CORE: Plain-text transaction statements are forbidden. Use sqlite_core_begin_transaction/Commit/Rollback.");
         }
         return SQLITE_MISUSE;
     }
@@ -232,7 +232,7 @@ int SqlLite_Core_ExecuteNonQuery(
 
     if (params && paramCount > 0)
     {
-        SqlLite_Core_BindParameters(stmt, params, paramCount);
+        sqlite_core_param_bind(stmt, params, paramCount);
     }
 
     rc = sqlite3_step(stmt);
@@ -243,7 +243,7 @@ int SqlLite_Core_ExecuteNonQuery(
     {
         if (params && paramCount > 0)
         {
-            SqlLite_Core_ProcessOutputParameters(stmt, params, paramCount);
+            sqlite_core_param_process_outputs(stmt, params, paramCount);
         }
         rows_affected = sqlite3_changes(db);
     }
@@ -260,12 +260,12 @@ int SqlLite_Core_ExecuteNonQuery(
 
 /* .NET ExecuteScalar parity: first column of the first row, NULL when the
  * result set is empty. */
-int SqlLite_Core_ExecuteScalar(
+int sqlite_core_execute_scalar(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
-    SqlLiteCoreParam *out_scalar_result,
+    sqlite_core_param_t *out_scalar_result,
     char *err_buf,
     int err_buf_max)
 {
@@ -279,24 +279,24 @@ int SqlLite_Core_ExecuteScalar(
     if (err_buf && err_buf_max > 0)
         err_buf[0] = '\0';
 
-    SqlLiteCoreParam dummy_local;
+    sqlite_core_param_t dummy_local;
     char buffer_descarte[256] = {0};
     if (out_scalar_result == NULL)
     {
-        memset(&dummy_local, 0, sizeof(SqlLiteCoreParam));
+        memset(&dummy_local, 0, sizeof(sqlite_core_param_t));
         out_scalar_result = &dummy_local;
         out_scalar_result->value.blob_or_text.ptr = buffer_descarte;
         out_scalar_result->value.blob_or_text.max_len = sizeof(buffer_descarte);
     }
 
-    if (!SqlLite_Core_IsSingleStatement(sql))
+    if (!sqlite_core_is_single_statement(sql))
     {
         if (err_buf && err_buf_max > 0)
             snprintf(err_buf, err_buf_max, "ERROR CORE: Only one statement per execution is allowed.");
         return SQLITE_MISUSE;
     }
 
-    if (SqlLite_Core_IsForbiddenTransactionalText(sql))
+    if (sqlite_core_is_forbidden_transaction_text(sql))
     {
         if (err_buf && err_buf_max > 0)
             snprintf(err_buf, err_buf_max, "ERROR CORE: Plain-text transaction statements are forbidden.");
@@ -317,7 +317,7 @@ int SqlLite_Core_ExecuteScalar(
 
     if (params && paramCount > 0)
     {
-        SqlLite_Core_BindParameters(stmt, params, paramCount);
+        sqlite_core_param_bind(stmt, params, paramCount);
     }
 
     rc = sqlite3_step(stmt);
@@ -349,9 +349,9 @@ int SqlLite_Core_ExecuteScalar(
                 const char *pSrcText = txt;
                 int must_free_text = 0;
 
-                if (StrDetectEncoding(txt) == ENCODING_UTF8)
+                if (sqlite_core_detect_encoding(txt) == ENCODING_UTF8)
                 {
-                    char *converted_ansi = SqlLite_Core_UTF8ToAnsi(txt);
+                    char *converted_ansi = sqlite_core_string_utf8_to_ansi(txt);
                     if (converted_ansi != NULL)
                     {
                         pSrcText = converted_ansi;
@@ -370,7 +370,7 @@ int SqlLite_Core_ExecuteScalar(
 
                 if (must_free_text)
                 {
-                    SqlLite_Core_FreeString((void *)pSrcText);
+                    sqlite_core_string_free((void *)pSrcText);
                 }
             }
             break;
@@ -401,12 +401,12 @@ int SqlLite_Core_ExecuteScalar(
 
 /* .NET ExecuteReader parity: the callback is invoked once per row, and
  * once with hasrows == 0 when the result set is empty. */
-int SqlLite_Core_ExecuteReader(
+int sqlite_core_execute_reader(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
-    SqlLiteCoreRowCallback reader_callback,
+    sqlite_core_row_callback_fn reader_callback,
     void *pUserContext,
     char *err_buf,
     int err_buf_max)
@@ -421,7 +421,7 @@ int SqlLite_Core_ExecuteReader(
         err_buf[0] = '\0';
     }
 
-    if (!SqlLite_Core_IsSingleStatement(sql))
+    if (!sqlite_core_is_single_statement(sql))
     {
         if (err_buf && err_buf_max > 0)
         {
@@ -430,11 +430,11 @@ int SqlLite_Core_ExecuteReader(
         return SQLITE_MISUSE;
     }
 
-    if (SqlLite_Core_IsForbiddenTransactionalText(sql))
+    if (sqlite_core_is_forbidden_transaction_text(sql))
     {
         if (err_buf && err_buf_max > 0)
         {
-            snprintf(err_buf, err_buf_max, "ERROR CORE: Plain-text transaction statements are forbidden. Use SqlLite_Core_BeginTransaction/Commit/Rollback.");
+            snprintf(err_buf, err_buf_max, "ERROR CORE: Plain-text transaction statements are forbidden. Use sqlite_core_begin_transaction/Commit/Rollback.");
         }
         return SQLITE_MISUSE;
     }
@@ -453,7 +453,7 @@ int SqlLite_Core_ExecuteReader(
 
     if (params != NULL && paramCount > 0)
     {
-        SqlLite_Core_BindParameters(stmt, params, paramCount);
+        sqlite_core_param_bind(stmt, params, paramCount);
     }
 
     int cols = sqlite3_column_count(stmt);

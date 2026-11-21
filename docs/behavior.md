@@ -8,23 +8,23 @@ contract for bug fixes and tests.
 
 | .NET (ADO.NET)               | libsqlite3                        | Required behavior |
 |------------------------------|-----------------------------------|-------------------|
-| `SqlConnection.Open`         | `SqlLite_Core_Open`               | Fails (`SQLITE_CANTOPEN`) if the file does not exist. |
-| `Open` + create semantics    | `SqlLite_Core_Open_Or_Create`     | Creates the file when missing. |
-| `ReadOnly=True` conn. string | `SqlLite_Core_Open_ReadOnly`      | Fails if the file does not exist; writes fail. |
-| `DbConnection.Close`         | `SqlLite_Core_Close`              | Idempotent, safe on `NULL`, returns 1 on success. |
-| connection state checks      | `SqlLite_Core_IsReadonly`         | **`1` iff the database is read-only, `0` if writable, `-1` on error.** |
-| `CommandTimeout`             | `SqlLite_Core_SetBusyTimeout`     | Accepts 0..30000 ms, clamps out-of-range values. |
+| `SqlConnection.Open`         | `sqlite_core_open`               | Fails (`SQLITE_CANTOPEN`) if the file does not exist. |
+| `Open` + create semantics    | `sqlite_core_open_or_create`     | Creates the file when missing. |
+| `ReadOnly=True` conn. string | `sqlite_core_open_readonly`      | Fails if the file does not exist; writes fail. |
+| `DbConnection.Close`         | `sqlite_core_close`              | Idempotent, safe on `NULL`, returns 1 on success. |
+| connection state checks      | `sqlite_core_is_readonly`         | **`1` iff the database is read-only, `0` if writable, `-1` on error.** |
+| `CommandTimeout`             | `sqlite_core_set_busy_timeout`     | Accepts 0..30000 ms, clamps out-of-range values. |
 
 ## Commands
 
 | .NET (ADO.NET)               | libsqlite3                        | Required behavior |
 |------------------------------|-----------------------------------|-------------------|
-| `ExecuteReader`              | `SqlLite_Core_ExecuteReader`      | Invokes the callback once per row; when the result set is empty the callback is invoked exactly once with `hasrows == 0` (equivalent to `HasRows == false`). Returns the number of rows processed; aborting from the callback stops iteration. |
-| `ExecuteNonQuery`            | `SqlLite_Core_ExecuteNonQuery`    | Returns rows affected; on error fills `err_buf` and returns the SQLite error code. |
-| `ExecuteScalar`              | `SqlLite_Core_ExecuteScalar`      | First column of the first row; **`SQLITE_CORE_TYPE_NULL` when there are no rows** (matches .NET `null`). |
-| one statement per command    | `SqlLite_Core_IsSingleStatement`  | `ExecuteNonQuery`/`ExecuteScalar`/`ExecuteReader` reject multi-statement text with `SQLITE_MISUSE`. |
-| transaction control          | `SqlLite_Core_BeginTransaction` / `Commit` / `Rollback` | `Begin` uses `BEGIN IMMEDIATE`; nested `Begin` fails; `Commit`/`Rollback` without an active transaction fail. |
-| no transactions in text      | `SqlLite_Core_IsForbiddenTransactionalText` | `ExecuteNonQuery`/`ExecuteScalar`/`ExecuteReader` reject `BEGIN`/`COMMIT`/`ROLLBACK`/`END` in the command text. |
+| `ExecuteReader`              | `sqlite_core_execute_reader`      | Invokes the callback once per row; when the result set is empty the callback is invoked exactly once with `hasrows == 0` (equivalent to `HasRows == false`). Returns the number of rows processed; aborting from the callback stops iteration. |
+| `ExecuteNonQuery`            | `sqlite_core_execute_non_query`    | Returns rows affected; on error fills `err_buf` and returns the SQLite error code. |
+| `ExecuteScalar`              | `sqlite_core_execute_scalar`      | First column of the first row; **`SQLITE_CORE_TYPE_NULL` when there are no rows** (matches .NET `null`). |
+| one statement per command    | `sqlite_core_is_single_statement`  | `ExecuteNonQuery`/`ExecuteScalar`/`ExecuteReader` reject multi-statement text with `SQLITE_MISUSE`. |
+| transaction control          | `sqlite_core_begin_transaction` / `Commit` / `Rollback` | `Begin` uses `BEGIN IMMEDIATE`; nested `Begin` fails; `Commit`/`Rollback` without an active transaction fail. |
+| no transactions in text      | `sqlite_core_is_forbidden_transaction_text` | `ExecuteNonQuery`/`ExecuteScalar`/`ExecuteReader` reject `BEGIN`/`COMMIT`/`ROLLBACK`/`END` in the command text. |
 
 ## Parameters
 
@@ -60,24 +60,41 @@ contract for bug fixes and tests.
 
 ## Encoding detection
 
-- `StrDetectEncoding` returns `ENCODING_UNKNOWN` for empty or NULL input,
+- `sqlite_core_detect_encoding` returns `ENCODING_UNKNOWN` for empty or NULL input,
   ASCII/UTF-8/ANSI otherwise. Conversion helpers accept that input safely.
 
 ## Errors
 
+Unified contract for every public function:
+
+| Return value | Meaning |
+|--------------|---------|
+| `>= 0` | Success. For value functions (`execute_non_query`, `execute_scalar`, `execute_reader`, `insert_json`) it is the affected/returned row count; for flag functions (`close`, `begin_transaction`, ...) it is `1` for success. |
+| `0` | Boolean "false" result (`is_readonly` on a writable database, `set_busy_timeout` failure). |
+| `-1` | Generic error (transaction could not be started/committed). Details in `err_buf`. |
+| `-2` | `SQLITE_CORE_BUFFER_TOO_SMALL`: destination buffer too small (`get_blob`). |
+| negative SQLite code | Engine failure (e.g. `-SQLITE_CONSTRAINT`); mirrors `SqlException.Number` negated. |
+| positive SQLite code | `execute_*` functions keep the native SQLite result codes (`SQLITE_MISUSE`, `SQLITE_CANTOPEN`, ...) for compatibility with engine conventions. |
+
 - Every function that accepts `err_buf` clears it on entry and fills it with
   the SQLite message on failure.
-- Return codes are the native SQLite result codes (`SQLITE_OK`,
-  `SQLITE_MISUSE`, ...); `1`/`0` are reserved for boolean-ish functions.
-- `GetLastErrorCode`, `GetLastErrorCodeExtended` and `GetLastErrorMsg`
-  mirror `SqlException.Number` / `Message`.
+- `error_code`, `error_code_extended` and `error_message` mirror
+  `SqlException.Number` / `Message`.
+
+## Naming
+
+The public API is `sqlite_core_*` (snake_case), types are
+`sqlite_core_*_t`. Every function declared with `SQLITE_CORE_API` in the
+public headers must appear in `sqlite.def`; the `exports` CTest verifies
+this at runtime against the shared library.
 
 ## Formatting and encoding
 
 - JSON output is UTF-8 and escapes `"`, `\` and control characters
   (RFC 8259). Numeric formatting is culture-invariant.
 - SQL text passed to the API is UTF-8; ANSI input is converted transparently
-  on every `Execute*` entry point (currently inconsistent — see milestone 2).
+  on every `Execute*` entry point (Windows only; Linux/macOS are UTF-8
+  native and the string is passed through).
 
 ## Status of this contract
 

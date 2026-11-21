@@ -3,44 +3,44 @@
 
 #include "sqlite_core.h" 
 
-int SqlLite_Core_IsForbiddenTransactionalText(const char *sql);
+int sqlite_core_is_forbidden_transaction_text(const char *sql);
 
-CORE_API int SqlLite_Core_ExecuteCommand(
+SQLITE_CORE_API int sqlite_core_execute_command(
     sqlite3 *db,
     const char *sql_command,
     char *err_buf,
     int err_buf_max);
     
-CORE_API int SqlLite_Core_ExecuteTransaction(
+SQLITE_CORE_API int sqlite_core_execute_transaction(
     sqlite3 *db,
     const char *sql_command,
     int txexpected,
     char *err_buf,
     int err_buf_max);
 
-CORE_API int SqlLite_Core_ExecuteNonQuery(
+SQLITE_CORE_API int sqlite_core_execute_non_query(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
     char *err_buf,
     int err_buf_max);
 
-CORE_API int SqlLite_Core_ExecuteScalar(
+SQLITE_CORE_API int sqlite_core_execute_scalar(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
-    SqlLiteCoreParam *out_scalar_result,
+    sqlite_core_param_t *out_scalar_result,
     char *err_buf,
     int err_buf_max);
 
-CORE_API int SqlLite_Core_ExecuteReader(
+SQLITE_CORE_API int sqlite_core_execute_reader(
     sqlite3 *db,
     const char *sql,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount,
-    SqlLiteCoreRowCallback reader_callback,
+    sqlite_core_row_callback_fn reader_callback,
     void *pUserContext,
     char *err_buf, int err_buf_max);
 

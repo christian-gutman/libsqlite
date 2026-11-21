@@ -36,7 +36,7 @@ static void fresh_db(void)
 
 /* Prepares a scalar output param that can receive a TEXT value:
  * TEXT results are copied into the caller's buffer (ptr/max_len). */
-static void out_param_init(SqlLiteCoreParam *p, char *buf, size_t buf_size)
+static void out_param_init(sqlite_core_param_t *p, char *buf, size_t buf_size)
 {
     memset(p, 0, sizeof(*p));
     p->value.blob_or_text.ptr = buf;
@@ -45,11 +45,11 @@ static void out_param_init(SqlLiteCoreParam *p, char *buf, size_t buf_size)
 
 static int table_exists(sqlite3 *db, const char *name)
 {
-    SqlLiteCoreParam out;
+    sqlite_core_param_t out;
     memset(&out, 0, sizeof(out));
     char sql[256];
     snprintf(sql, sizeof(sql), "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='%s'", name);
-    int rc = SqlLite_Core_ExecuteScalar(db, sql, NULL, 0, &out, NULL, 0);
+    int rc = sqlite_core_execute_scalar(db, sql, NULL, 0, &out, NULL, 0);
     return (rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_INT && out.value.iVal == 1) ? 1 : 0;
 }
 
@@ -59,19 +59,19 @@ static void test_isreadonly(void)
     printf("IsReadonly (was inverted)\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
     CHECK(db != NULL && rc == SQLITE_OK, "open_or_create succeeds");
-    CHECK(SqlLite_Core_IsReadonly(db) == 0, "writable database reports 0 (not 1)");
-    SqlLite_Core_Close(db);
+    CHECK(sqlite_core_is_readonly(db) == 0, "writable database reports 0 (not 1)");
+    sqlite_core_close(db);
 
-    sqlite3 *ro = SqlLite_Core_Open_ReadOnly(DB_FILE, &rc);
+    sqlite3 *ro = sqlite_core_open_readonly(DB_FILE, &rc);
     CHECK(ro != NULL && rc == SQLITE_OK, "open_readonly succeeds");
-    CHECK(SqlLite_Core_IsReadonly(ro) == 1, "read-only database reports 1 (not 0)");
+    CHECK(sqlite_core_is_readonly(ro) == 1, "read-only database reports 1 (not 0)");
 
     /* writes must actually fail on the read-only handle */
-    int wrc = SqlLite_Core_ExecuteNonQuery(ro, "CREATE TABLE t(x)", NULL, 0, NULL, 0);
+    int wrc = sqlite_core_execute_non_query(ro, "CREATE TABLE t(x)", NULL, 0, NULL, 0);
     CHECK(wrc != SQLITE_OK && wrc != SQLITE_MISUSE, "write on read-only handle fails");
-    SqlLite_Core_Close(ro);
+    sqlite_core_close(ro);
 }
 
 /* ------------------------------------------------------------------ */
@@ -80,31 +80,31 @@ static void test_scalar_int64_and_rows(void)
     printf("ExecuteScalar / ExecuteNonQuery parity\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
     CHECK(db != NULL, "db opened");
 
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "CREATE TABLE big(v INTEGER)", NULL, 0, NULL, 0) >= 0,
+    CHECK(sqlite_core_execute_non_query(db, "CREATE TABLE big(v INTEGER)", NULL, 0, NULL, 0) >= 0,
           "CREATE TABLE executes");
 
     /* 64-bit scalar value (used to truncate to 32 bits) */
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "INSERT INTO big VALUES (9007199254740993)", NULL, 0, NULL, 0) == 1,
+    CHECK(sqlite_core_execute_non_query(db, "INSERT INTO big VALUES (9007199254740993)", NULL, 0, NULL, 0) == 1,
           "INSERT reports 1 affected row");
-    SqlLiteCoreParam out;
+    sqlite_core_param_t out;
     memset(&out, 0, sizeof(out));
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT v FROM big", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT v FROM big", NULL, 0, &out, NULL, 0);
     CHECK(rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_INT && out.value.iVal == 9007199254740993LL,
           "ExecuteScalar returns the exact 64-bit value");
 
     /* empty result set -> NULL (.NET parity) */
     memset(&out, 0, sizeof(out));
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT v FROM big WHERE 1=0", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT v FROM big WHERE 1=0", NULL, 0, &out, NULL, 0);
     CHECK(rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_NULL, "empty result set yields NULL");
 
     /* transaction text is rejected (.NET parity) */
-    int brc = SqlLite_Core_ExecuteNonQuery(db, "BEGIN", NULL, 0, NULL, 0);
+    int brc = sqlite_core_execute_non_query(db, "BEGIN", NULL, 0, NULL, 0);
     CHECK(brc == SQLITE_MISUSE, "plain BEGIN text is rejected");
 
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 }
 
 /* ------------------------------------------------------------------ */
@@ -113,8 +113,8 @@ static void test_insert_json(void)
     printf("Insert_Json (was dropping the last char of every key/value)\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db,
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(sqlite_core_execute_non_query(db,
               "CREATE TABLE personas(id INTEGER PRIMARY KEY, nombre TEXT, ciudad TEXT, saldo REAL)",
               NULL, 0, NULL, 0) >= 0, "CREATE TABLE personas");
 
@@ -122,13 +122,13 @@ static void test_insert_json(void)
         "[{\"id\":1,\"nombre\":\"Zúrico Pérez\",\"ciudad\":\"Málaga\",\"saldo\":1250.5},"
         "{\"id\":2,\"nombre\":\"Ana\",\"ciudad\":\"Bogotá\",\"saldo\":-3.25}]";
 
-    int rows = SqlLite_Core_Insert_Json(db, "personas", json, NULL, 0);
+    int rows = sqlite_core_insert_json(db, "personas", json, NULL, 0);
     CHECK(rows == 2, "two rows inserted");
 
     char nombre_buf[256];
-    SqlLiteCoreParam out;
+    sqlite_core_param_t out;
     out_param_init(&out, nombre_buf, sizeof(nombre_buf));
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT nombre FROM personas WHERE id=1", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT nombre FROM personas WHERE id=1", NULL, 0, &out, NULL, 0);
     /* TEXT out is converted to ANSI on Windows, kept as UTF-8 elsewhere */
 #if defined(_WIN32)
     const char *expected_name = "Z\xFArico P\xE9rez";
@@ -140,24 +140,24 @@ static void test_insert_json(void)
           "first row value round-trips exactly (last char kept)");
 
     double saldo = 0;
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT saldo FROM personas WHERE id=2", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT saldo FROM personas WHERE id=2", NULL, 0, &out, NULL, 0);
     saldo = (rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_DOUBLE) ? out.value.dVal : 0;
     CHECK(saldo == -3.25, "REAL value is faithful");
 
     /* duplicate PK on the second row rolls the whole batch back */
-    int rows2 = SqlLite_Core_Insert_Json(db, "personas",
+    int rows2 = sqlite_core_insert_json(db, "personas",
         "[{\"id\":10,\"nombre\":\"Nueva\"},{\"id\":1,\"nombre\":\"Dup\"}]", NULL, 0);
     CHECK(rows2 < 0, "constraint violation is reported as an error");
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT COUNT(*) FROM personas WHERE id=10", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT COUNT(*) FROM personas WHERE id=10", NULL, 0, &out, NULL, 0);
     CHECK(rc == SQLITE_OK && out.value.iVal == 0, "failed batch rolled back completely");
 
     /* not-an-array input is rejected, no injection happens */
-    int rows3 = SqlLite_Core_Insert_Json(db, "personas", "{\"id\":1}", NULL, 0);
+    int rows3 = sqlite_core_insert_json(db, "personas", "{\"id\":1}", NULL, 0);
     CHECK(rows3 < 0, "object instead of array is rejected");
-    int rows4 = SqlLite_Core_Insert_Json(db, "personas", "[]", NULL, 0);
+    int rows4 = sqlite_core_insert_json(db, "personas", "[]", NULL, 0);
     CHECK(rows4 == 0, "empty array inserts nothing");
 
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 }
 
 /* ------------------------------------------------------------------ */
@@ -166,29 +166,29 @@ static void test_insert_json_injection(void)
     printf("Insert_Json injection guard (table/column names)\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "CREATE TABLE app_data(id INTEGER, v TEXT)", NULL, 0, NULL, 0) >= 0,
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(sqlite_core_execute_non_query(db, "CREATE TABLE app_data(id INTEGER, v TEXT)", NULL, 0, NULL, 0) >= 0,
           "CREATE TABLE app_data");
 
-    int rows = SqlLite_Core_Insert_Json(db, "app_data", "[{\"id\":1,\"v\":\"legit\"}]", NULL, 0);
+    int rows = sqlite_core_insert_json(db, "app_data", "[{\"id\":1,\"v\":\"legit\"}]", NULL, 0);
     CHECK(rows == 1, "legit insert works");
 
     /* hostile table name must not execute the injected statement */
-    int bad = SqlLite_Core_Insert_Json(db, "x\"); DROP TABLE app_data; --", "[{\"id\":2,\"v\":\"pwn\"}]", NULL, 0);
+    int bad = sqlite_core_insert_json(db, "x\"); DROP TABLE app_data; --", "[{\"id\":2,\"v\":\"pwn\"}]", NULL, 0);
     CHECK(bad < 0, "hostile table name fails with an error");
     CHECK(table_exists(db, "app_data"), "app_data survives the hostile table name");
 
     /* hostile column key must not break the statement structure */
-    int bad2 = SqlLite_Core_Insert_Json(db, "app_data", "[{\"id\":3,\"v\":\"a\"}); DROP TABLE app_data; --\"}]", NULL, 0);
+    int bad2 = sqlite_core_insert_json(db, "app_data", "[{\"id\":3,\"v\":\"a\"}); DROP TABLE app_data; --\"}]", NULL, 0);
     CHECK(bad2 < 0 || table_exists(db, "app_data"), "hostile column key does not drop the table");
     CHECK(table_exists(db, "app_data"), "app_data survives the hostile column key");
 
-    SqlLiteCoreParam out;
+    sqlite_core_param_t out;
     memset(&out, 0, sizeof(out));
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT COUNT(*) FROM app_data", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT COUNT(*) FROM app_data", NULL, 0, &out, NULL, 0);
     CHECK(rc == SQLITE_OK && out.value.iVal == 1, "only the legit row was inserted");
 
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 }
 
 /* ------------------------------------------------------------------ */
@@ -197,35 +197,35 @@ static void test_insert_json_transaction_guard(void)
     printf("Insert_Json transaction guard (used to steal the caller's transaction)\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "CREATE TABLE tx_t(v TEXT)", NULL, 0, NULL, 0) >= 0,
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(sqlite_core_execute_non_query(db, "CREATE TABLE tx_t(v TEXT)", NULL, 0, NULL, 0) >= 0,
           "CREATE TABLE tx_t");
 
     /* Start an ambient transaction, then call Insert_Json: it must join it */
-    CHECK(SqlLite_Core_BeginTransaction(db, NULL, 0) == 1, "ambient transaction started");
-    int rows = SqlLite_Core_Insert_Json(db, "tx_t", "[{\"v\":\"a\"},{\"v\":\"b\"}]", NULL, 0);
+    CHECK(sqlite_core_begin_transaction(db, NULL, 0) == 1, "ambient transaction started");
+    int rows = sqlite_core_insert_json(db, "tx_t", "[{\"v\":\"a\"},{\"v\":\"b\"}]", NULL, 0);
     CHECK(rows == 2, "Insert_Json joins the ambient transaction");
 
     /* Rollback must still undo everything (Insert_Json did not commit) */
-    CHECK(SqlLite_Core_Rollback(db, NULL, 0) == 1, "rollback succeeds");
-    SqlLiteCoreParam out;
+    CHECK(sqlite_core_rollback_transaction(db, NULL, 0) == 1, "rollback succeeds");
+    sqlite_core_param_t out;
     memset(&out, 0, sizeof(out));
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT COUNT(*) FROM tx_t", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT COUNT(*) FROM tx_t", NULL, 0, &out, NULL, 0);
     CHECK(rc == SQLITE_OK && out.value.iVal == 0, "ambient rollback undid the batch (no stolen commit)");
 
     /* Without an ambient transaction Insert_Json commits by itself */
-    rows = SqlLite_Core_Insert_Json(db, "tx_t", "[{\"v\":\"c\"}]", NULL, 0);
+    rows = sqlite_core_insert_json(db, "tx_t", "[{\"v\":\"c\"}]", NULL, 0);
     CHECK(rows == 1, "standalone Insert_Json works");
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT COUNT(*) FROM tx_t", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT COUNT(*) FROM tx_t", NULL, 0, &out, NULL, 0);
     CHECK(rc == SQLITE_OK && out.value.iVal == 1, "standalone Insert_Json committed");
 
     /* Nested BeginTransaction is rejected */
-    CHECK(SqlLite_Core_BeginTransaction(db, NULL, 0) == 1, "begin");
-    CHECK(SqlLite_Core_BeginTransaction(db, NULL, 0) != 1, "nested begin rejected");
-    CHECK(SqlLite_Core_Rollback(db, NULL, 0) == 1, "rollback");
-    CHECK(SqlLite_Core_Rollback(db, NULL, 0) != 1, "stray rollback rejected");
+    CHECK(sqlite_core_begin_transaction(db, NULL, 0) == 1, "begin");
+    CHECK(sqlite_core_begin_transaction(db, NULL, 0) != 1, "nested begin rejected");
+    CHECK(sqlite_core_rollback_transaction(db, NULL, 0) == 1, "rollback");
+    CHECK(sqlite_core_rollback_transaction(db, NULL, 0) != 1, "stray rollback rejected");
 
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 }
 
 /* ------------------------------------------------------------------ */
@@ -234,19 +234,19 @@ static void test_json_roundtrip(void)
     printf("ExecuteReaderToJSON + escaping (was emitting invalid JSON)\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db,
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(sqlite_core_execute_non_query(db,
               "CREATE TABLE rt(a INTEGER, b TEXT, c REAL, d TEXT)",
               NULL, 0, NULL, 0) >= 0, "CREATE TABLE rt");
 
     /* tricky values: quotes, backslashes, newline+tab (via char()), unicode, NULL */
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "INSERT INTO rt VALUES (1, 'quote\" and \\ back', 3.5, 'línea1' || char(10) || 'línea2' || char(9) || 'tab')",
+    CHECK(sqlite_core_execute_non_query(db, "INSERT INTO rt VALUES (1, 'quote\" and \\ back', 3.5, 'línea1' || char(10) || 'línea2' || char(9) || 'tab')",
               NULL, 0, NULL, 0) >= 0, "INSERT tricky row");
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "INSERT INTO rt VALUES (9007199254740993, 'x', 0, NULL)",
+    CHECK(sqlite_core_execute_non_query(db, "INSERT INTO rt VALUES (9007199254740993, 'x', 0, NULL)",
               NULL, 0, NULL, 0) >= 0, "INSERT row with NULL");
 
     char *json = NULL;
-    int rows = SqlLite_Core_ExecuteReaderToJSON(db, "SELECT a, b, c, d FROM rt ORDER BY a", NULL, 0, &json, NULL, 0);
+    int rows = sqlite_core_execute_reader_to_json(db, "SELECT a, b, c, d FROM rt ORDER BY a", NULL, 0, &json, NULL, 0);
     CHECK(rows == 2 && json != NULL, "reader to json returns 2 rows");
     if (json)
     {
@@ -259,22 +259,22 @@ static void test_json_roundtrip(void)
         CHECK(json[0] == '[' && json[strlen(json) - 1] == ']', "document is wrapped in an array");
 
         /* round-trip: feed the JSON straight back into another table */
-        CHECK(SqlLite_Core_ExecuteNonQuery(db, "CREATE TABLE rt2(a INTEGER, b TEXT, c REAL, d TEXT)",
+        CHECK(sqlite_core_execute_non_query(db, "CREATE TABLE rt2(a INTEGER, b TEXT, c REAL, d TEXT)",
                   NULL, 0, NULL, 0) >= 0, "CREATE TABLE rt2");
-        int back = SqlLite_Core_Insert_Json(db, "rt2", json, NULL, 0);
+        int back = sqlite_core_insert_json(db, "rt2", json, NULL, 0);
         CHECK(back == 2, "generated JSON is valid input for Insert_Json");
 
         char b_buf[512];
-        SqlLiteCoreParam out;
+        sqlite_core_param_t out;
         out_param_init(&out, b_buf, sizeof(b_buf));
-        rc = SqlLite_Core_ExecuteScalar(db, "SELECT b FROM rt2 WHERE a=1", NULL, 0, &out, NULL, 0);
+        rc = sqlite_core_execute_scalar(db, "SELECT b FROM rt2 WHERE a=1", NULL, 0, &out, NULL, 0);
         CHECK(rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_TEXT &&
               out.value.blob_or_text.ptr != NULL &&
               strcmp(out.value.blob_or_text.ptr, "quote\" and \\ back") == 0,
               "escaped value round-trips byte-exact");
         char d_buf[512];
         out_param_init(&out, d_buf, sizeof(d_buf));
-        rc = SqlLite_Core_ExecuteScalar(db, "SELECT d FROM rt2 WHERE a=1", NULL, 0, &out, NULL, 0);
+        rc = sqlite_core_execute_scalar(db, "SELECT d FROM rt2 WHERE a=1", NULL, 0, &out, NULL, 0);
 #if defined(_WIN32)
         const char *expected_d = "l\xEDnea1\nl\xEDnea2\ttab";
 #else
@@ -283,20 +283,20 @@ static void test_json_roundtrip(void)
         CHECK(rc == SQLITE_OK && out.value.blob_or_text.ptr != NULL &&
               strcmp(out.value.blob_or_text.ptr, expected_d) == 0,
               "newline/tab value round-trips byte-exact");
-        rc = SqlLite_Core_ExecuteScalar(db, "SELECT d FROM rt2 WHERE a=9007199254740993", NULL, 0, &out, NULL, 0);
+        rc = sqlite_core_execute_scalar(db, "SELECT d FROM rt2 WHERE a=9007199254740993", NULL, 0, &out, NULL, 0);
         CHECK(rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_NULL, "null round-trips as NULL");
 
-        SqlLite_Core_FreeString(json);
+        sqlite_core_string_free(json);
     }
 
     /* empty result set -> "[]" */
     char *empty = NULL;
-    int empty_rows = SqlLite_Core_ExecuteReaderToJSON(db, "SELECT a FROM rt WHERE 1=0", NULL, 0, &empty, NULL, 0);
+    int empty_rows = sqlite_core_execute_reader_to_json(db, "SELECT a FROM rt WHERE 1=0", NULL, 0, &empty, NULL, 0);
     CHECK(empty_rows == 0 && empty != NULL && strcmp(empty, "[]") == 0, "empty result set yields []");
     if (empty)
-        SqlLite_Core_FreeString(empty);
+        sqlite_core_string_free(empty);
 
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 }
 
 /* ------------------------------------------------------------------ */
@@ -305,8 +305,8 @@ static void test_getblob(void)
     printf("GetBlob (was not compiled at all)\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "CREATE TABLE files(name TEXT, data BLOB)", NULL, 0, NULL, 0) >= 0,
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(sqlite_core_execute_non_query(db, "CREATE TABLE files(name TEXT, data BLOB)", NULL, 0, NULL, 0) >= 0,
           "CREATE TABLE files");
 
     unsigned char blob[8] = {0x00, 0x01, 0xFE, 0xFF, 0x10, 0x7F, 0x80, 0x42};
@@ -315,19 +315,19 @@ static void test_getblob(void)
              blob[0], blob[1], blob[2], blob[3], blob[4], blob[5], blob[6], blob[7]);
     char sql[256];
     snprintf(sql, sizeof(sql), "INSERT INTO files VALUES ('a', %s)", hex);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, sql, NULL, 0, NULL, 0) >= 0, "INSERT blob");
+    CHECK(sqlite_core_execute_non_query(db, sql, NULL, 0, NULL, 0) >= 0, "INSERT blob");
 
     unsigned char dest[8] = {0};
     int copied = 0;
-    rc = SqlLite_Core_GetBlob(db, "SELECT data FROM files WHERE name='a'", dest, sizeof(dest), &copied);
+    rc = sqlite_core_get_blob(db, "SELECT data FROM files WHERE name='a'", dest, sizeof(dest), &copied);
     CHECK(rc == SQLITE_OK && copied == 8 && memcmp(dest, blob, 8) == 0, "blob round-trips exactly");
 
     unsigned char small[4] = {0};
     copied = 0;
-    rc = SqlLite_Core_GetBlob(db, "SELECT data FROM files WHERE name='a'", small, sizeof(small), &copied);
-    CHECK(rc == -2 && copied == 4, "small buffer reports -2 and copies what fits");
+    rc = sqlite_core_get_blob(db, "SELECT data FROM files WHERE name='a'", small, sizeof(small), &copied);
+    CHECK(rc == SQLITE_CORE_BUFFER_TOO_SMALL && copied == 4, "small buffer reports BUFFER_TOO_SMALL and copies what fits");
 
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 }
 
 /* ------------------------------------------------------------------ */
@@ -351,18 +351,18 @@ static void test_long_string_no_stack_overflow(void)
         src[pos] = '\0';
         size_t src_len = (size_t)pos;
 
-        char *ansi = SqlLite_Core_UTF8ToAnsi(src);
+        char *ansi = sqlite_core_string_utf8_to_ansi(src);
         CHECK(ansi != NULL, "long UTF-8 -> ANSI conversion succeeds on the heap");
         if (ansi)
         {
             /* every U+00E9 becomes one 0xE9 byte plus alternating 'A' */
             CHECK(strlen(ansi) == src_len - src_len / 3, "converted length is correct");
-            char *utf8 = SqlLite_Core_AnsiToUTF8(ansi);
+            char *utf8 = sqlite_core_string_ansi_to_utf8(ansi);
             CHECK(utf8 != NULL, "long ANSI -> UTF-8 conversion succeeds");
             if (utf8)
                 CHECK(strcmp(utf8, src) == 0, "long string round-trips exactly");
-            SqlLite_Core_FreeString(utf8);
-            SqlLite_Core_FreeString(ansi);
+            sqlite_core_string_free(utf8);
+            sqlite_core_string_free(ansi);
         }
         free(src);
     }
@@ -374,17 +374,17 @@ static void test_ansi_sql_and_uri(void)
     printf("ANSI SQL + URI readonly open\n");
     fresh_db();
     int rc = 0;
-    sqlite3 *db = SqlLite_Core_Open_Or_Create(DB_FILE, &rc);
-    CHECK(SqlLite_Core_ExecuteNonQuery(db, "CREATE TABLE t(v TEXT)", NULL, 0, NULL, 0) >= 0, "create");
+    sqlite3 *db = sqlite_core_open_or_create(DB_FILE, &rc);
+    CHECK(sqlite_core_execute_non_query(db, "CREATE TABLE t(v TEXT)", NULL, 0, NULL, 0) >= 0, "create");
 
     /* accented SQL text through ExecuteNonQuery (conversion was missing here) */
-    int rows = SqlLite_Core_ExecuteNonQuery(db, "INSERT INTO t VALUES ('Café')", NULL, 0, NULL, 0);
+    int rows = sqlite_core_execute_non_query(db, "INSERT INTO t VALUES ('Café')", NULL, 0, NULL, 0);
     CHECK(rows == 1, "ANSI SQL executes on ExecuteNonQuery");
 
     char v_buf[256];
-    SqlLiteCoreParam out;
+    sqlite_core_param_t out;
     out_param_init(&out, v_buf, sizeof(v_buf));
-    rc = SqlLite_Core_ExecuteScalar(db, "SELECT v FROM t", NULL, 0, &out, NULL, 0);
+    rc = sqlite_core_execute_scalar(db, "SELECT v FROM t", NULL, 0, &out, NULL, 0);
 #if defined(_WIN32)
     CHECK(rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_TEXT &&
           out.value.blob_or_text.len == 4 &&
@@ -393,43 +393,43 @@ static void test_ansi_sql_and_uri(void)
     CHECK(rc == SQLITE_OK && out.type == SQLITE_CORE_TYPE_TEXT &&
           strcmp(out.value.blob_or_text.ptr, "Caf\xC3\xA9") == 0, "scalar text is returned in UTF-8");
 #endif
-    SqlLite_Core_Close(db);
+    sqlite_core_close(db);
 
     /* URI read-only: no global sqlite3_config side effect anymore */
-    sqlite3 *u = SqlLite_Core_Open_Uri_ReadOnly("file:regression.db?mode=ro", &rc);
+    sqlite3 *u = sqlite_core_open_uri_readonly("file:regression.db?mode=ro", &rc);
     CHECK(u != NULL && rc == SQLITE_OK, "URI read-only open succeeds");
     if (u)
     {
-        CHECK(SqlLite_Core_IsReadonly(u) == 1, "URI connection is read-only");
-        int w = SqlLite_Core_ExecuteNonQuery(u, "INSERT INTO t VALUES ('x')", NULL, 0, NULL, 0);
+        CHECK(sqlite_core_is_readonly(u) == 1, "URI connection is read-only");
+        int w = sqlite_core_execute_non_query(u, "INSERT INTO t VALUES ('x')", NULL, 0, NULL, 0);
         CHECK(w != SQLITE_OK && w != SQLITE_MISUSE, "write fails on URI read-only");
-        SqlLite_Core_Close(u);
+        sqlite_core_close(u);
     }
 
     /* and the same process keeps working with regular connections after a
      * URI open (the removed global config used to leak process-wide state) */
-    sqlite3 *again = SqlLite_Core_Open(DB_FILE, &rc);
+    sqlite3 *again = sqlite_core_open(DB_FILE, &rc);
     CHECK(again != NULL && rc == SQLITE_OK, "regular open still works after URI usage");
     if (again)
-        SqlLite_Core_Close(again);
+        sqlite_core_close(again);
 }
 
 /* ------------------------------------------------------------------ */
 static void test_version(void)
 {
     printf("Version strings\n");
-    CHECK(strcmp(SqlLite_Core_Version(), "1.0.0") == 0, "library version is 1.0.0");
-    CHECK(strstr(SqlLite_Core_SqliteVersion(), "3.54") != NULL, "engine version exposed separately");
+    CHECK(strcmp(sqlite_core_version(), "1.0.0") == 0, "library version is 1.0.0");
+    CHECK(strstr(sqlite_core_sqlite_version(), "3.54") != NULL, "engine version exposed separately");
 }
 
 /* ------------------------------------------------------------------ */
 static void test_encoding_detect(void)
 {
     printf("Absorbed encoding detection\n");
-    CHECK(StrDetectEncoding("plain ascii") == ENCODING_ASCII, "ascii detected");
-    CHECK(StrDetectEncoding("caf\xC3\xA9") == ENCODING_UTF8, "utf-8 detected");
-    CHECK(StrDetectEncoding("caf\xE9") == ENCODING_ANSI, "ansi detected");
-    CHECK(StrDetectEncoding("") == ENCODING_UNKNOWN, "empty string reports unknown");
+    CHECK(sqlite_core_detect_encoding("plain ascii") == ENCODING_ASCII, "ascii detected");
+    CHECK(sqlite_core_detect_encoding("caf\xC3\xA9") == ENCODING_UTF8, "utf-8 detected");
+    CHECK(sqlite_core_detect_encoding("caf\xE9") == ENCODING_ANSI, "ansi detected");
+    CHECK(sqlite_core_detect_encoding("") == ENCODING_UNKNOWN, "empty string reports unknown");
 }
 
 /* ------------------------------------------------------------------ */
@@ -437,7 +437,7 @@ int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0); /* unbuffered: see progress even on crashes */
     printf("libsqlite3 regression tests\n");
-    printf("library %s / sqlite %s\n\n", SqlLite_Core_Version(), SqlLite_Core_SqliteVersion());
+    printf("library %s / sqlite %s\n\n", sqlite_core_version(), sqlite_core_sqlite_version());
 
     test_isreadonly();
     test_scalar_int64_and_rows();

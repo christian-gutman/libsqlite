@@ -3,16 +3,16 @@
 
 #include "sqlite_core.h" 
 
-CORE_API const char *SqlLite_Core_CleanPrefix(const char *name);
+SQLITE_CORE_API const char *sqlite_core_param_clean_prefix(const char *name);
 
-void SqlLite_Core_BindParameters(
+void sqlite_core_param_bind(
     sqlite3_stmt *stmt,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount);
 
-void SqlLite_Core_ProcessOutputParameters(
+void sqlite_core_param_process_outputs(
     sqlite3_stmt *stmt,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount);
     
 #endif // SQLITE_CORE_PARAMETER_H

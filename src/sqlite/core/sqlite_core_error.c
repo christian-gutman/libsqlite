@@ -1,6 +1,6 @@
 #include "sqlite_core_error.h"
 
-int SqlLite_Core_GetLastErrorCode(sqlite3 *db)
+int sqlite_core_error_code(sqlite3 *db)
 {
     if (db == NULL)
     {
@@ -8,7 +8,7 @@ int SqlLite_Core_GetLastErrorCode(sqlite3 *db)
     }
     return sqlite3_errcode(db);
 }
-int SqlLite_Core_GetLastErrorCodeExtended(sqlite3 *db)
+int sqlite_core_error_code_extended(sqlite3 *db)
 {
     if (db == NULL)
     {
@@ -17,7 +17,7 @@ int SqlLite_Core_GetLastErrorCodeExtended(sqlite3 *db)
     return sqlite3_extended_errcode(db);
 }
 
-const char* SqlLite_Core_GetLastErrorMsg(sqlite3 *db)
+const char* sqlite_core_error_message(sqlite3 *db)
 {
     if (db == NULL)
     {

@@ -2,11 +2,11 @@
 
 /*
  * String utilities. Returned buffers are allocated by the SQLite allocator
- * and must be released with SqlLite_Core_FreeString().
+ * and must be released with sqlite_core_string_free().
  */
 
 /* printf-style formatter. Returns a heap string (free with FreeString). */
-char *SqlLite_Core_Format(const char *format, ...)
+char *sqlite_core_string_format(const char *format, ...)
 {
     if (format == NULL)
     {
@@ -21,7 +21,7 @@ char *SqlLite_Core_Format(const char *format, ...)
 
 /* Concatenates two strings into a new heap buffer. NULL operands are
  * treated as empty strings. */
-char *SqlLite_Core_Concat(const char *str1, const char *str2)
+char *sqlite_core_string_concat(const char *str1, const char *str2)
 {
     if (str1 == NULL && str2 == NULL)
         return NULL;
@@ -34,7 +34,7 @@ char *SqlLite_Core_Concat(const char *str1, const char *str2)
 }
 
 /* Releases any string returned by this library (SQLite allocator). */
-void SqlLite_Core_FreeString(const char *input)
+void sqlite_core_string_free(const char *input)
 {
     if (input != NULL)
     {
@@ -44,7 +44,7 @@ void SqlLite_Core_FreeString(const char *input)
 
 /* Converts ANSI (Windows-1252 / active code page) text to UTF-8.
  * On non-Windows platforms input is assumed UTF-8 already and is copied. */
-char *SqlLite_Core_AnsiToUTF8(const char *ansi_str)
+char *sqlite_core_string_ansi_to_utf8(const char *ansi_str)
 {
     if (ansi_str == NULL)
     {
@@ -52,7 +52,7 @@ char *SqlLite_Core_AnsiToUTF8(const char *ansi_str)
     }
 
     /* Already ASCII or UTF-8: nothing to convert */
-    int encoding = StrDetectEncoding(ansi_str);
+    int encoding = sqlite_core_detect_encoding(ansi_str);
     if (encoding == ENCODING_ASCII || encoding == ENCODING_UTF8)
     {
         return sqlite3_mprintf("%s", ansi_str);
@@ -112,7 +112,7 @@ char *SqlLite_Core_AnsiToUTF8(const char *ansi_str)
 
 /* Converts UTF-8 text to ANSI (Windows-1252 / active code page).
  * On non-Windows platforms the string is copied (UTF-8 native). */
-char *SqlLite_Core_UTF8ToAnsi(const char *utf8_str)
+char *sqlite_core_string_utf8_to_ansi(const char *utf8_str)
 {
     if (utf8_str == NULL)
     {
@@ -120,7 +120,7 @@ char *SqlLite_Core_UTF8ToAnsi(const char *utf8_str)
     }
 
     /* Pure ASCII needs no conversion */
-    int encoding = StrDetectEncoding(utf8_str);
+    int encoding = sqlite_core_detect_encoding(utf8_str);
     if (encoding == ENCODING_ASCII)
     {
         return sqlite3_mprintf("%s", utf8_str);

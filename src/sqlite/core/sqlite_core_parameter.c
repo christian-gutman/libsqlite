@@ -1,6 +1,6 @@
 #include "sqlite_core_parameter.h"
 
-const char *SqlLite_Core_CleanPrefix(const char *name)
+const char *sqlite_core_param_clean_prefix(const char *name)
 {
     if (name == NULL)
     {
@@ -16,9 +16,9 @@ const char *SqlLite_Core_CleanPrefix(const char *name)
     return name;
 }
 
-void SqlLite_Core_BindParameters(
+void sqlite_core_param_bind(
     sqlite3_stmt *stmt,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount)
 { 
     if (stmt == NULL || params == NULL || paramCount <= 0)
@@ -35,7 +35,7 @@ void SqlLite_Core_BindParameters(
         if (name == NULL)
             continue;
 
-        const char *key_name = SqlLite_Core_CleanPrefix(name);
+        const char *key_name = sqlite_core_param_clean_prefix(name);
 
         for (int j = 0; j < paramCount; j++)
         {
@@ -53,7 +53,7 @@ void SqlLite_Core_BindParameters(
             }
             else
             {
-                is_match = (str_compare(key_name, params[j].name) == 0 || str_compare(name, params[j].name) == 0);
+                is_match = (sqlite_core_str_compare(key_name, params[j].name) == 0 || sqlite_core_str_compare(name, params[j].name) == 0);
             }
 
             if (is_match)
@@ -80,9 +80,9 @@ void SqlLite_Core_BindParameters(
 
                     if (pSrcText != NULL)
                     {
-                        if (StrDetectEncoding(pSrcText) == ENCODING_ANSI)
+                        if (sqlite_core_detect_encoding(pSrcText) == ENCODING_ANSI)
                         {
-                            char *converted_text = SqlLite_Core_AnsiToUTF8(pSrcText);
+                            char *converted_text = sqlite_core_string_ansi_to_utf8(pSrcText);
                             if (converted_text != NULL)
                             {
                                 pSrcText = converted_text;
@@ -95,7 +95,7 @@ void SqlLite_Core_BindParameters(
 
                     if (must_free)
                     {
-                        SqlLite_Core_FreeString((void *)pSrcText);
+                        sqlite_core_string_free((void *)pSrcText);
                     }
                     break;
                 }
@@ -110,9 +110,9 @@ void SqlLite_Core_BindParameters(
     }
 }
  
-void SqlLite_Core_ProcessOutputParameters(
+void sqlite_core_param_process_outputs(
     sqlite3_stmt *stmt,
-    SqlLiteCoreParam *params,
+    sqlite_core_param_t *params,
     int paramCount)
 {
   
@@ -135,7 +135,7 @@ void SqlLite_Core_ProcessOutputParameters(
         if (params[j].name == NULL)
             continue;
 
-        const char *key_name = SqlLite_Core_CleanPrefix(params[j].name);
+        const char *key_name = sqlite_core_param_clean_prefix(params[j].name);
 
         for (int c = 0; c < cols; c++)
         {
@@ -151,7 +151,7 @@ void SqlLite_Core_ProcessOutputParameters(
             }
             else
             {
-                is_match = (str_compare(col_name, key_name) == 0 || str_compare(col_name, params[j].name) == 0);
+                is_match = (sqlite_core_str_compare(col_name, key_name) == 0 || sqlite_core_str_compare(col_name, params[j].name) == 0);
             }
 
             if (is_match)
@@ -180,9 +180,9 @@ void SqlLite_Core_ProcessOutputParameters(
 
                     if (txt != NULL)
                     {
-                        if (StrDetectEncoding(txt) == ENCODING_UTF8)
+                        if (sqlite_core_detect_encoding(txt) == ENCODING_UTF8)
                         {
-                            char *converted_ansi = SqlLite_Core_UTF8ToAnsi(txt);
+                            char *converted_ansi = sqlite_core_string_utf8_to_ansi(txt);
                             if (converted_ansi != NULL)
                             {
                                 pSrcText = converted_ansi;
@@ -200,7 +200,7 @@ void SqlLite_Core_ProcessOutputParameters(
                         } 
                         if (must_free)
                         {
-                            SqlLite_Core_FreeString((void *)pSrcText);
+                            sqlite_core_string_free((void *)pSrcText);
                         }
                     }
                     break;

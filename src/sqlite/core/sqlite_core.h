@@ -22,9 +22,9 @@ extern "C" {
 
 #include "compat/sqlite_compat.h"
 
-CORE_API const char *SqlLite_Core_Version();
+SQLITE_CORE_API const char *sqlite_core_version();
 
-CORE_API const char *SqlLite_Core_SqliteVersion();
+SQLITE_CORE_API const char *sqlite_core_sqlite_version();
  
 typedef struct sqlite3 sqlite3;
 typedef struct sqlite3_stmt sqlite3_stmt;
@@ -35,19 +35,19 @@ typedef enum {
     SQLITE_CORE_TYPE_DOUBLE = 4,
     SQLITE_CORE_TYPE_TEXT = 6,
     SQLITE_CORE_TYPE_BLOB = 8
-} SqlLiteCoreParamType;
+} sqlite_core_param_type_t;
 
 typedef enum {
     SQLITE_CORE_DIRECTION_INPUT = 1,
     SQLITE_CORE_DIRECTION_OUTPUT = 2,
     SQLITE_CORE_DIRECTION_INPUTOUTPUT = 3
-} SqlLiteCoreParameterDirection;
+} sqlite_core_param_direction_t;
 
 typedef struct {
     const char *name;
     int no_insensitive;
-    SqlLiteCoreParamType type;
-    SqlLiteCoreParameterDirection Direction;
+    sqlite_core_param_type_t type;
+    sqlite_core_param_direction_t Direction;
     union {
         double dVal;
         sqlite3_int64 iVal;
@@ -57,9 +57,9 @@ typedef struct {
             int max_len;
         } blob_or_text;
     } value;
-} SqlLiteCoreParam;
+} sqlite_core_param_t;
 
-typedef int(*SqlLiteCoreRowCallback)(
+typedef int(*sqlite_core_row_callback_fn)(
     sqlite3_stmt *stmt,
     int columns,
     int hasrows,

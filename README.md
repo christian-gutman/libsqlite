@@ -29,15 +29,15 @@ El proyecto elimina la necesidad de depender de controladores ODBC, proveedores 
 Las funciones están organizadas modularmente en los archivos fuente del proyecto según su rol:
 
 ### 🔌 Gestión de Conexiones (`sqlite_core_cnx`)
-* `SqlLite_Core_Open`, `SqlLite_Core_Open_ReadOnly`, `SqlLite_Core_Open_Or_Create`, `SqlLite_Core_Open_Uri_ReadOnly`: Funciones optimizadas para la apertura y control de archivos de base de datos bajo diferentes directivas de acceso.
-* `SqlLite_Core_Close`: Cierre seguro liberando los manejadores de SQLite.
-* `SqlLite_Core_IsReadonly` / `SqlLite_Core_SetBusyTimeout`: Control de estado y tiempos de espera para bloqueos de concurrencia.
+* `sqlite_core_open`, `sqlite_core_open_readonly`, `sqlite_core_open_or_create`, `sqlite_core_open_uri_readonly`: Funciones optimizadas para la apertura y control de archivos de base de datos bajo diferentes directivas de acceso.
+* `sqlite_core_close`: Cierre seguro liberando los manejadores de SQLite.
+* `sqlite_core_is_readonly` / `sqlite_core_set_busy_timeout`: Control de estado y tiempos de espera para bloqueos de concurrencia.
 
 ### ⚡ Ejecución de Comandos (`sqlite_core_command` / `sqlite_core_transaction`)
-* `SqlLite_Core_ExecuteCommand` / `SqlLite_Core_ExecuteNonQuery`: Ejecución directa de sentencias DDL y DML.
-* `SqlLite_Core_ExecuteScalar`: Recuperación rápida de valores únicos (como IDs autoincrementables o conteos).
-* `SqlLite_Core_ExecuteReader`: Recuperación orientada a filas para la lectura secuencial de datos.
-* `SqlLite_Core_BeginTransaction`, `SqlLite_Core_Commit`, `SqlLite_Core_Rollback`, `SqlLite_Core_ExecuteTransaction`: Control absoluto y seguro de operaciones atómicas.
+* `sqlite_core_execute_command` / `sqlite_core_execute_non_query`: Ejecución directa de sentencias DDL y DML.
+* `sqlite_core_execute_scalar`: Recuperación rápida de valores únicos (como IDs autoincrementables o conteos).
+* `sqlite_core_execute_reader`: Recuperación orientada a filas para la lectura secuencial de datos.
+* `sqlite_core_begin_transaction`, `sqlite_core_commit_transaction`, `sqlite_core_rollback_transaction`, `sqlite_core_execute_transaction`: Control absoluto y seguro de operaciones atómicas.
 
 ### 🔤 Utilidades, Cadenas y Errores
 * **Manejo de Strings (`sqlite_core_string`):** Funciones críticas de formateo, concatenación, liberación de memoria (`FreeString`) y codificación de páginas de texto.

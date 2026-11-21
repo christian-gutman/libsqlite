@@ -50,7 +50,7 @@ typedef struct {
     SqlLiteCoreParameterDirection Direction;
     union {
         double dVal;
-        int iVal;
+        sqlite3_int64 iVal;
         struct {
             char *ptr;
             int len;
@@ -72,6 +72,8 @@ typedef int(*SqlLiteCoreRowCallback)(
 #include "sqlite_core_parameter.h"
 #include "sqlite_core_command.h"
 #include "sqlite_core_transaction.h"
+#include "sqlite_core_builder.h"
+#include "sqlite_core_field.h"
 
 #ifdef __cplusplus
 }

@@ -39,6 +39,29 @@ contract for bug fixes and tests.
 - Text parameters are converted to UTF-8 before binding (ANSI input is
   detected, not assumed); the value stored in the parameter struct is never
   mutated by the library.
+- Integer values are 64-bit end to end (`value.iVal` is `sqlite3_int64`),
+  matching .NET `long`.
+- **TEXT results in `ExecuteScalar`**: the caller must provide
+  `value.blob_or_text.ptr` and `max_len`; the value is copied there (values
+  larger than `max_len - 1` are silently truncated). Without a buffer the
+  TEXT value is dropped and only the type is reported.
+
+## JSON
+
+- `ExecuteReaderToJSON` returns a UTF-8 JSON array of objects (RFC 8259
+  escaped) and `[]` for an empty result set; the string is heap-allocated by
+  the SQLite allocator and released with `FreeString`.
+- `Insert_Json` parses server-side via SQLite JSON1 (nested documents,
+  escaped strings and numeric formats handled natively), inserts inside a
+  transaction it owns only when no transaction is active, and returns the
+  number of inserted rows or a **negative** SQLite error code.
+- Table and column identifiers are quoted as SQLite identifiers; extraction
+  paths are bound parameters, so key names can never alter the statement.
+
+## Encoding detection
+
+- `StrDetectEncoding` returns `ENCODING_UNKNOWN` for empty or NULL input,
+  ASCII/UTF-8/ANSI otherwise. Conversion helpers accept that input safely.
 
 ## Errors
 

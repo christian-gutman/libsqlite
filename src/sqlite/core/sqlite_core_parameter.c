@@ -69,7 +69,7 @@ void SqlLite_Core_BindParameters(
                     break;
 
                 case SQLITE_CORE_TYPE_INT:
-                    sqlite3_bind_int(stmt, i, params[j].value.iVal);
+                    sqlite3_bind_int64(stmt, i, params[j].value.iVal);
                     break;
 
                 case SQLITE_CORE_TYPE_TEXT:
@@ -161,7 +161,7 @@ void SqlLite_Core_ProcessOutputParameters(
                 {
                 case SQLITE_INTEGER:
                     params[j].type = SQLITE_CORE_TYPE_INT;
-                    params[j].value.iVal = sqlite3_column_int(stmt, c);
+                    params[j].value.iVal = sqlite3_column_int64(stmt, c);
                     break;
 
                 case SQLITE_FLOAT:

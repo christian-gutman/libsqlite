@@ -27,4 +27,7 @@ SqlLite_Core_GetLastErrorCode  ; sqlite_core_error
     SqlLite_Core_Version  ; sqlite_core
     SqlLite_Core_SqliteVersion  ; sqlite_core
     SqlLite_Core_JsonWriterCallback ; sqlite_core_builder
+    SqlLite_Core_ExecuteReaderToJSON ; sqlite_core_builder
+    SqlLite_Core_Insert_Json ; sqlite_core_builder
+    SqlLite_Core_GetBlob ; sqlite_core_field
     

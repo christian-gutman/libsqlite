@@ -1,34 +1,22 @@
 #include "sqlite_core_transaction.h"
 
+/* Begins a transaction (BEGIN IMMEDIATE) on the connection.
+ * Fails if a transaction is already active. */
 int SqlLite_Core_BeginTransaction(sqlite3 *db, char *err_buf, int err_buf_max) {
-     /* 
-     * [txexpected = 1]: Para iniciar una nueva transacción (BEGIN), el estado de 
-     * Autocommit esperado debe ser 1 (Encendido/Libre). 
-     * Si actualmente está en 0 (Transacción activa), significa que el desarrollador 
-     * intentó hacer un doble BEGIN secuencial. El validador interceptará esta 
-     * discrepancia y abortará inmediatamente con código -1, impidiendo el error del motor.
-     */
-    return SqlLite_Core_ExecuteTransaction(db, "BEGIN IMMEDIATE TRANSACTION;",1, err_buf, err_buf_max);
+    /* [txexpected = 1]: to start a new transaction, autocommit must be on
+     * (no active transaction). A nested BEGIN is rejected with -1. */
+    return SqlLite_Core_ExecuteTransaction(db, "BEGIN IMMEDIATE TRANSACTION;", 1, err_buf, err_buf_max);
 }
 
+/* Commits the active transaction. Fails when no transaction is open. */
 int SqlLite_Core_Commit(sqlite3 *db, char *err_buf, int err_buf_max) {
-    /* 
-     * [txexpected = 0]: Para confirmar y guardar datos (COMMIT), el estado de 
-     * Autocommit esperado debe ser 0 (Apagado/Transacción activa). 
-     * Si actualmente está en 1 (Libre), significa que no existe ninguna transacción 
-     * previa en este handle. El validador detectará la anomalía, evitará inyectar un 
-     * comando COMMIT huérfano a SQLite y abortará devolviendo -1.
-     */
-    return SqlLite_Core_ExecuteTransaction(db, "COMMIT TRANSACTION;",0, err_buf, err_buf_max);
+    /* [txexpected = 0]: autocommit must be off (transaction active). A
+     * stray COMMIT is rejected with -1. */
+    return SqlLite_Core_ExecuteTransaction(db, "COMMIT TRANSACTION;", 0, err_buf, err_buf_max);
 }
 
+/* Rolls back the active transaction. Fails when no transaction is open. */
 int SqlLite_Core_Rollback(sqlite3 *db, char *err_buf, int err_buf_max) {
-      /* 
-     * [txexpected = 0]: Para deshacer operaciones en memoria (ROLLBACK), el estado de 
-     * Autocommit esperado debe ser de igual forma 0 (Apagado/Transacción activa). 
-     * Si actualmente está en 1 (Libre), significa que el motor no está procesando ningún 
-     * bloque transaccional que requiera ser revertido. Al igual que el Commit, el validador 
-     * frena la llamada devolviendo -1 y protegiendo el flujo lógico de la sesión.
-     */
+    /* [txexpected = 0]: same guard as Commit. */
     return SqlLite_Core_ExecuteTransaction(db, "ROLLBACK TRANSACTION;", 0, err_buf, err_buf_max);
 }

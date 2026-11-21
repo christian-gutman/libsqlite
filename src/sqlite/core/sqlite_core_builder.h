@@ -5,31 +5,35 @@
 
 /**
  * @struct SqlLiteStringContext
- * @brief Estructura de control para la gestión de memoria dinámica en el generador de cadenas, JSON. XML, CSV
- * 
- * Esta estructura mantiene el estado persistente del búfer acumulador en el Heap de la RAM.
- * Viaja de forma opaca encapsulada a través del parámetro genérico 'pUserContext' exigido
- * por la firma de tu función callback corporativa 'SqlLiteCoreRowCallback'.
+ * @brief Opaque memory context for the dynamic JSON string builder.
+ *
+ * Holds the heap buffer that accumulates the JSON output. It travels through
+ * the generic 'pUserContext' parameter required by the
+ * SqlLiteCoreRowCallback signature.
  */
 typedef struct {
-    char *string_ptr;         /**< Puntero base al bloque de caracteres del string JSON asignado en el Heap. */
-    size_t allocated_size;  /**< Capacidad total de memoria (en bytes) asignada actualmente por malloc/realloc. */
-    size_t current_len;     /**< Longitud real actual de la cadena acumulada (excluyendo el terminador nulo '\0'). */
-    int rows_processed;     /**< Contador acumulativo del número de registros (filas) procesados con éxito. */
-    int has_error;          /**< Bandera de estado crítico (Booleano). Se activa en 1 si ocurre un error Out-Of-Memory (OOM). */
+    char *string_ptr;         /**< Base pointer to the accumulated JSON buffer (heap). */
+    size_t allocated_size;    /**< Total capacity in bytes currently allocated. */
+    size_t current_len;       /**< Current string length, excluding the NUL terminator. */
+    int rows_processed;       /**< Number of rows successfully processed. */
+    int has_error;            /**< Error flag: set to 1 on out-of-memory. */
 } SqlLiteStringContext;
 
 
 /**
- * @brief Callback especializado para la generación dinámica de flujos JSON.
- *        Cumple estrictamente con la firma SqlLiteCoreRowCallback de tu arquitectura Core.
+ * @brief Specialized callback that builds a JSON array from a result set.
+ *        Matches the SqlLiteCoreRowCallback signature.
  *
- * @param[in] stmt          Statement activo de SQLite en estado SQLITE_ROW.
- * @param[in] columns       Número neto de columnas devueltas por la consulta.
- * @param[in] hasrows       Bandera de control de presencia de filas.
- * @param[in] pUserContext  Puntero genérico que encapsula el contexto de memoria (SqlLiteJsonContext*).
+ * Values are emitted as UTF-8 and properly escaped (RFC 8259): quotes,
+ * backslashes and control characters are escaped. NULL becomes JSON null.
+ * Integers use full 64-bit precision; doubles use %.17g (round-trip safe).
  *
- * @return int              0 para continuar con la siguiente fila, 1 para abortar por error (OOM).
+ * @param[in] stmt          Active SQLite statement positioned on a row.
+ * @param[in] columns       Number of columns in the result set.
+ * @param[in] hasrows       1 when a valid row is current, 0 for an empty set.
+ * @param[in] pUserContext  Pointer to the caller's SqlLiteStringContext.
+ *
+ * @return 0 to continue with the next row, 1 to abort (out of memory).
  */
 CORE_API int SqlLite_Core_JsonWriterCallback(
     sqlite3_stmt *stmt,
@@ -37,54 +41,70 @@ CORE_API int SqlLite_Core_JsonWriterCallback(
     int hasrows,
     void *pUserContext);
 
-    /**
- * @brief Procesa un arreglo JSON e inyecta dinámicamente sus registros en la tabla especificada.
- * 
- * Esta función realiza un análisis sintáctico lineal (parsing) en un solo barrido sobre una 
- * cadena JSON plana. Diseña de forma dinámica las instrucciones SQL estructuradas basándose 
- * en las propiedades del primer objeto detectado, eliminando la necesidad de esquemas cableados 
- * (hardcodeados) en tiempo de compilación.
- * 
- * @section seguridad Seguridad y Mitigación contra Inyecciones SQL
- * La función implementa de manera estricta el patrón de @b Sentencias @b Preparadas 
- * (Prepared Statements). En ningún escenario realiza concatenación de texto plano para inyectar 
- * los valores. En su lugar, utiliza comodines correlativos (`?`) y delega la asignación al motor 
- * binario mediante las funciones nativas de vinculación paramétrica (`sqlite3_bind_*`).
- * 
- * @section transacciones Rendimiento mediante Bloques Transaccionales
- * Con el fin de mitigar el impacto de E/S en el almacenamiento físico, el ciclo completo se encapsula 
- * de forma automática entre directivas `BEGIN TRANSACTION;` y `COMMIT;`. Esto agrupa múltiples 
- * inserciones en memoria RAM y realiza una única escritura atómica en el disco duro.
- * 
- * @param[in]  db           Puntero activo e inicializado a la conexión de la base de datos de SQLite. @b No @b puede @b ser @b NULL.
- * @param[in]  table_name   Cadena de caracteres (`C-String`) que especifica el nombre de la tabla destino en SQLite.
- * @param[in]  json_str     Cadena de caracteres que contiene el arreglo JSON estructurado (ej. `"[{"col": val}]"`).
- * @param[out] err_buf      Búfer de memoria asignado para almacenar el mensaje de error textual en caso de fallo. Puede ser `NULL`.
- * @param[in]  err_buf_max  Capacidad máxima en bytes reservada para @p err_buf para prevenir desbordamientos (*Buffer Overflow*).
- * 
- * @return int Cantidad de registros afectados o código de estado crítico:
- *         @retval >=0  Operación exitosa. Devuelve el número total de filas (objetos) insertadas en la base de datos.
- *         @retval SQLITE_MISUSE (21) Mal uso de la interfaz de SQLite o punteros críticos obligatorios pasados como @c NULL.
- *         @retval SQLITE_NOMEM (7) Fallo del sistema operativo al intentar redimensionar o asignar memoria en el Heap.
- *         @retval Otros Códigos Nativos Devuelve el código de error producido por el motor de SQLite (ej. fallos de constraints).
- * 
- * @note Si la inserción de una sola fila falla debido a violaciones de integridad (ej. una llave primaria duplicada 
- *       o una restricción @c NOT @c NULL), se ejecuta una llamada de contingencia a @c ROLLBACK; deshaciendo por 
- *       completo la tanda completa para evitar la corrupción o inconsistencia parcial de los datos.
- * 
- * @warning Los valores string extraídos del JSON se transfieren a SQLite utilizando la bandera @c SQLITE_TRANSIENT. 
- *          Esto fuerza a SQLite a realizar una copia interna de los datos, garantizando la seguridad de la memoria 
- *          pero incrementando marginalmente el consumo de RAM en payloads masivos.
- * 
- * @see SqlLite_Core_ExecuteReaderToJSON
- */
 
-int SqlLite_Core_Insert_Json(
+/**
+ * @brief Executes a query and returns its result set as a JSON array.
+ *
+ * The produced document is a JSON array of objects:
+ *   [\n  {"col1": 1, "col2": "text"},\n  {"col1": 2, "col2": null}\n]
+ * An empty result set produces "[]". Column names come from the result set
+ * metadata; values are UTF-8 and RFC 8259 escaped.
+ *
+ * @param[in]  db            Open database handle. Must not be NULL.
+ * @param[in]  sql           Query text (single statement, ANSI or UTF-8).
+ * @param[in]  params        Optional named parameters (may be NULL).
+ * @param[in]  paramCount    Number of entries in params.
+ * @param[out] out_json      Receives the heap-allocated JSON string
+ *                           (release with SqlLite_Core_FreeString).
+ *                           Set to NULL on failure.
+ * @param[out] err_buf       Optional error message buffer.
+ * @param[in]  err_buf_max   Capacity of err_buf.
+ *
+ * @return Number of rows (>= 0) on success, or a SQLite error code.
+ */
+CORE_API int SqlLite_Core_ExecuteReaderToJSON(
+    sqlite3 *db,
+    const char *sql,
+    SqlLiteCoreParam *params,
+    int paramCount,
+    char **out_json,
+    char *err_buf,
+    int err_buf_max);
+
+
+/**
+ * @brief Parses a JSON array of objects and inserts them into a table.
+ *
+ * The JSON array is parsed by the embedded SQLite JSON1 engine, so nested
+ * structures, escaped strings and numeric formats are handled natively:
+ *   [{"col1": "value", "col2": 42}, ...]
+ *
+ * Column names are taken from the first object. Values are bound through
+ * prepared-statement placeholders (no string concatenation of values).
+ * Identifiers (table and column names) are quoted as SQLite identifiers;
+ * they never alter the statement structure.
+ *
+ * When no transaction is active the whole batch runs inside one
+ * BEGIN IMMEDIATE ... COMMIT; any failure rolls the batch back. When a
+ * transaction is already active the batch joins it and the caller keeps
+ * control of commit/rollback.
+ *
+ * @param[in]  db           Open database handle. Must not be NULL.
+ * @param[in]  table_name   Destination table (quoted as an identifier).
+ * @param[in]  json_str     JSON array of objects.
+ * @param[out] err_buf      Optional error message buffer.
+ * @param[in]  err_buf_max  Capacity of err_buf.
+ *
+ * @return Number of inserted rows (>= 0), or a negative SQLite error code
+ *         (-SQLITE_MISUSE for invalid input, -1 when the transaction
+ *         cannot be started or committed).
+ */
+CORE_API int SqlLite_Core_Insert_Json(
     sqlite3 *db,
     const char *table_name,
     const char *json_str,
     char *err_buf,
-    int err_buf_max);    
+    int err_buf_max);
 
 
 #endif // SQLITE_CORE_BUILDER_H

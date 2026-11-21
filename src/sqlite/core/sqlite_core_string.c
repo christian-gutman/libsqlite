@@ -1,5 +1,11 @@
 #include "sqlite_core_string.h"
 
+/*
+ * String utilities. Returned buffers are allocated by the SQLite allocator
+ * and must be released with SqlLite_Core_FreeString().
+ */
+
+/* printf-style formatter. Returns a heap string (free with FreeString). */
 char *SqlLite_Core_Format(const char *format, ...)
 {
     if (format == NULL)
@@ -13,9 +19,10 @@ char *SqlLite_Core_Format(const char *format, ...)
     return result;
 }
 
+/* Concatenates two strings into a new heap buffer. NULL operands are
+ * treated as empty strings. */
 char *SqlLite_Core_Concat(const char *str1, const char *str2)
 {
-    // Si alguno es NULL, devolvemos una copia formateada del otro para evitar fallos
     if (str1 == NULL && str2 == NULL)
         return NULL;
     if (str1 == NULL)
@@ -23,10 +30,10 @@ char *SqlLite_Core_Concat(const char *str1, const char *str2)
     if (str2 == NULL)
         return sqlite3_mprintf("%s", str1);
 
-    // Mprintf se encarga de medir ambos strings y unirlos en un nuevo buffer dinámico
     return sqlite3_mprintf("%s%s", str1, str2);
 }
 
+/* Releases any string returned by this library (SQLite allocator). */
 void SqlLite_Core_FreeString(const char *input)
 {
     if (input != NULL)
@@ -34,7 +41,9 @@ void SqlLite_Core_FreeString(const char *input)
         sqlite3_free((void *)input);
     }
 }
- 
+
+/* Converts ANSI (Windows-1252 / active code page) text to UTF-8.
+ * On non-Windows platforms input is assumed UTF-8 already and is copied. */
 char *SqlLite_Core_AnsiToUTF8(const char *ansi_str)
 {
     if (ansi_str == NULL)
@@ -42,7 +51,7 @@ char *SqlLite_Core_AnsiToUTF8(const char *ansi_str)
         return NULL;
     }
 
-    // Usar la función de detección previa
+    /* Already ASCII or UTF-8: nothing to convert */
     int encoding = StrDetectEncoding(ansi_str);
     if (encoding == ENCODING_ASCII || encoding == ENCODING_UTF8)
     {
@@ -50,52 +59,59 @@ char *SqlLite_Core_AnsiToUTF8(const char *ansi_str)
     }
 
 #if defined(_WIN32) || defined(_WIN64)
-    // 1. Calcular el tamaño necesario para UTF-16
+    /* 1. Measure the intermediate UTF-16 buffer */
     int wide_len = MultiByteToWideChar(CP_ACP, 0, ansi_str, -1, NULL, 0);
     if (wide_len <= 0)
     {
         return NULL;
     }
 
-    // Reservar en el stack (se libera sola al salir de la función)
-    wchar_t *wide_str = (wchar_t *)_alloca(wide_len * sizeof(wchar_t));
-
-    // Convertir de ANSI a UTF-16
-    if (MultiByteToWideChar(CP_ACP, 0, ansi_str, -1, wide_str, wide_len) <= 0)
+    /* 2. Heap-allocate the intermediate buffer (the old _alloca version
+     *    could overflow the stack with long strings) */
+    wchar_t *wide_str = (wchar_t *)sqlite3_malloc((size_t)wide_len * sizeof(wchar_t));
+    if (wide_str == NULL)
     {
         return NULL;
     }
 
-    // 2. Calcular el tamaño necesario para UTF-8 final
+    if (MultiByteToWideChar(CP_ACP, 0, ansi_str, -1, wide_str, wide_len) <= 0)
+    {
+        sqlite3_free(wide_str);
+        return NULL;
+    }
+
+    /* 3. Measure and produce the final UTF-8 buffer */
     int utf8_len = WideCharToMultiByte(CP_UTF8, 0, wide_str, -1, NULL, 0, NULL, NULL);
     if (utf8_len <= 0)
     {
+        sqlite3_free(wide_str);
         return NULL;
     }
 
-    // Reservar memoria en el HEAP usando SQLite
     char *utf8_str = (char *)sqlite3_malloc(utf8_len);
     if (utf8_str == NULL)
     {
+        sqlite3_free(wide_str);
         return NULL;
     }
 
-    // Convertir de UTF-16 a UTF-8 final
     if (WideCharToMultiByte(CP_UTF8, 0, wide_str, -1, utf8_str, utf8_len, NULL, NULL) <= 0)
     {
+        sqlite3_free(wide_str);
         sqlite3_free(utf8_str);
         return NULL;
     }
-    
+
+    sqlite3_free(wide_str);
     return utf8_str;
-#else 
-    // CORREGIDO: En Linux/Mac/Android, asumimos que el sistema ya opera en UTF-8,
-    // o duplicamos la cadena original de forma segura con el formato de SQLite.
-    return sqlite3_mprintf("%s", ansi_str);    
+#else
+    /* Linux/macOS are UTF-8 native: duplicate the string */
+    return sqlite3_mprintf("%s", ansi_str);
 #endif
 }
 
-
+/* Converts UTF-8 text to ANSI (Windows-1252 / active code page).
+ * On non-Windows platforms the string is copied (UTF-8 native). */
 char *SqlLite_Core_UTF8ToAnsi(const char *utf8_str)
 {
     if (utf8_str == NULL)
@@ -103,7 +119,7 @@ char *SqlLite_Core_UTF8ToAnsi(const char *utf8_str)
         return NULL;
     }
 
-    // Si el texto es ASCII puro, no requiere ninguna conversión (ANSI y UTF-8 son idénticos)
+    /* Pure ASCII needs no conversion */
     int encoding = StrDetectEncoding(utf8_str);
     if (encoding == ENCODING_ASCII)
     {
@@ -111,36 +127,49 @@ char *SqlLite_Core_UTF8ToAnsi(const char *utf8_str)
     }
 
 #if defined(_WIN32) || defined(_WIN64)
-    // 1. Calcular tamaño necesario para pasar de UTF-8 a UTF-16 (WideChar)
+    /* 1. UTF-8 -> UTF-16 */
     int wide_len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, NULL, 0);
     if (wide_len <= 0)
-        return sqlite3_mprintf("%s", utf8_str); // Fallback seguro si falla
+        return sqlite3_mprintf("%s", utf8_str); /* safe fallback */
 
-    wchar_t *wide_str = (wchar_t *)_alloca(wide_len * sizeof(wchar_t));
+    /* 2. Heap-allocate the intermediate buffer (the old _alloca version
+     *    could overflow the stack with long strings) */
+    wchar_t *wide_str = (wchar_t *)sqlite3_malloc((size_t)wide_len * sizeof(wchar_t));
+    if (wide_str == NULL)
+        return NULL;
+
     if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wide_str, wide_len) <= 0)
     {
+        sqlite3_free(wide_str);
         return sqlite3_mprintf("%s", utf8_str);
     }
 
-    // 2. Calcular tamaño necesario para pasar de UTF-16 a ANSI (Windows-1252)
+    /* 3. UTF-16 -> ANSI */
     int ansi_len = WideCharToMultiByte(CP_ACP, 0, wide_str, -1, NULL, 0, NULL, NULL);
     if (ansi_len <= 0)
+    {
+        sqlite3_free(wide_str);
         return sqlite3_mprintf("%s", utf8_str);
+    }
 
     char *ansi_str = (char *)sqlite3_malloc(ansi_len);
     if (ansi_str == NULL)
+    {
+        sqlite3_free(wide_str);
         return NULL;
+    }
 
     if (WideCharToMultiByte(CP_ACP, 0, wide_str, -1, ansi_str, ansi_len, NULL, NULL) <= 0)
     {
+        sqlite3_free(wide_str);
         sqlite3_free(ansi_str);
         return sqlite3_mprintf("%s", utf8_str);
     }
 
-    return ansi_str; // CORREGIDO: Devolvemos la cadena convertida a ANSI
+    sqlite3_free(wide_str);
+    return ansi_str;
 #else
-    // CORREGIDO: En entornos no-Windows (Linux/Mac) el estándar nativo ya es UTF-8,
-    // así que simplemente clonamos la cadena.
+    /* Linux/macOS are UTF-8 native: duplicate the string */
     return sqlite3_mprintf("%s", utf8_str);
 #endif
 }

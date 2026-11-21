@@ -41,6 +41,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 option(BUILD_SHARED_LIBS "Build libsqlite3 as a shared library (DLL/.so/.dylib)" ON)
+option(LIBSQLITE3_BUILD_TESTS "Build the regression tests (CTest)" ON)
 
 # ============================================================================
 # Output layout: <repo>/bin/<arch>-<os>/<config>/
@@ -88,6 +89,9 @@ set(SRC_libsqlite3
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_transaction.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_builder.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_builder.c"
+
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_field.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/sqlite_core_field.c"
 )
 
 if(WIN32)
@@ -204,3 +208,11 @@ add_custom_command(TARGET libsqlite3 POST_BUILD
         "${CMAKE_CURRENT_SOURCE_DIR}/examples"
         "$<TARGET_FILE_DIR:libsqlite3>/"
 )
+
+# ============================================================================
+# Tests
+# ============================================================================
+if(LIBSQLITE3_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

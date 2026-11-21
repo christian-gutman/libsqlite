@@ -76,7 +76,9 @@ sqlite3 *SqlLite_Core_Open(const char *uripath, int *out_rc)
 
 sqlite3 *SqlLite_Core_Open_Uri_ReadOnly(const char *uripath, int *out_rc)
 {
-    sqlite3_config(SQLITE_CONFIG_URI, 1);
+    /* URI interpretation is requested per-connection via SQLITE_OPEN_URI
+     * (the global sqlite3_config(SQLITE_CONFIG_URI) call is process-wide
+     * and must run before the library is initialized, so it is not used). */
     return SqlLite_Core_OpenEx(uripath, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, out_rc);
 }
 
@@ -89,13 +91,15 @@ int SqlLite_Core_Close(sqlite3 *db)
     return (rc == SQLITE_OK) ? 1 : 0;
 }
 
+/* .NET parity: returns 1 only when the database is truly read-only,
+ * 0 when it is writable, -1 on error. sqlite3_db_readonly() already
+ * returns exactly these values. */
 int SqlLite_Core_IsReadonly(sqlite3 *db)
 {
     if (db == NULL)
         return -1;
 
-    int rc = sqlite3_db_readonly(db, "main");
-    return (rc == SQLITE_OK) ? 1 : 0;
+    return sqlite3_db_readonly(db, "main");
 }
 
 int SqlLite_Core_SetBusyTimeout(sqlite3 *db, int ms)

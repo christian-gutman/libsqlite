@@ -50,7 +50,7 @@ built library) · 🟡 written, needs toolchain/container · ⬜ planned.
 | C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | ✅ dotnet 6 |
 | Go | `go/libsqlite.go` | `go/example_full.go` | 🟡 cgo (needs gcc / container) |
 | Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ⬜ |
-| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ⬜ |
+| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ✅ koffi (18 checks) |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
 | Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |

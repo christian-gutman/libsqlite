@@ -12,9 +12,18 @@ lcFixture = "foxpro_fixture.bin"
 lcBig   = "foxpro_oversize.bin"
 lcErr   = REPLICATE(CHR(0), 256)
 
-IF FILE(lcDb)      THEN DELETE FILE (lcDb)
-IF FILE(lcFixture) THEN DELETE FILE (lcFixture)
-IF FILE(lcBig)     THEN DELETE FILE (lcBig)
+IF FILE(lcDb)      
+ DELETE FILE (lcDb)
+ENDIF 
+
+IF FILE(lcFixture) 
+ DELETE FILE (lcFixture)
+ENDIF 
+
+IF FILE(lcBig) 
+ DELETE FILE (lcBig)
+ENDIF 
+
 = StrToFile(lcFixture, REPLICATE(CHR(0),31) + CHR(255) + REPLICATE(CHR(0), 992))  && 1024 bytes
 = StrToFile(lcBig, REPLICATE(CHR(0), 2048))
 
@@ -130,9 +139,18 @@ DO CheckWith(sqlite_core_execute_non_query(db, "SELECT 1; SELECT 2", 0, 0, @lcEr
 
 DO CheckWith(sqlite_core_close(db) = 1, "close")
 
-IF FILE(lcDb)      THEN DELETE FILE (lcDb)
-IF FILE(lcFixture) THEN DELETE FILE (lcFixture)
-IF FILE(lcBig)     THEN DELETE FILE (lcBig)
+
+IF FILE(lcDb)      
+ DELETE FILE (lcDb)
+ENDIF 
+
+IF FILE(lcFixture) 
+ DELETE FILE (lcFixture)
+ENDIF 
+
+IF FILE(lcBig) 
+ DELETE FILE (lcBig)
+ENDIF 
 
 ? ""
 ? ALLTRIM(STR(lnChecks)) + " checks, " + ALLTRIM(STR(lnFail)) + " failures"

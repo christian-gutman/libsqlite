@@ -1,0 +1,13 @@
+{
+  "name": "libsqlite-nodejs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "libsqlite3 binding for Node.js (koffi)",
+  "main": "libsqlite.js",
+  "scripts": {
+    "example": "node example_full.js"
+  },
+  "dependencies": {
+    "koffi": "^2.9.0"
+  }
+}

@@ -11,6 +11,7 @@ and runs the suites (and one language example) against the real artifact.
 
 ```bat
 docker\build.cmd go
+docker\build.cmd java      # downloads the JNA jar, runs javac + the example
 ```
 
 Flow of a language container:

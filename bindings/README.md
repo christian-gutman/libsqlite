@@ -48,11 +48,11 @@ built library) · 🟡 written, needs toolchain/container · ⬜ planned.
 |----------|---------|---------|--------|
 | Python | `python/binding.py` | `python/example_full.py` | ✅ ctypes |
 | C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | ✅ dotnet 6 |
-| Go | `go/libsqlite.go` | `go/example_full.go` | 🟡 cgo (needs gcc / container) |
-| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ⬜ |
+| Go | `go/libsqlite.go` | `go/example_full.go` | ✅ cgo (19 checks, container) |
+| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ✅ rustc (19 checks) |
 | Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ✅ koffi (18 checks) |
+| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ✅ JNA (20 checks) |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
-| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
 | Swift | `swift/LibSqlite.swift` | `swift/example_full.swift` | ⬜ |
@@ -91,13 +91,15 @@ Each folder contains a `README.md` with the exact build/run commands.
 
 ## Running the examples through containers
 
-Build the library on the host (or via `docker/Dockerfile`) and then, per
-language:
+Each verified language ships a container that builds the library, runs the
+CTest suite and then compiles and runs its example:
 
-```bash
-bash docker/run-binding.sh python      # builds the image, runs the example, removes the image
+```bat
+docker\build.cmd python   :: builds, runs and removes the image
+docker\build.cmd go
+docker\build.cmd java     :: also fetches the JNA jar from Maven Central
 ```
 
-The script mounts the repository read-only, so no host toolchain is
-needed; images are removed after each run to keep disk usage flat
-(`docker system df` shows the reclaim).
+The wrapper removes the image afterwards, so nothing accumulates
+(`docker system df` shows the reclaim). The examples mutate files only
+inside the container; the host repository is never written to.

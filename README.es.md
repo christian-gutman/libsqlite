@@ -418,6 +418,9 @@ comparar resultados):
 | Python | [`bindings/python`](bindings/python) |
 | C# / .NET | [`bindings/csharp`](bindings/csharp) |
 | Go | [`bindings/go`](bindings/go) |
+| Rust | [`bindings/rust`](bindings/rust) |
+| Node.js | [`bindings/nodejs`](bindings/nodejs) |
+| Java | [`bindings/java`](bindings/java) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -439,7 +442,7 @@ los verifica en todas las plataformas:
 | [transaction.c](src/sqlite/examples/transaction.c) | `begin` / `commit` / `rollback` y sus rutas de fallo |
 | [json.c](src/sqlite/examples/json.c) | `execute_reader_to_json` e `insert_json` en ambos sentidos |
 
-> Los builds compartidos de Windows exportan exactamente los 31 símbolos
+> Los builds compartidos de Windows exportan exactamente los 34 símbolos
 > `sqlite_core_*` (`sqlite.def`): las llamadas directas al motor
 > (`sqlite3_column_*`, ...) requieren enlace **estático**, y por eso los
 > ejemplos se quedan en la API del wrapper.

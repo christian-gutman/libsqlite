@@ -29,6 +29,11 @@ __pycache__/
 # kept ignored until they are vendored under third_party/)
 external/
 
+# Java binding: the JNA jar is fetched on demand (bindings/java/get_jna.ps1)
+bindings/java/lib/
+bindings/java/classes/
+*.class
+
 # Editor/IDE local settings
 .vscode/
 

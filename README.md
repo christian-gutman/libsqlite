@@ -412,6 +412,9 @@ each one (same flow in every language, so results can be compared):
 | Python | [`bindings/python`](bindings/python) |
 | C# / .NET | [`bindings/csharp`](bindings/csharp) |
 | Go | [`bindings/go`](bindings/go) |
+| Rust | [`bindings/rust`](bindings/rust) |
+| Node.js | [`bindings/nodejs`](bindings/nodejs) |
+| Java | [`bindings/java`](bindings/java) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -431,7 +434,7 @@ They are built by default and run as CTest smoke tests
 | [transaction.c](src/sqlite/examples/transaction.c) | `begin` / `commit` / `rollback` and their failure paths |
 | [json.c](src/sqlite/examples/json.c) | `execute_reader_to_json` and `insert_json` in both directions |
 
-> Windows shared builds export exactly the 31 `sqlite_core_*` symbols
+> Windows shared builds export exactly the 34 `sqlite_core_*` symbols
 > (`sqlite.def`): direct engine calls (`sqlite3_column_*`, ...) need a
 > **static** link, which is why the examples stay on the wrapper API.
 

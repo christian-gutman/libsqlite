@@ -13,6 +13,15 @@ separately by `sqlite_core_sqlite_version()`.
 
 ### Added
 
+- **Language bindings** (`bindings/`): Python, C#, Go, Rust, Node.js and
+  Java now wrap the frozen API, each with a canonical example verified
+  against a real build (19/19, 19/19, 19/19, 19/19, 18/18 and 20/20 checks
+  respectively; Go and Java also run in their Linux containers). Every
+  binding is checked against `src/sqlite/core/sqlite.def` by
+  `bindings/verify_symbols.py` (34/34 symbols in all of them).
+- **Java binding container**: `docker/bindings/java.Dockerfile` builds the
+  library, runs the CTest suite, fetches the JNA jar from Maven Central and
+  runs the Java example against the Linux shared object.
 - **Chunked BLOB writes**: `sqlite_core_insert_blob` and
   `sqlite_core_update_blob` stream a file into a BLOB column through the
   incremental blob I/O API in chunks (64 KiB default, configurable;

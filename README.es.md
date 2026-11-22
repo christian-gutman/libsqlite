@@ -406,6 +406,23 @@ parseadas y enlazadas por parámetros (sin concatenar cadenas, sin inyección).
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Flujo de build/tests, reglas para ampliar la API congelada |
 | [SECURITY.md](SECURITY.md) | Cómo reportar vulnerabilidades |
 
+## Bindings para otros lenguajes
+
+La API congelada está envuelta para otros lenguajes, con un ejemplo
+canónico en cada uno (el mismo flujo en todos los lenguajes para poder
+comparar resultados):
+
+| Lenguaje | Carpeta |
+|----------|---------|
+| C (nativo) | [`src/sqlite/examples`](src/sqlite/examples) |
+| Python | [`bindings/python`](bindings/python) |
+| C# / .NET | [`bindings/csharp`](bindings/csharp) |
+| Go | [`bindings/go`](bindings/go) |
+
+Tabla completa, reglas (propiedad del alocador, callbacks, struct de
+parámetros) y los lenguajes restantes:
+**[bindings/README.md](bindings/README.md)**.
+
 ## Ejemplos
 
 Hay cuatro programas validados en

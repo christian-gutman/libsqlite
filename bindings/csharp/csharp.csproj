@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The built library must sit next to the executable:
+         copy libsqlite3.dll (Windows) / libsqlite3.so here, or set
+         LibSqlite:DllPath to an absolute path. -->
+    <None Include="LibSqlite.cs" />
+  </ItemGroup>
+
+</Project>

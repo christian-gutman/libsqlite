@@ -147,6 +147,9 @@ public static class Lib
     public delegate int RowCallback(IntPtr stmt, int columns, int hasrows, IntPtr ctx);
 
     // ---- helpers --------------------------------------------------------
+    public static string PtrToStringAnsi(IntPtr p) =>
+        p == IntPtr.Zero ? string.Empty : (Marshal.PtrToStringAnsi(p) ?? string.Empty);
+
     public static string PtrToStringFree(IntPtr p)
     {
         if (p == IntPtr.Zero) return string.Empty;

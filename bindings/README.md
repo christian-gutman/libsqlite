@@ -41,33 +41,36 @@ Exit code = number of failed checks (0 on success).
 
 ## Coverage
 
-| Language | Binding | Example | Verified with |
-|----------|---------|---------|---------------|
-| Python | `python/binding.py` | `python/example_full.py` | ctypes + Docker `python` |
-| C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | `dotnet` + Docker |
-| Go | `go/libsqlite.go` | `go/example_full.go` | cgo + Docker `golang` |
-| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | `rustc` + Docker `rust` |
-| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | koffi + Docker `node` |
-| Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | dart:ffi + Docker `dart` |
-| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | JNA + Docker `eclipse-temurin` |
-| R | `r/libsqlite.R` | `r/example_full.R` | `dyn.load` + Docker `r-base` |
-| C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | Docker `gcc`/`clang` |
-| Swift | `swift/LibSqlite.swift` | `swift/example_full.swift` | Docker `swift` |
-| Kotlin | `kotlin/LibSqlite.kt` | `kotlin/ExampleFull.kt` | JNA + Docker |
-| Delphi / FPC | `delphi/libsqlite.pas` | `delphi/example_full.dpr` | Docker `freepascal` |
-| VB.NET | `vbnet/LibSqlite.vb` | `vbnet/ExampleFull.vb` | `dotnet` + Docker |
-| D | `d/libsqlite.d` | `d/example_full.d` | Docker `dlang` |
-| Nim | `nim/libsqlite.nim` | `nim/example_full.nim` | Docker `nimlang` |
-| Zig | `zig/libsqlite.zig` | `zig/example_full.zig` | Docker `zig` |
-| Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | fiddle + Docker `ruby` |
-| PHP | `php/libsqlite.php` | `php/example_full.php` | FFI + Docker `php` |
-| LuaJIT | `lua/libsqlite.lua` | `lua/example_full.lua` | FFI + Docker |
-| Perl | `perl/libsqlite.pl` | `perl/example_full.pl` | FFI::Platypus + Docker `perl` |
-| Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | `ccall` + Docker `julia` |
-| Fortran | `fortran/libsqlite.f90` | `fortran/example_full.f90` | `iso_c_binding` + Docker `gcc` |
-| Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | `ctypes`/FFI + Docker `haskell` |
-| Tcl | `tcl/libsqlite.tcl` | `tcl/example_full.tcl` | `ffidl`/`Ffidl` + Docker |
-| MATLAB | `matlab/libsqlite.m` | `matlab/example_full.m` | `calllib` + Docker (where available) |
+Legend: ✅ verified locally (example compiles and runs green against the
+built library) · 🟡 written, needs toolchain/container · ⬜ planned.
+
+| Language | Binding | Example | Status |
+|----------|---------|---------|--------|
+| Python | `python/binding.py` | `python/example_full.py` | ✅ ctypes |
+| C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | ✅ dotnet 6 |
+| Go | `go/libsqlite.go` | `go/example_full.go` | 🟡 cgo (needs gcc / container) |
+| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ⬜ |
+| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ⬜ |
+| Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
+| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ⬜ |
+| R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
+| C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
+| Swift | `swift/LibSqlite.swift` | `swift/example_full.swift` | ⬜ |
+| Kotlin | `kotlin/LibSqlite.kt` | `kotlin/ExampleFull.kt` | ⬜ |
+| Delphi / FPC | `delphi/libsqlite.pas` | `delphi/example_full.dpr` | ⬜ |
+| VB.NET | `vbnet/LibSqlite.vb` | `vbnet/ExampleFull.vb` | ⬜ |
+| D | `d/libsqlite.d` | `d/example_full.d` | ⬜ |
+| Nim | `nim/libsqlite.nim` | `nim/example_full.nim` | ⬜ |
+| Zig | `zig/libsqlite.zig` | `zig/example_full.zig` | ⬜ |
+| Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ⬜ |
+| PHP | `php/libsqlite.php` | `php/example_full.php` | ⬜ |
+| LuaJIT | `lua/libsqlite.lua` | `lua/example_full.lua` | ⬜ |
+| Perl | `perl/libsqlite.pl` | `perl/example_full.pl` | ⬜ |
+| Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | ⬜ |
+| Fortran | `fortran/libsqlite.f90` | `fortran/example_full.f90` | ⬜ |
+| Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | ⬜ |
+| Tcl | `tcl/libsqlite.tcl` | `tcl/example_full.tcl` | ⬜ |
+| MATLAB | `matlab/libsqlite.m` | `matlab/example_full.m` | ⬜ |
 
 Each folder contains a `README.md` with the exact build/run commands.
 

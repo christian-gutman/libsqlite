@@ -37,6 +37,23 @@ Every string returned by the library is released with
 `sqlite_core_string_free` (SQLite allocator), and a reader callback
 aborts iteration by returning non-zero — the same rules the tests follow.
 
+## Language bindings (`bindings/`)
+
+The same canonical flow (open → DDL → named parameters → reader →
+scalar → JSON out/in → BLOB from file → `get_blob` → transactions →
+error paths → close) is implemented for other languages; see
+[`bindings/README.md`](../../bindings/README.md) for the rules and the
+full table.
+
+Covered so far:
+
+| Language | Folder | Status |
+|----------|--------|--------|
+| C (this folder) | `src/sqlite/examples` | native |
+| Python | `bindings/python` | verified (19/19) |
+| C# / .NET | `bindings/csharp` | verified (19/19, net8.0) |
+| Go | `bindings/go` | written, needs cgo toolchain |
+
 > **Windows shared builds (DLL)** export exactly the 31 `sqlite_core_*`
 > symbols listed in `core/sqlite.def`. The engine helpers
 > (`sqlite3_column_*`, ...) are **not** exported, so consumers of the DLL

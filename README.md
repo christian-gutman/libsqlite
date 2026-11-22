@@ -401,6 +401,21 @@ statements (no string concatenation, no injection).
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Build/test workflow, rules for extending the frozen API |
 | [SECURITY.md](SECURITY.md) | How to report vulnerabilities |
 
+## Bindings to other languages
+
+The frozen API is wrapped for other languages with a canonical example in
+each one (same flow in every language, so results can be compared):
+
+| Language | Folder |
+|----------|--------|
+| C (native) | [`src/sqlite/examples`](src/sqlite/examples) |
+| Python | [`bindings/python`](bindings/python) |
+| C# / .NET | [`bindings/csharp`](bindings/csharp) |
+| Go | [`bindings/go`](bindings/go) |
+
+Full table, rules (allocator ownership, callbacks, parameter struct) and
+the remaining languages: **[bindings/README.md](bindings/README.md)**.
+
 ## Examples
 
 Four validated programs live in [`src/sqlite/examples/`](src/sqlite/examples/).

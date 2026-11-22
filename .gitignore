@@ -2,6 +2,7 @@
 build/
 build*/
 cmake-build*/
+obj/
 
 # Binaries and build artifacts
 bin/

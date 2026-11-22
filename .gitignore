@@ -20,6 +20,10 @@ bin/
 *.db
 *.bin
 
+# Python
+__pycache__/
+*.pyc
+
 # External dependencies (absorbed into the project on next milestone;
 # kept ignored until they are vendored under third_party/)
 external/

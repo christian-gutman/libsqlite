@@ -41,7 +41,7 @@ static int JsonCtx_Ensure(sqlite_core_json_builder_t *ctx, size_t extra)
         new_size *= 2;
     }
 
-    char *ptr = (char *)sqlite3_realloc(ctx->string_ptr, new_size);
+    char *ptr = (char *)sqlite3_realloc(ctx->string_ptr, (int)new_size);
     if (ptr == NULL)
     {
         ctx->has_error = 1;
@@ -328,7 +328,7 @@ static char *QuoteKeyPath(const char *key)
         return NULL;
 
     size_t len = strlen(key);
-    char *out = (char *)sqlite3_malloc(len * 2 + 6); /* worst case */
+    char *out = (char *)sqlite3_malloc((int)(len * 2 + 6)); /* worst case */
     if (out == NULL)
         return NULL;
 
@@ -443,7 +443,7 @@ static char *BuildJsonInsertSql(sqlite3 *db, const char *table_name, const StrLi
     for (int i = 0; i < keys->count; i++)
         total += strlen(keys->items[i]) + 40;
 
-    char *buf = (char *)sqlite3_malloc(total);
+    char *buf = (char *)sqlite3_malloc((int)total);
     if (buf == NULL)
     {
         sqlite3_free(quoted_table);

@@ -113,8 +113,9 @@ void CopyErrorMessage(char *err_buf, int err_buf_max, const char *zErrMsg)
         return;
 
     size_t len = strlen(zErrMsg);
-    if ((int)len > err_buf_max - 1)
-        len = (size_t)err_buf_max - 1;
+    size_t room = (err_buf_max > 1) ? (size_t)(err_buf_max - 1) : (size_t)0;
+    if (len > room)
+        len = room;
     memcpy(err_buf, zErrMsg, len);
     err_buf[len] = '\0';
 }

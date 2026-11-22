@@ -72,6 +72,21 @@ built library) · 🟡 written, needs toolchain/container · ⬜ planned.
 | Tcl | `tcl/libsqlite.tcl` | `tcl/example_full.tcl` | ⬜ |
 | MATLAB | `matlab/libsqlite.m` | `matlab/example_full.m` | ⬜ |
 
+## Legacy (Windows DLL consumers)
+
+The frozen 34-symbol `.def` is what these platforms load; all of them run
+against the Win32/x64 DLL the project already produces.
+
+| Language | Folder | Status |
+|----------|--------|--------|
+| Visual FoxPro 9 | `foxpro/` | 🟡 `DECLARE DLL` example + README (FoxPro 2.6 is 16-bit and **cannot** load the DLL; the production path is the separate FLL deliverable) |
+| Clipper (Harbour/xHarbour/NAM) | `clipper/` | 🟡 runtime `hb_libLoad`/`_dllfn` example + README |
+| Delphi / FPC | `delphi/` | ⬜ |
+| VB6 | `vb6/` | ⬜ |
+| COBOL (GnuCOBOLFFI) | `cobol/` | ⬜ |
+| PowerBuilder | `powerbuilder/` | ⬜ |
+| RPG (IBM i) | `rpg/` | ⬜ |
+
 Each folder contains a `README.md` with the exact build/run commands.
 
 ## Running the examples through containers

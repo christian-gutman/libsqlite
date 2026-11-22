@@ -418,6 +418,8 @@ comparar resultados):
 | Python | [`bindings/python`](bindings/python) |
 | C# / .NET | [`bindings/csharp`](bindings/csharp) |
 | Go | [`bindings/go`](bindings/go) |
+| Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
+| Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
 Tabla completa, reglas (propiedad del alocador, callbacks, struct de
 parámetros) y los lenguajes restantes:

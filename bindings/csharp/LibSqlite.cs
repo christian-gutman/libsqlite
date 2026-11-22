@@ -146,6 +146,11 @@ public static class Lib
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int RowCallback(IntPtr stmt, int columns, int hasrows, IntPtr ctx);
 
+    [DllImport(Dll, EntryPoint = "sqlite_core_json_writer_callback",
+        CallingConvention = CallingConvention.Cdecl)]
+    public static extern int sqlite_core_json_writer_callback(
+        IntPtr stmt, int columns, int hasrows, IntPtr ctx);
+
     // ---- helpers --------------------------------------------------------
     public static string PtrToStringAnsi(IntPtr p) =>
         p == IntPtr.Zero ? string.Empty : (Marshal.PtrToStringAnsi(p) ?? string.Empty);

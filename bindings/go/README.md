@@ -6,13 +6,14 @@ directly, the preamble provides `param_set_int` / `param_set_text` /
 `param_get_int` helpers for `sqlite_core_param_t`.
 
 ```bash
-# Linux
-CGO_LDFLAGS="-L../bin/x64-Linux/shared/Release -llibsqlite3" \
-  LD_LIBRARY_PATH=../bin/x64-Linux/shared/Release go run example_full.go libsqlite.go
+# Linux (module layout: go.mod lives in this folder)
+# note -l:libsqlite3.so (the file already carries the "lib" prefix)
+CGO_LDFLAGS="-L../bin/x64-Linux/shared/Release -l:libsqlite3.so" \
+  LD_LIBRARY_PATH=../bin/x64-Linux/shared/Release go run .
 
 # Windows (MSYS2/MinGW gcc)
 CGO_LDFLAGS="-L../bin/x64-Windows/shared/Release -llibsqlite3" \
-  PATH="../bin/x64-Windows/shared/Release;$PATH" go run example_full.go libsqlite.go
+  PATH="../bin/x64-Windows/shared/Release;$PATH" go run .
 ```
 
 Notes:

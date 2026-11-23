@@ -13,7 +13,9 @@ import os
 import re
 import sys
 
-EXTENSIONS = (".py", ".cs", ".go", ".rs", ".js", ".dart", ".java", ".R",
+# Compared against the file name lower-cased (see binding_files()), so
+# every entry stays in lower case: ".R" here would never match "Lib.R".
+EXTENSIONS = (".py", ".cs", ".go", ".rs", ".js", ".dart", ".java", ".r",
               ".hpp", ".cpp", ".swift", ".kt", ".pas", ".vb", ".d", ".nim",
               ".zig", ".rb", ".php", ".lua", ".pl", ".jl", ".f", ".f90",
               ".hs", ".tcl", ".m", ".prg", ".cmd", ".ps1")

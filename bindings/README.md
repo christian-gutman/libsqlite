@@ -53,6 +53,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ✅ rustc + container (fixed for 1.97+, see its README) |
 | Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ✅ koffi, container |
 | Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ✅ JNA, container |
+| R | `r/libsqlite.R` | `r/example_full.R` | ✅ shim + `R CMD SHLIB`, container (21 checks) |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
@@ -99,9 +100,10 @@ CTest suite and then compiles and runs its example:
 docker\build.cmd python   :: builds, runs and removes the image
 docker\build.cmd csharp   :: publishes the example, .so next to the DLL
 docker\build.cmd go
-docker\build.cmd rust     :: plain rustc + -l:libsqlite3.so
+docker\build.cmd rust     :: plain rustc + the platform #[link] name
 docker\build.cmd nodejs   :: npm install koffi inside the container
 docker\build.cmd java     :: also fetches the JNA jar from Maven Central
+docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
 
 docker\build_all.cmd      :: the six of them in sequence + pass/fail matrix
 ```

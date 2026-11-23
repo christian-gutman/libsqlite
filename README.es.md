@@ -421,6 +421,7 @@ comparar resultados):
 | Rust | [`bindings/rust`](bindings/rust) |
 | Node.js | [`bindings/nodejs`](bindings/nodejs) |
 | Java | [`bindings/java`](bindings/java) |
+| R | [`bindings/r`](bindings/r) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -471,7 +472,7 @@ compila y ejecuta el ejemplo del lenguaje contra el `.so` real; la imagen
 se elimina al final (`docker system df` no crece):
 
 ```bat
-docker\build_all.cmd            :: python csharp go rust nodejs java
+docker\build_all.cmd            :: python csharp go rust nodejs java r
 docker\build.cmd python         :: un solo lenguaje
 ```
 

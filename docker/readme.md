@@ -13,7 +13,8 @@ and runs the suites (and one language example) against the real artifact.
 ```bat
 docker\build.cmd python
 docker\build.cmd java      :: downloads the JNA jar, runs javac + the example
-docker\build_all.cmd       :: python csharp go rust nodejs java
+docker\build.cmd r         :: compiles the R shim (R CMD SHLIB) + runs it
+docker\build_all.cmd       :: python csharp go rust nodejs java r
 ```
 
 Flow of a language container:
@@ -41,6 +42,7 @@ results are comparable line by line.
 | `bindings/rust.Dockerfile` | `rust:1-bookworm` | plain `rustc` (the binding carries the platform-specific `#[link]` name) | 19 checks |
 | `bindings/nodejs.Dockerfile` | `node:24-bookworm` | `npm install koffi` | 18 checks |
 | `bindings/java.Dockerfile` | `eclipse-temurin:17-jammy` | JNA jar from Maven Central | 20 checks |
+| `bindings/r.Dockerfile` | `r-base:latest` | `R CMD SHLIB` (the shim) | 21 checks |
 
 **Not containerized:** Visual FoxPro (`bindings/foxpro`) and Clipper
 (`bindings/clipper`). Both are Windows-only legacy consumers of the DLL

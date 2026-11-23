@@ -38,12 +38,23 @@ separately by `sqlite_core_sqlite_version()`.
   the example's exit status and re-raises it (`rc=$?; echo ..._EXIT=$rc;
   exit $rc`). The trailing `echo` used to mask failures, so `docker run`
   reported success even when the example failed.
-- **Language bindings** (`bindings/`): Python, C#, Go, Rust, Node.js and
-  Java now wrap the frozen API, each with a canonical example verified
-  against a real build (19/19, 19/19, 19/19, 19/19, 18/18 and 20/20 checks
-  respectively, all of them also inside their Linux containers). Every
-  binding is checked against `src/sqlite/core/sqlite.def` by
+- **Language bindings** (`bindings/`): Python, C#, Go, Rust, Node.js, Java
+  and R now wrap the frozen API, each with a canonical example verified
+  against a real build (19/19, 19/19, 19/19, 19/19, 18/18, 20/20 and 21/21
+  checks respectively, all of them also inside their Linux containers).
+  Every binding is checked against `src/sqlite/core/sqlite.def` by
   `bindings/verify_symbols.py` (34/34 symbols in all of them).
+- **R binding** (`bindings/r`): `libsqlite.R` + `src/libsqlite_shim.c`
+  (compiled with `R CMD SHLIB`). The shim is unavoidable — R's `.C()`
+  discards the C return value (the `sqlite3*` handle would be unreachable),
+  cannot build `sqlite_core_param_t` (a union with native pointers), has no
+  `sqlite3_int64` representation and cannot turn an R closure into the
+  `execute_reader` callback. It re-implements nothing: every entry point
+  calls the frozen API, including `sqlite_core_json_writer_callback`
+  (`reader_json_callback()`), and releases every returned string with
+  `sqlite_core_string_free`.
+- **R container**: `docker/bindings/r.Dockerfile` (`r-base` + `r-base-dev`)
+  compiles the shim and runs the example against the Linux shared object.
 - **Chunked BLOB writes**: `sqlite_core_insert_blob` and
   `sqlite_core_update_blob` stream a file into a BLOB column through the
   incremental blob I/O API in chunks (64 KiB default, configurable;

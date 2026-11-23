@@ -415,6 +415,7 @@ each one (same flow in every language, so results can be compared):
 | Rust | [`bindings/rust`](bindings/rust) |
 | Node.js | [`bindings/nodejs`](bindings/nodejs) |
 | Java | [`bindings/java`](bindings/java) |
+| R | [`bindings/r`](bindings/r) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -462,7 +463,7 @@ the language example against the real `.so`, and is removed at the end
 (`docker system df` stays flat):
 
 ```bat
-docker\build_all.cmd            :: python csharp go rust nodejs java
+docker\build_all.cmd            :: python csharp go rust nodejs java r
 docker\build.cmd python         :: a single language
 ```
 

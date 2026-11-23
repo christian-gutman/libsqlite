@@ -10,7 +10,7 @@ rem        docker\build_all.cmd go java    (only these)
 
 setlocal EnableDelayedExpansion
 
-set LANGS=python csharp go rust nodejs java
+set LANGS=python csharp go rust nodejs java r
 if not "%~1"=="" set LANGS=%*
 
 set PASSED=
@@ -26,7 +26,7 @@ for %%L in (%LANGS%) do (
 
 echo.
 echo ============================================================
-echo container matrix:  python csharp go rust nodejs java
+echo container matrix:  python csharp go rust nodejs java r
 if not "!PASSED!"=="" echo PASSED:!PASSED!
 if not "!FAILED!"=="" echo FAILED:!FAILED!
 echo ============================================================

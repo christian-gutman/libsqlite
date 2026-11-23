@@ -58,6 +58,19 @@ separately by `sqlite_core_sqlite_version()`.
   `readerJsonCallback()` also drives `sqlite_core_json_writer_callback`.
 - **Swift container**: `docker/bindings/swift.Dockerfile` (`swift:6.0`)
   compiles with `swiftc -I include` against the Linux shared object.
+- **Ruby binding** (`bindings/ruby`): `libsqlite.rb` binds the frozen
+  34-symbol surface with the `ffi` gem. `Fiddle` from the standard library
+  was tried first and rejected: `Fiddle::Closure` is broken on Ruby 3.x
+  (calling the trampoline raises "undefined method 'call' for an instance
+  of Fiddle::Closure"), so the binding uses ffi's first-class callbacks (a
+  Ruby `Proc` passed to the attached `execute_reader`). `ParamSet` builds
+  `sqlite_core_param_t[]` in raw memory (offsets from
+  `FFI::Platform::ADDRESS_SIZE / 8`, valid on LP64 and ILP32), and every
+  returned string follows the allocator rule (`take_string` releases the
+  heap ones with `sqlite_core_string_free`).
+- **Ruby container**: `docker/bindings/ruby.Dockerfile` (`ruby:3.3`) runs
+  the example against the Linux shared object; ruby joins `build_all.cmd`
+  (ten languages).
 - **R shim no longer calls engine internals**: the JSON path used
   `sqlite3_mprintf` / `sqlite3_realloc` / `sqlite3_free`, which the frozen
   export list does not contain (they link on Linux, where the shared object

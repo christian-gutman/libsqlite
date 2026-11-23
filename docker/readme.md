@@ -16,6 +16,7 @@ docker\build.cmd java      :: downloads the JNA jar, runs javac + the example
 docker\build.cmd r         :: compiles the R shim (R CMD SHLIB) + runs it
 docker\build.cmd cpp       :: g++ -std=c++17 (header-only binding)
 docker\build.cmd swift     :: swiftc -I include + module.modulemap
+docker\build.cmd ruby      :: Fiddle (standard library, no dependencies)
 docker\build_all.cmd       :: python csharp cpp go rust nodejs java r swift
 ```
 
@@ -46,6 +47,7 @@ results are comparable line by line.
 | `bindings/java.Dockerfile` | `eclipse-temurin:17-jammy` | JNA jar from Maven Central | 20 checks |
 | `bindings/r.Dockerfile` | `r-base:latest` | `R CMD SHLIB` (the shim) | 21 checks |
 | `bindings/swift.Dockerfile` | `swift:6.0-jammy` | none (the binding ships its own C module) | 32 checks |
+| `bindings/ruby.Dockerfile` | `ruby:3.3-bookworm` | `gem install ffi` | 29 checks |
 
 **Not containerized:** Visual FoxPro (`bindings/foxpro`) and Clipper
 (`bindings/clipper`). Both are Windows-only legacy consumers of the DLL

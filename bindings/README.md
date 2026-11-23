@@ -41,17 +41,18 @@ Exit code = number of failed checks (0 on success).
 
 ## Coverage
 
-Legend: ✅ verified locally (example compiles and runs green against the
-built library) · 🟡 written, needs toolchain/container · ⬜ planned.
+Legend: ✅ verified (example compiles and runs green against the built
+library — "container" means the same example also ran in its Linux
+container) · 🟡 written, needs toolchain · ⬜ planned.
 
 | Language | Binding | Example | Status |
 |----------|---------|---------|--------|
-| Python | `python/binding.py` | `python/example_full.py` | ✅ ctypes |
-| C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | ✅ dotnet 6 |
-| Go | `go/libsqlite.go` | `go/example_full.go` | ✅ cgo (19 checks, container) |
-| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ✅ rustc (19 checks) |
-| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ✅ koffi (18 checks) |
-| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ✅ JNA (20 checks) |
+| Python | `python/binding.py` | `python/example_full.py` | ✅ ctypes, container |
+| C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | ✅ dotnet 8, container |
+| Go | `go/libsqlite.go` | `go/example_full.go` | ✅ cgo, container |
+| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ✅ rustc + container (fixed for 1.97+, see its README) |
+| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ✅ koffi, container |
+| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ✅ JNA, container |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
@@ -96,9 +97,18 @@ CTest suite and then compiles and runs its example:
 
 ```bat
 docker\build.cmd python   :: builds, runs and removes the image
+docker\build.cmd csharp   :: publishes the example, .so next to the DLL
 docker\build.cmd go
+docker\build.cmd rust     :: plain rustc + -l:libsqlite3.so
+docker\build.cmd nodejs   :: npm install koffi inside the container
 docker\build.cmd java     :: also fetches the JNA jar from Maven Central
+
+docker\build_all.cmd      :: the six of them in sequence + pass/fail matrix
 ```
+
+FoxPro and Clipper are deliberately **not** containerized: they consume
+the Windows DLL from a 16/32-bit legacy runtime and cannot run in a Linux
+container (see `docker/readme.md`).
 
 The wrapper removes the image afterwards, so nothing accumulates
 (`docker system df` shows the reclaim). The examples mutate files only

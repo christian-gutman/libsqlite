@@ -1,5 +1,11 @@
 // libsqlite3 binding for Rust: the frozen 34-symbol surface, no crates.
-#![allow(dead_code)] // the whole surface is declared; each example uses a subset
+//
+// NOTE (rustc 1.97+, found by the Linux container): this file is meant to
+// be include!()-ed by the examples, and an *inner* attribute (#![...]) is
+// not permitted inside an included file ("an inner attribute is not
+// permitted in this context"). The examples therefore declare
+// #![allow(dead_code)] at the top of the file that does the include!
+// (the whole surface is declared; each example uses a subset).
 //
 // The library is linked with the platform name:
 //   Windows: libsqlite3.lib (import library next to libsqlite3.dll)
@@ -12,7 +18,12 @@
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_double, c_int, c_void};
 
-#[link(name = "libsqlite3")]
+// The #[link] name is platform-specific: on Windows the import library is
+// "libsqlite3.lib", while on Unix the linker shorthand for
+// libsqlite3.so is "-lsqlite3" (link(name = "libsqlite3") would make the
+// linker look for liblibsqlite3.so). Found by the Linux container.
+#[cfg_attr(windows, link(name = "libsqlite3", kind = "dylib"))]
+#[cfg_attr(unix, link(name = "sqlite3"))]
 extern "C" {
     fn sqlite_core_version() -> *const c_char;
     fn sqlite_core_sqlite_version() -> *const c_char;

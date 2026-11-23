@@ -16,9 +16,11 @@ not by priority.
 | 8 | **FoxPro FLL** | Windows | M | Deliberate separate deliverable: rebuild the FLL against the renamed `sqlite_core_*` API (removed from this repository in milestone 0). |
 | 9 | **API documentation site** | web | S/L | The headers already carry Doxygen comments; `doxygen` + GitHub Pages would publish them. |
 | 10 | **Package managers** (vcpkg/conan ports) | all | M | The CMake package (`find_package(libsqlite3)`) and install rules already exist; a port is mostly packaging. |
+| 11 | **Language bindings** (`bindings/`) | all | S→L | **In progress** — Python, C#, Go, Rust, Node.js and Java verified (each with a Linux container; see `docker/bindings/*.Dockerfile` and `docker/build_all.cmd`). Remaining: Dart/Flutter (deliberately last) and the rest of the modern list in `bindings/README.md`. |
 
 Only item 1 needs a human with repository access; 5 is the next
-engineering item, 6–7 extend the "one engine everywhere" story.
+engineering item, 6–7 extend the "one engine everywhere" story, and 11
+advances one language at a time (each stage ends with a report).
 
 ---
 
@@ -40,7 +42,9 @@ esfuerzo, no por prioridad.
 | 8 | **FLL de FoxPro** | Windows | M | Entregable separado a propósito: reconstruir la FLL contra la API renombrada `sqlite_core_*` (se quitó de este repositorio en el hito 0). |
 | 9 | **Sitio de docs de la API** | web | S/L | Las cabeceras ya tienen comentarios Doxygen; `doxygen` + GitHub Pages las publicaría. |
 | 10 | **Gestores de paquetes** (ports vcpkg/conan) | todas | M | El paquete CMake (`find_package(libsqlite3)`) y las reglas de install ya existen; un port es sobre todo empaquetado. |
+| 11 | **Bindings de lenguajes** (`bindings/`) | todas | S→L | **En progreso** — Python, C#, Go, Rust, Node.js y Java verificados (cada uno con su contenedor Linux; ver `docker/bindings/*.Dockerfile` y `docker/build_all.cmd`). Quedan: Dart/Flutter (a propósito al final) y el resto de la lista moderna en `bindings/README.md`. |
 
 Solo el punto 1 necesita una persona con acceso al repo; el 5 es el
 siguiente ítem de ingeniería; 6–7 extienden la historia de "un solo
-motor en todas partes".
+motor en todas partes"; y el 11 avanza de a un lenguaje por etapa (cada
+etapa termina con un informe).

@@ -454,6 +454,23 @@ docker run --rm -v "$(pwd)/bin-local:/bin-local" \
 
 (PowerShell: `docker run --rm -v "${PWD}/bin-local:/bin-local" ...`.)
 
+### Binding containers
+
+Every verified binding also runs in its own Linux container: the image
+builds the library, runs the full CTest suite and then compiles and runs
+the language example against the real `.so`, and is removed at the end
+(`docker system df` stays flat):
+
+```bat
+docker\build_all.cmd            :: python csharp go rust nodejs java
+docker\build.cmd python         :: a single language
+```
+
+FoxPro and Clipper are excluded: they load the Windows DLL from a
+16/32-bit legacy runtime and have no Linux container. Full matrix in
+[`docker/readme.md`](docker/readme.md), per-language rules in
+[`bindings/README.md`](bindings/README.md).
+
 ## Contributing & security
 
 Bug reports and feature requests use the GitHub issue templates (they ask

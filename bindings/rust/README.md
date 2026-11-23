@@ -11,15 +11,28 @@ rustc -L native=../../bin/x64-Windows/shared/Release example_full.rs -o example.
 # libsqlite3.dll next to the exe or on PATH
 
 # Linux
-rustc -C link-arg=-l:libsqlite3.so \
-      -L native=../../bin/x64-Linux/shared/Release example_full.rs -o example
+rustc -L native=../../bin/x64-Linux/shared/Release example_full.rs -o example
 LD_LIBRARY_PATH=../../bin/x64-Linux/shared/Release ./example
 ```
 
-Notes:
+Notes (the first two were found by the Linux container, not by the host
+run):
 
-- `-l:libsqlite3.so` on Unix: the file already carries the `lib` prefix,
-  so `-llibsqlite3` would look for `liblibsqlite3.so`.
+- **Platform-specific `#[link]` name**: the binding uses
+  `#[cfg_attr(windows, link(name = "libsqlite3"))]` /
+  `#[cfg_attr(unix, link(name = "sqlite3"))]`. A single
+  `link(name = "libsqlite3")` works on Windows (there the import library
+  is `libsqlite3.lib`) but on Unix it becomes `-llibsqlite3`, and the
+  linker then looks for `liblibsqlite3.so` — hence no `-l:libsqlite3.so`
+  link-arg is needed anymore; `-L native=<dir>` is enough on every
+  platform.
+- **No inner attribute in the included file** (rustc 1.97+): `example_full.rs`
+  `include!`s `libsqlite.rs`, and an inner attribute (`#![allow(dead_code)]`)
+  inside an included file is rejected with "an inner attribute is not
+  permitted in this context". The attribute lives in `example_full.rs` (the
+  file that does the include) and `libsqlite.rs` documents why.
+- Running from Visual Studio (cargo-free): the DLL must be next to the
+  exe or on `PATH` (`PATH=...;.\..\bin\x64-Windows\shared\Release`).
 - `static_str` reads strings owned by the library's static data
   (versions, error messages); `take_str` releases the
   SQLite-allocated ones with `sqlite_core_string_free`.

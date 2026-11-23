@@ -11,6 +11,10 @@
 //
 // Exit code = number of failed checks.
 
+// Inner attribute in the file that does the include!(): libsqlite.rs is an
+// included file and cannot carry one itself (see the note at its top).
+#![allow(dead_code)]
+
 include!("libsqlite.rs");
 
 use std::io::Write;

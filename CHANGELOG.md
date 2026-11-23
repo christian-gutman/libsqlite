@@ -13,15 +13,37 @@ separately by `sqlite_core_sqlite_version()`.
 
 ### Added
 
+- **Binding containers**: `docker/bindings/{python,csharp,go,rust,nodejs,java}.Dockerfile`
+  plus `docker/build_all.cmd`, which runs every verified language in Linux
+  (library build + CTest suite + canonical example against the real `.so`)
+  and prints a pass/fail matrix; each image is removed after its run so
+  docker disk usage stays flat. FoxPro and Clipper are excluded on purpose
+  (Windows-only 16/32-bit consumers of the DLL).
+
+### Fixed
+
+- **Rust binding with rustc 1.97+**: `#![allow(dead_code)]` inside an
+  `include!`d file is rejected ("an inner attribute is not permitted in
+  this context"), so the example stopped compiling with current
+  toolchains. The attribute moved to `bindings/rust/example_full.rs` (the
+  file that does the include) and `libsqlite.rs` documents why.
+- **Rust linking on Unix**: `#[link(name = "libsqlite3")]` becomes
+  `-llibsqlite3` and the linker looks for `liblibsqlite3.so`. The name is
+  now platform-specific (`libsqlite3` on Windows, where the import library
+  is `libsqlite3.lib`; `sqlite3` on Unix, which maps to `libsqlite3.so`),
+  and no `-l:libsqlite3.so` link-arg is needed: `-L native=<dir>` suffices
+  everywhere. Both defects were found by the Rust Linux container — the
+  host-only verification had used an older rustc and never linked on Linux.
+- **Container exit codes**: every `bindings/<lang>.Dockerfile` now captures
+  the example's exit status and re-raises it (`rc=$?; echo ..._EXIT=$rc;
+  exit $rc`). The trailing `echo` used to mask failures, so `docker run`
+  reported success even when the example failed.
 - **Language bindings** (`bindings/`): Python, C#, Go, Rust, Node.js and
   Java now wrap the frozen API, each with a canonical example verified
   against a real build (19/19, 19/19, 19/19, 19/19, 18/18 and 20/20 checks
-  respectively; Go and Java also run in their Linux containers). Every
+  respectively, all of them also inside their Linux containers). Every
   binding is checked against `src/sqlite/core/sqlite.def` by
   `bindings/verify_symbols.py` (34/34 symbols in all of them).
-- **Java binding container**: `docker/bindings/java.Dockerfile` builds the
-  library, runs the CTest suite, fetches the JNA jar from Maven Central and
-  runs the Java example against the Linux shared object.
 - **Chunked BLOB writes**: `sqlite_core_insert_blob` and
   `sqlite_core_update_blob` stream a file into a BLOB column through the
   incremental blob I/O API in chunks (64 KiB default, configurable;

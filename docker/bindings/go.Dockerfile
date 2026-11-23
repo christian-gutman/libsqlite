@@ -25,4 +25,7 @@ ENV CGO_LDFLAGS="-L/src/bin/x64-Linux/shared/Release -llibsqlite3"
 ENV LD_LIBRARY_PATH=/src/bin/x64-Linux/shared/Release
 
 WORKDIR /src/bindings/go
-CMD ["sh", "-c", "LIBDIR=$(dirname $(find /src/bin -name 'libsqlite3.so' | head -1)); echo \"so at: $LIBDIR\"; ls -la $LIBDIR; CGO_LDFLAGS=\"-L$LIBDIR -Wl,-rpath,$LIBDIR\" LD_LIBRARY_PATH=$LIBDIR go run ."]
+CMD ["sh", "-c", "LIBDIR=$(dirname $(find /src/bin -name 'libsqlite3.so' | head -1)); \
+echo \"so at: $LIBDIR\"; ls -la $LIBDIR; \
+CGO_LDFLAGS=\"-L$LIBDIR -Wl,-rpath,$LIBDIR\" LD_LIBRARY_PATH=$LIBDIR go run .; \
+rc=$?; echo GO_EXIT=$rc; exit $rc"]

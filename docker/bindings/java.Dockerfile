@@ -27,10 +27,11 @@ RUN curl -fsSL -o /opt/jna.jar \
 
 ENV JNA_JAR=/opt/jna.jar
 
-# 3. Java canonical example against the real .so
+# 3. Java canonical example against the real .so; the exit code survives
+#    the echo so docker run reports a failure correctly
 WORKDIR /src/bindings/java
 CMD ["sh", "-c", "LIB=$(find /src/bin -name 'libsqlite3.so' | head -1); \
 echo \"so at: $LIB\"; ls -la $LIB; \
 javac -encoding UTF-8 -cp $JNA_JAR -d classes LibSqlite.java ExampleFull.java \
 && java -cp classes:$JNA_JAR -Djna.encoding=UTF-8 ExampleFull $LIB; \
-echo JAVA_EXIT=$?"]
+rc=$?; echo JAVA_EXIT=$rc; exit $rc"]

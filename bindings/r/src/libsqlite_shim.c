@@ -586,40 +586,38 @@ SEXP sqlite_r_json(SEXP db, SEXP what, SEXP a, SEXP b, SEXP params)
     }
 
     if (w == 2) {
+        /* Mirrors sqlite_core_execute_reader_to_json, but only with the
+         * frozen API: string_format/string_concat allocate with the SQLite
+         * allocator (the engine helpers are not part of the export list, so
+         * they would not link against the Windows DLL). */
         sqlite_core_json_builder_t builder;
         memset(&builder, 0, sizeof(builder));
-        builder.string_ptr = sqlite3_mprintf("[\n");
-        if (builder.string_ptr == NULL) {
-            params_free(&pa);
-            Rf_error("libsqlite3: out of memory building the JSON array");
-        }
-        builder.allocated_size = (size_t)sqlite3_msize(builder.string_ptr);
-        builder.current_len = strlen(builder.string_ptr);
 
         int inner_rows = sqlite_core_execute_reader(
             h, text_of(a), pa.items, pa.count,
             sqlite_core_json_writer_callback, &builder, err, (int)sizeof(err));
         if (inner_rows >= 0 && !builder.has_error) {
             if (builder.rows_processed == 0) {
-                sqlite3_free(builder.string_ptr);
-                json = sqlite3_mprintf("[]");
+                json = sqlite_core_string_format("[]");
                 rows = 0;
             } else {
-                size_t len = builder.current_len + 2;
-                char *closed = (char *)sqlite3_realloc(builder.string_ptr,
-                                                       (int)len + 1);
-                if (closed != NULL) {
-                    memcpy(closed + builder.current_len, "\n]", 3);
-                    closed[len] = '\0';
-                    json = closed;
-                    rows = builder.rows_processed;
-                } else {
-                    sqlite3_free(builder.string_ptr);
-                    rows = SQLITE_NOMEM;
+                /* "[\n" + <rows> + "\n]" */
+                char *with_close = sqlite_core_string_concat(
+                    builder.string_ptr == NULL ? "" : builder.string_ptr, "\n]");
+                char *with_open = sqlite_core_string_concat("[\n", with_close);
+                if (with_close != NULL) {
+                    sqlite_core_string_free(with_close);
                 }
+                if (builder.string_ptr != NULL) {
+                    sqlite_core_string_free(builder.string_ptr);
+                }
+                json = with_open;
+                rows = builder.rows_processed;
             }
         } else {
-            sqlite3_free(builder.string_ptr);
+            if (builder.string_ptr != NULL) {
+                sqlite_core_string_free(builder.string_ptr);
+            }
             rows = inner_rows < 0 ? inner_rows : SQLITE_NOMEM;
         }
         params_free(&pa);

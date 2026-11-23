@@ -50,6 +50,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | Python | `python/binding.py` | `python/example_full.py` | ✅ ctypes, container |
 | C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | ✅ dotnet 8, container |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ✅ g++ (header-only), container |
+| Swift | `swift/LibSqlite.swift` | `swift/ExampleFull.swift` | ✅ swiftc (módulo C propio), container |
 | Go | `go/libsqlite.go` | `go/example_full.go` | ✅ cgo, container |
 | Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | ✅ rustc + container (fixed for 1.97+, see its README) |
 | Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | ✅ koffi, container |
@@ -101,13 +102,14 @@ CTest suite and then compiles and runs its example:
 docker\build.cmd python   :: builds, runs and removes the image
 docker\build.cmd csharp   :: publishes the example, .so next to the DLL
 docker\build.cmd cpp      :: g++ -std=c++17 against the header-only binding
+docker\build.cmd swift    :: swiftc -I include + module.modulemap
 docker\build.cmd go
 docker\build.cmd rust     :: plain rustc + the platform #[link] name
 docker\build.cmd nodejs   :: npm install koffi inside the container
 docker\build.cmd java     :: also fetches the JNA jar from Maven Central
 docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
 
-docker\build_all.cmd      :: the eight of them in sequence + pass/fail matrix
+docker\build_all.cmd      :: the nine of them in sequence + pass/fail matrix
 ```
 
 FoxPro and Clipper are deliberately **not** containerized: they consume

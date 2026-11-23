@@ -71,6 +71,12 @@ Builds the library, runs the full CTest suite, compiles the shim with
   NUL-terminated UTF-8; the shim copies the R string into its own buffer
   (SQLite binds with `SQLITE_TRANSIENT`, so the copy is enough) and frees
   it after the call.
+- **No engine internals**: the shim never calls `sqlite3_*` directly. The
+  JSON path builds its document with `sqlite_core_string_format` /
+  `sqlite_core_string_concat` / `sqlite_core_string_free`, because the
+  engine helpers are not part of the frozen export list (they resolve on
+  Linux, where the `.so` is built with default visibility, but not against
+  the Windows DLL).
 - **Verified in the container** (there is no R on the build host): 21
   checks, 0 failures, CTest 7/7.
 

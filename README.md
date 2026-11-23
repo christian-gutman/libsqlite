@@ -412,6 +412,7 @@ each one (same flow in every language, so results can be compared):
 | Python | [`bindings/python`](bindings/python) |
 | C# / .NET | [`bindings/csharp`](bindings/csharp) |
 | C++ | [`bindings/cpp`](bindings/cpp) |
+| Swift | [`bindings/swift`](bindings/swift) |
 | Go | [`bindings/go`](bindings/go) |
 | Rust | [`bindings/rust`](bindings/rust) |
 | Node.js | [`bindings/nodejs`](bindings/nodejs) |
@@ -464,7 +465,7 @@ the language example against the real `.so`, and is removed at the end
 (`docker system df` stays flat):
 
 ```bat
-docker\build_all.cmd            :: python csharp cpp go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp swift go rust nodejs java r
 docker\build.cmd python         :: a single language
 ```
 

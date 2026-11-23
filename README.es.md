@@ -418,6 +418,7 @@ comparar resultados):
 | Python | [`bindings/python`](bindings/python) |
 | C# / .NET | [`bindings/csharp`](bindings/csharp) |
 | C++ | [`bindings/cpp`](bindings/cpp) |
+| Swift | [`bindings/swift`](bindings/swift) |
 | Go | [`bindings/go`](bindings/go) |
 | Rust | [`bindings/rust`](bindings/rust) |
 | Node.js | [`bindings/nodejs`](bindings/nodejs) |
@@ -473,7 +474,7 @@ compila y ejecuta el ejemplo del lenguaje contra el `.so` real; la imagen
 se elimina al final (`docker system df` no crece):
 
 ```bat
-docker\build_all.cmd            :: python csharp cpp go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp swift go rust nodejs java r
 docker\build.cmd python         :: un solo lenguaje
 ```
 

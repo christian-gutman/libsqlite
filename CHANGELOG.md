@@ -38,12 +38,33 @@ separately by `sqlite_core_sqlite_version()`.
   the example's exit status and re-raises it (`rc=$?; echo ..._EXIT=$rc;
   exit $rc`). The trailing `echo` used to mask failures, so `docker run`
   reported success even when the example failed.
-- **Language bindings** (`bindings/`): Python, C#, Go, Rust, Node.js, Java
-  and R now wrap the frozen API, each with a canonical example verified
-  against a real build (19/19, 19/19, 19/19, 19/19, 18/18, 20/20 and 21/21
-  checks respectively, all of them also inside their Linux containers).
-  Every binding is checked against `src/sqlite/core/sqlite.def` by
-  `bindings/verify_symbols.py` (34/34 symbols in all of them).
+- **Language bindings** (`bindings/`): Python, C#, C++, Swift, Go, Rust,
+  Node.js, Java and R now wrap the frozen API, each with a canonical
+  example verified against a real build (19/19, 19/19, 28/28, 32/32,
+  19/19, 19/19, 18/18, 20/20 and 21/21 checks respectively, all of them
+  also inside their Linux containers). Every binding is checked against
+  `src/sqlite/core/sqlite.def` by `bindings/verify_symbols.py` (34/34
+  symbols in all of them).
+- **Swift binding** (`bindings/swift`): `include/libsqlite.h` +
+  `module.modulemap` make the frozen surface importable with `import
+  libsqlite3`, and `LibSqlite.swift` adds the Swift layer — `Connection`
+  (class, closes in `deinit`), `ParamSet` (own native copies of name and
+  value, allocated stable array), `takeString` / `staticString` following
+  the allocator rule, the dedicated `sqlite_core_begin/commit/
+  rollback_transaction` wrappers, a `@_silgen_name` binding for the C
+  variadic `sqlite_core_string_format` (Swift marks imported variadics
+  unavailable) and a C counting trampoline (`sqlite3_stmt*`+context, because
+  a C function pointer cannot be formed from a context-capturing closure).
+  `readerJsonCallback()` also drives `sqlite_core_json_writer_callback`.
+- **Swift container**: `docker/bindings/swift.Dockerfile` (`swift:6.0`)
+  compiles with `swiftc -I include` against the Linux shared object.
+- **R shim no longer calls engine internals**: the JSON path used
+  `sqlite3_mprintf` / `sqlite3_realloc` / `sqlite3_free`, which the frozen
+  export list does not contain (they link on Linux, where the shared object
+  is built with default visibility, but **not** against the Windows DLL).
+  The document is now assembled with `sqlite_core_string_format` /
+  `sqlite_core_string_concat` / `sqlite_core_string_free` — all part of the
+  34 exported symbols.
 - **R binding** (`bindings/r`): `libsqlite.R` + `src/libsqlite_shim.c`
   (compiled with `R CMD SHLIB`). The shim is unavoidable — R's `.C()`
   discards the C return value (the `sqlite3*` handle would be unreachable),

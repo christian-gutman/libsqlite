@@ -14,7 +14,8 @@ and runs the suites (and one language example) against the real artifact.
 docker\build.cmd python
 docker\build.cmd java      :: downloads the JNA jar, runs javac + the example
 docker\build.cmd r         :: compiles the R shim (R CMD SHLIB) + runs it
-docker\build_all.cmd       :: python csharp go rust nodejs java r
+docker\build.cmd cpp       :: g++ -std=c++17 (header-only binding)
+docker\build_all.cmd       :: python csharp cpp go rust nodejs java r
 ```
 
 Flow of a language container:

@@ -411,6 +411,7 @@ each one (same flow in every language, so results can be compared):
 | C (native) | [`src/sqlite/examples`](src/sqlite/examples) |
 | Python | [`bindings/python`](bindings/python) |
 | C# / .NET | [`bindings/csharp`](bindings/csharp) |
+| C++ | [`bindings/cpp`](bindings/cpp) |
 | Go | [`bindings/go`](bindings/go) |
 | Rust | [`bindings/rust`](bindings/rust) |
 | Node.js | [`bindings/nodejs`](bindings/nodejs) |
@@ -463,7 +464,7 @@ the language example against the real `.so`, and is removed at the end
 (`docker system df` stays flat):
 
 ```bat
-docker\build_all.cmd            :: python csharp go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp go rust nodejs java r
 docker\build.cmd python         :: a single language
 ```
 

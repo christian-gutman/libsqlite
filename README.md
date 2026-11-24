@@ -423,6 +423,7 @@ each one (same flow in every language, so results can be compared):
 | Julia | [`bindings/julia`](bindings/julia) |
 | Fortran | [`bindings/fortran`](bindings/fortran) |
 | Kotlin | [`bindings/kotlin`](bindings/kotlin) |
+| Nim | [`bindings/nim`](bindings/nim) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -470,7 +471,7 @@ the language example against the real `.so`, and is removed at the end
 (`docker system df` stays flat):
 
 ```bat
-docker\build_all.cmd            :: python csharp cpp swift ruby julia kotlin fortran go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp swift ruby julia kotlin nim fortran go rust nodejs java r
 docker\build.cmd python         :: a single language
 ```
 

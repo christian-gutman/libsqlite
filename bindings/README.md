@@ -58,6 +58,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | R | `r/libsqlite.R` | `r/example_full.R` | ✅ shim + `R CMD SHLIB`, container (21 checks) |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ✅ ffi gem, container (29 checks) |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | ✅ ccall, container (32 checks) |
+| Nim | `nim/libsqlite.nim` | `nim/example_full.nim` | ✅ {.importc, dynlib}, container |
 | Fortran | `fortran/libsqlite.f90` | `fortran/example_full.f90` | ✅ gfortran (iso_c_binding), container (33 checks) |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
@@ -67,13 +68,13 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | Delphi / FPC | `delphi/libsqlite.pas` | `delphi/example_full.dpr` | ⬜ |
 | VB.NET | `vbnet/LibSqlite.vb` | `vbnet/ExampleFull.vb` | ⬜ |
 | D | `d/libsqlite.d` | `d/example_full.d` | ⬜ |
-| Nim | `nim/libsqlite.nim` | `nim/example_full.nim` | ⬜ |
 | Zig | `zig/libsqlite.zig` | `zig/example_full.zig` | ⬜ |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ⬜ |
 | PHP | `php/libsqlite.php` | `php/example_full.php` | ⬜ |
 | LuaJIT | `lua/libsqlite.lua` | `lua/example_full.lua` | ⬜ |
 | Perl | `perl/libsqlite.pl` | `perl/example_full.pl` | ⬜ |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | ⬜ |
+| Nim | `nim/libsqlite.nim` | `nim/example_full.nim` | ✅ {.importc, dynlib}, container |
 | Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | ⬜ |
 | Tcl | `tcl/libsqlite.tcl` | `tcl/example_full.tcl` | ⬜ |
 | MATLAB | `matlab/libsqlite.m` | `matlab/example_full.m` | ⬜ |
@@ -115,7 +116,7 @@ docker\build.cmd java     :: also fetches the JNA jar from Maven Central
 docker\build.cmd kotlin  :: Kotlin compiler + JNA jar, kotlinc + kotlin
 docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
 
-docker\build_all.cmd      :: the twelve of them in sequence + pass/fail matrix
+docker\build_all.cmd      :: the thirteen of them in sequence + pass/fail matrix
 ```
 
 FoxPro and Clipper are deliberately **not** containerized: they consume

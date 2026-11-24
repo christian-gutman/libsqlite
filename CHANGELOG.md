@@ -114,6 +114,18 @@ separately by `sqlite_core_sqlite_version()`.
   (`eclipse-temurin:17`) installs the Kotlin compiler (GitHub release) and
   the JNA jar (Maven Central) and then compiles/runs the example with
   `kotlinc` / `kotlin`; kotlin joins `build_all.cmd` (thirteen languages).
+- **Nim binding** (`bindings/nim`): `libsqlite.nim` declares the frozen
+  34-symbol surface with `{.importc, dynlib: libname.}` — Nim resolves the
+  symbols in the library at run time, so there is no wrapper library and no
+  link-time dependency — and the C union of `sqlite_core_param_t` is declared
+  with Nim's `{.union.}` pragma (exact 16-byte layout on LP64). The reader
+  callback is a top-level `{.cdecl.}` proc (a cdecl proc cannot capture the
+  environment), `ParamSet` owns the `cstring` copies, and the JSON document
+  is also built by driving `sqlite_core_execute_reader` with the exported
+  `sqlite_core_json_writer_callback`.
+- **Nim container**: `docker/bindings/nim.Dockerfile` (`nimlang/nim:2.0.14`)
+  builds the library, runs the CTest suite and compiles/runs the example
+  with `nim c -d:release`; nim joins `build_all.cmd` (fourteen languages).
 - **R shim no longer calls engine internals**: the JSON path used
   `sqlite3_mprintf` / `sqlite3_realloc` / `sqlite3_free`, which the frozen
   export list does not contain (they link on Linux, where the shared object

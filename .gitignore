@@ -54,3 +54,7 @@ bindings/fortran/example
 # Kotlin binding artifacts (compiler output and the JNA jar)
 bindings/kotlin/lib/
 bindings/kotlin/out/
+# Nim binding artifacts (nimcache output and the compiled example)
+bindings/nim/.nimcache/
+bindings/nim/example_full
+bindings/nim/nimcache/

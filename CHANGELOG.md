@@ -102,6 +102,18 @@ separately by `sqlite_core_sqlite_version()`.
   `gfortran` (the Debian `gfortran` alternatives package fails its
   post-installation script there); it compiles the module first (gfortran
   emits `libsqlite.mod`) and runs the example.
+- **Kotlin binding** (`bindings/kotlin`): mirror of the Java binding on the
+  JVM side (JNA interface with the 34 symbols), with a Kotlin layer
+  (`Sqlite.ParamSet` building the `sqlite_core_param_t[]` array in native
+  memory, and `Sqlite.Connection` wrapping the handle). `sqlite_core_json_writer_callback`
+  is bound but not passed as a callback (a symbol bound with `Native.load`
+  has no address you can hand to JNA), which is the same choice the Java,
+  C#, Go and C++ bindings make; the reader callback is a Kotlin `fun
+  interface ... : Callback` (SAM conversion).
+- **Kotlin container**: `docker/bindings/kotlin.Dockerfile`
+  (`eclipse-temurin:17`) installs the Kotlin compiler (GitHub release) and
+  the JNA jar (Maven Central) and then compiles/runs the example with
+  `kotlinc` / `kotlin`; kotlin joins `build_all.cmd` (thirteen languages).
 - **R shim no longer calls engine internals**: the JSON path used
   `sqlite3_mprintf` / `sqlite3_realloc` / `sqlite3_free`, which the frozen
   export list does not contain (they link on Linux, where the shared object

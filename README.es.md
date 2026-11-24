@@ -428,6 +428,7 @@ comparar resultados):
 | Ruby | [`bindings/ruby`](bindings/ruby) |
 | Julia | [`bindings/julia`](bindings/julia) |
 | Fortran | [`bindings/fortran`](bindings/fortran) |
+| Kotlin | [`bindings/kotlin`](bindings/kotlin) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -478,7 +479,7 @@ compila y ejecuta el ejemplo del lenguaje contra el `.so` real; la imagen
 se elimina al final (`docker system df` no crece):
 
 ```bat
-docker\build_all.cmd            :: python csharp cpp swift ruby julia fortran go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp swift ruby julia kotlin fortran go rust nodejs java r
 docker\build.cmd python         :: un solo lenguaje
 ```
 

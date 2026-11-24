@@ -63,7 +63,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
 | Swift | `swift/LibSqlite.swift` | `swift/example_full.swift` | ⬜ |
-| Kotlin | `kotlin/LibSqlite.kt` | `kotlin/ExampleFull.kt` | ⬜ |
+| Kotlin | `kotlin/libsqlite.kt` | `kotlin/ExampleFull.kt` | ✅ JNA + kotlinc, container (31 checks) |
 | Delphi / FPC | `delphi/libsqlite.pas` | `delphi/example_full.dpr` | ⬜ |
 | VB.NET | `vbnet/LibSqlite.vb` | `vbnet/ExampleFull.vb` | ⬜ |
 | D | `d/libsqlite.d` | `d/example_full.d` | ⬜ |
@@ -112,9 +112,10 @@ docker\build.cmd go
 docker\build.cmd rust     :: plain rustc + the platform #[link] name
 docker\build.cmd nodejs   :: npm install koffi inside the container
 docker\build.cmd java     :: also fetches the JNA jar from Maven Central
+docker\build.cmd kotlin  :: Kotlin compiler + JNA jar, kotlinc + kotlin
 docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
 
-docker\build_all.cmd      :: the eleven of them in sequence + pass/fail matrix
+docker\build_all.cmd      :: the twelve of them in sequence + pass/fail matrix
 ```
 
 FoxPro and Clipper are deliberately **not** containerized: they consume

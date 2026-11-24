@@ -50,3 +50,7 @@ bindings/fortran/example
 # Visual Studio local state (created by a local dotnet run)
 .vs/
 *.suo
+
+# Kotlin binding artifacts (compiler output and the JNA jar)
+bindings/kotlin/lib/
+bindings/kotlin/out/

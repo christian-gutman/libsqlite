@@ -51,6 +51,7 @@ results are comparable line by line.
 | `bindings/ruby.Dockerfile` | `ruby:3.3-bookworm` | `gem install ffi` | 29 checks |
 | `bindings/julia.Dockerfile` | `julia:1.11-bookworm` | none (`ccall`/`@cfunction`) | 32 checks |
 | `bindings/fortran.Dockerfile` | `ubuntu:24.04` + gfortran | none (iso_c_binding) | 33 checks |
+| `bindings/kotlin.Dockerfile` | `eclipse-temurin:17` + Kotlin + JNA | kotlinc + the JNA jar | 31 checks |
 
 **Not containerized:** Visual FoxPro (`bindings/foxpro`) and Clipper
 (`bindings/clipper`). Both are Windows-only legacy consumers of the DLL

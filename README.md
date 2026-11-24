@@ -394,7 +394,8 @@ statements (no string concatenation, no injection).
 | Document | Contents |
 |----------|----------|
 | [docs/behavior.md](docs/behavior.md) | Behavioral contract with .NET: mapping per function, return codes, JSON, encoding (the acceptance contract) |
-| [docs/pragmas.md](docs/pragmas.md) | PRAGMA bundle (WAL, synchronous, busy_timeout, foreign_keys, temp_store): what each one does, scope and how to apply it at open time |
+| [docs/pragmas.md](docs/pragmas.md) | PRAGMA bundle
+| [docs/PROGRESS.md](docs/PROGRESS.md) | Binding progress: which languages are verified today, the container matrix, the frozen 34-symbol API and what is still pending | (WAL, synchronous, busy_timeout, foreign_keys, temp_store): what each one does, scope and how to apply it at open time |
 | [docs/behavior.es.md](docs/behavior.es.md) | Same contract, in Spanish |
 | [README.es.md](README.es.md) | This README in Spanish |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What is pending: Android/Flutter, iOS, WASM, FoxPro FLL, release |

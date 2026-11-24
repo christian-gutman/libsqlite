@@ -45,14 +45,36 @@ error paths → close) is implemented for other languages; see
 [`bindings/README.md`](../../bindings/README.md) for the rules and the
 full table.
 
-Covered so far:
+Covered so far — 14 languages verified end to end in containers
+(library built, CTest suite green, canonical example green):
+
+| Language | Folder | Status | Checks |
+|----------|--------|--------|--------|
+| C (this folder) | `src/sqlite/examples` | native | — |
+| Python | `bindings/python` | ✅ verified, container | 19 |
+| C# / .NET | `bindings/csharp` | ✅ verified, container | 19 |
+| C++ | `bindings/cpp` | ✅ verified, container | 28 |
+| Swift | `bindings/swift` | ✅ verified, container | 32 |
+| Go | `bindings/go` | ✅ verified, container | 19 |
+| Rust | `bindings/rust` | ✅ verified, container | 19 |
+| Node.js | `bindings/nodejs` | ✅ verified, container | 18 |
+| Java | `bindings/java` | ✅ verified, container | 20 |
+| R | `bindings/r` | ✅ verified, container | 21 |
+| Ruby | `bindings/ruby` | ✅ verified, container | 29 |
+| Julia | `bindings/julia` | ✅ verified, container | 32 |
+| Kotlin | `bindings/kotlin` | ✅ verified, container | 31 |
+| Nim | `bindings/nim` | ✅ verified, container | 34 |
+| Fortran | `bindings/fortran` | ✅ verified, container | 33 |
+
+Also declared (34 symbols each) but outside the container matrix:
 
 | Language | Folder | Status |
 |----------|--------|--------|
-| C (this folder) | `src/sqlite/examples` | native |
-| Python | `bindings/python` | verified (19/19) |
-| C# / .NET | `bindings/csharp` | verified (19/19, net8.0) |
-| Go | `bindings/go` | written, needs cgo toolchain |
+| Visual FoxPro 9 | `bindings/foxpro` | 🟡 declarations + README only |
+| Clipper | `bindings/clipper` | 🟡 declarations + README only |
+
+Pending (no example yet): Dart/Flutter, D, Haskell, PHP, Perl, Zig,
+LuaJIT, Tcl, MATLAB, Delphi/FPC, VB6, COBOL, PowerBuilder, RPG.
 
 > **Windows shared builds (DLL)** export exactly the 31 `sqlite_core_*`
 > symbols listed in `core/sqlite.def`. The engine helpers

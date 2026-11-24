@@ -11,7 +11,7 @@ No compilation of the binding itself: link against `libsqlite3`.
 ## Container
 
 ```bat
-docker\build.cmd.cmd.cmd.cmd    :: see the note below
+docker\build.cmd fortran    :: see the note below
 ```
 
 The container (`docker/bindings/fortran.Dockerfile`) uses `ubuntu:24.04`

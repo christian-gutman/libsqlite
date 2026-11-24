@@ -18,7 +18,7 @@ KOTLINC=kotlinc ./run.sh ../../bin/x64-Linux/shared/Release/libsqlite3.so
 ## Container
 
 ```bat
-docker\build.cmd.cmd.cmd    :: see the note below
+docker\build.cmd kotlin    :: see the note below
 ```
 
 `docker/bindings/kotlin.Dockerfile` uses `eclipse-temurin:17`, installs the

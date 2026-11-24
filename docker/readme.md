@@ -18,7 +18,7 @@ docker\build.cmd cpp       :: g++ -std=c++17 (header-only binding)
 docker\build.cmd swift     :: swiftc -I include + module.modulemap
 docker\build.cmd ruby      :: installs the ffi gem, runs the example
 docker\build.cmd julia     :: ccall/@cfunction, no dependencies
-docker\build_all.cmd       :: python csharp cpp go rust nodejs java r swift
+docker\build_all.cmd       :: python csharp cpp go rust nodejs java r swift ruby julia kotlin nim fortran
 ```
 
 Flow of a language container:

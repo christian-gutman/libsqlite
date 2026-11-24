@@ -66,6 +66,12 @@ Covered so far — 14 languages verified end to end in containers
 | Nim | `bindings/nim` | ✅ verified, container | 34 |
 | Fortran | `bindings/fortran` | ✅ verified, container | 33 |
 
+### 🟡 Written, pending container verification
+
+| Language | Folder | Status | Checks |
+|----------|--------|--------|--------|
+| PHP | `bindings/php` | 🟡 FFI binding + example written, needs container run | 19 (planned) |
+
 Also declared (34 symbols each) but outside the container matrix:
 
 | Language | Folder | Status |
@@ -73,7 +79,7 @@ Also declared (34 symbols each) but outside the container matrix:
 | Visual FoxPro 9 | `bindings/foxpro` | 🟡 declarations + README only |
 | Clipper | `bindings/clipper` | 🟡 declarations + README only |
 
-Pending (no example yet): Dart/Flutter, D, Haskell, PHP, Perl, Zig,
+Pending (no example yet): Dart/Flutter, D, Haskell, Perl, Zig,
 LuaJIT, Tcl, MATLAB, Delphi/FPC, VB6, COBOL, PowerBuilder, RPG.
 
 > **Windows shared builds (DLL)** export exactly the 31 `sqlite_core_*`

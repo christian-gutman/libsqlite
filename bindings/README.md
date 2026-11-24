@@ -82,7 +82,7 @@ have no Linux container — they consume the Win32/x64 DLL from a legacy
 | Dart / Flutter | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ deferred by the user |
 | D | `d/libsqlite.d` | `d/example_full.d` | ⬜ |
 | Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | ⬜ |
-| PHP | `php/libsqlite.php` | `php/example_full.php` | ⬜ |
+| PHP | `php/libsqlite.php` | `php/example_full.php` | 🟡 written, needs container verification |
 | Perl | `perl/libsqlite.pl` | `perl/example_full.pl` | ⬜ |
 | Zig | `zig/libsqlite.zig` | `zig/example_full.zig` | ⬜ |
 | LuaJIT | `lua/libsqlite.lua` | `lua/example_full.lua` | ⬜ |

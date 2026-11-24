@@ -18,7 +18,7 @@ docker\build.cmd cpp       :: g++ -std=c++17 (header-only binding)
 docker\build.cmd swift     :: swiftc -I include + module.modulemap
 docker\build.cmd ruby      :: installs the ffi gem, runs the example
 docker\build.cmd julia     :: ccall/@cfunction, no dependencies
-docker\build_all.cmd       :: python csharp cpp go rust nodejs java r swift ruby julia kotlin nim fortran
+docker\build_all.cmd       :: php python csharp cpp go rust nodejs java r swift ruby julia kotlin nim fortran
 ```
 
 Flow of a language container:
@@ -40,6 +40,7 @@ results are comparable line by line.
 
 | Container | Base image | Language dependency | Canonical example |
 |-----------|------------|---------------------|-------------------|
+| `bindings/php.Dockerfile` | `php:8.2-bookworm` | none (FFI) | 19 checks |
 | `bindings/python.Dockerfile` | `python:3.12-bookworm` | none (ctypes) | 19 checks |
 | `bindings/csharp.Dockerfile` | `mcr.microsoft.com/dotnet/sdk:8.0` | `dotnet publish` | 19 checks |
 | `bindings/go.Dockerfile` | `golang:1.22-bookworm` | cgo | 19 checks |

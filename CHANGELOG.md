@@ -71,6 +71,23 @@ separately by `sqlite_core_sqlite_version()`.
 - **Ruby container**: `docker/bindings/ruby.Dockerfile` (`ruby:3.3`) runs
   the example against the Linux shared object; ruby joins `build_all.cmd`
   (ten languages).
+- **Julia binding** (`bindings/julia`): `libsqlite.jl` binds the frozen
+  34-symbol surface with `ccall` — no packages. The library is loaded with
+  `Libdl.dlopen(path, RTLD_LAZY | RTLD_GLOBAL)` and reached with the
+  name-only `ccall` form (Julia 1.11 rejects a pointer in the library
+  position). `ParamSet` builds `sqlite_core_param_t[]` in raw memory, the
+  row callback is a Julia function wrapped with `@cfunction` (the state
+  lives in module-level `Ref`s, since a closure cannot be used there), and
+  `json_writer_callback` drives the exported
+  `sqlite_core_json_writer_callback`. The gate
+  (`bindings/verify_symbols.py`) caught three symbols the first version did
+  not wrap (`sqlite_core_open_ex`, `sqlite_core_string_ansi_to_utf8`,
+  `sqlite_core_string_utf8_to_ansi`); they are now bound and exercised by
+  the example (32 checks).
+- **Julia container**: `docker/bindings/julia.Dockerfile` (`julia:1.11`)
+  adds only the compiler + cmake the library needs, then runs the example
+  against the Linux shared object; julia joins `build_all.cmd` (eleven
+  languages).
 - **R shim no longer calls engine internals**: the JSON path used
   `sqlite3_mprintf` / `sqlite3_realloc` / `sqlite3_free`, which the frozen
   export list does not contain (they link on Linux, where the shared object

@@ -57,6 +57,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | Java | `java/LibSqlite.java` | `java/ExampleFull.java` | ✅ JNA, container |
 | R | `r/libsqlite.R` | `r/example_full.R` | ✅ shim + `R CMD SHLIB`, container (21 checks) |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ✅ ffi gem, container (29 checks) |
+| Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | ✅ ccall, container (32 checks) |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
@@ -104,7 +105,8 @@ docker\build.cmd python   :: builds, runs and removes the image
 docker\build.cmd csharp   :: publishes the example, .so next to the DLL
 docker\build.cmd cpp      :: g++ -std=c++17 against the header-only binding
 docker\build.cmd swift    :: swiftc -I include + module.modulemap
-docker\build.cmd ruby     :: Fiddle (stdlib), no dependencies
+docker\build.cmd ruby     :: the ffi gem (Fiddle::Closure is broken in Ruby 3.x)
+docker\build.cmd julia    :: ccall/@cfunction, no dependencies
 docker\build.cmd go
 docker\build.cmd rust     :: plain rustc + the platform #[link] name
 docker\build.cmd nodejs   :: npm install koffi inside the container

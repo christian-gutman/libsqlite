@@ -400,6 +400,7 @@ parseadas y enlazadas por parámetros (sin concatenar cadenas, sin inyección).
 |-----------|-----------|
 | [docs/behavior.es.md](docs/behavior.es.md) | Contrato de comportamiento con .NET: correspondencia por función, códigos de retorno, JSON, codificación (el contrato de aceptación) |
 | [docs/behavior.md](docs/behavior.md) | El mismo contrato, en inglés |
+| [docs/pragmas.md](docs/pragmas.md) | PRAGMAs de conexion (WAL, synchronous, busy_timeout, foreign_keys, temp_store): que hace cada uno, su alcance y como aplicarlos al abrir |
 | [README.md](README.md) | Este README en inglés |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Qué queda pendiente: Android/Flutter, iOS, WASM, FLL de FoxPro, release |
 | [CHANGELOG.md](CHANGELOG.md) | Historial de versiones y cambios incompatibles |
@@ -426,6 +427,7 @@ comparar resultados):
 | R | [`bindings/r`](bindings/r) |
 | Ruby | [`bindings/ruby`](bindings/ruby) |
 | Julia | [`bindings/julia`](bindings/julia) |
+| Fortran | [`bindings/fortran`](bindings/fortran) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -476,7 +478,7 @@ compila y ejecuta el ejemplo del lenguaje contra el `.so` real; la imagen
 se elimina al final (`docker system df` no crece):
 
 ```bat
-docker\build_all.cmd            :: python csharp cpp swift ruby julia go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp swift ruby julia fortran go rust nodejs java r
 docker\build.cmd python         :: un solo lenguaje
 ```
 

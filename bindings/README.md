@@ -58,6 +58,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | R | `r/libsqlite.R` | `r/example_full.R` | ✅ shim + `R CMD SHLIB`, container (21 checks) |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ✅ ffi gem, container (29 checks) |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | ✅ ccall, container (32 checks) |
+| Fortran | `fortran/libsqlite.f90` | `fortran/example_full.f90` | ✅ gfortran (iso_c_binding), container (33 checks) |
 | Dart | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ |
 | R | `r/libsqlite.R` | `r/example_full.R` | ⬜ |
 | C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | ⬜ |
@@ -73,7 +74,6 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | LuaJIT | `lua/libsqlite.lua` | `lua/example_full.lua` | ⬜ |
 | Perl | `perl/libsqlite.pl` | `perl/example_full.pl` | ⬜ |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | ⬜ |
-| Fortran | `fortran/libsqlite.f90` | `fortran/example_full.f90` | ⬜ |
 | Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | ⬜ |
 | Tcl | `tcl/libsqlite.tcl` | `tcl/example_full.tcl` | ⬜ |
 | MATLAB | `matlab/libsqlite.m` | `matlab/example_full.m` | ⬜ |
@@ -107,13 +107,14 @@ docker\build.cmd cpp      :: g++ -std=c++17 against the header-only binding
 docker\build.cmd swift    :: swiftc -I include + module.modulemap
 docker\build.cmd ruby     :: the ffi gem (Fiddle::Closure is broken in Ruby 3.x)
 docker\build.cmd julia    :: ccall/@cfunction, no dependencies
+docker\build.cmd.cmd    :: gfortran (iso_c_binding); the module is compiled first
 docker\build.cmd go
 docker\build.cmd rust     :: plain rustc + the platform #[link] name
 docker\build.cmd nodejs   :: npm install koffi inside the container
 docker\build.cmd java     :: also fetches the JNA jar from Maven Central
 docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
 
-docker\build_all.cmd      :: the ten of them in sequence + pass/fail matrix
+docker\build_all.cmd      :: the eleven of them in sequence + pass/fail matrix
 ```
 
 FoxPro and Clipper are deliberately **not** containerized: they consume

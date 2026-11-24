@@ -394,6 +394,7 @@ statements (no string concatenation, no injection).
 | Document | Contents |
 |----------|----------|
 | [docs/behavior.md](docs/behavior.md) | Behavioral contract with .NET: mapping per function, return codes, JSON, encoding (the acceptance contract) |
+| [docs/pragmas.md](docs/pragmas.md) | PRAGMA bundle (WAL, synchronous, busy_timeout, foreign_keys, temp_store): what each one does, scope and how to apply it at open time |
 | [docs/behavior.es.md](docs/behavior.es.md) | Same contract, in Spanish |
 | [README.es.md](README.es.md) | This README in Spanish |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What is pending: Android/Flutter, iOS, WASM, FoxPro FLL, release |
@@ -420,6 +421,7 @@ each one (same flow in every language, so results can be compared):
 | R | [`bindings/r`](bindings/r) |
 | Ruby | [`bindings/ruby`](bindings/ruby) |
 | Julia | [`bindings/julia`](bindings/julia) |
+| Fortran | [`bindings/fortran`](bindings/fortran) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 
@@ -467,7 +469,7 @@ the language example against the real `.so`, and is removed at the end
 (`docker system df` stays flat):
 
 ```bat
-docker\build_all.cmd            :: python csharp cpp swift ruby julia go rust nodejs java r
+docker\build_all.cmd            :: python csharp cpp swift ruby julia fortran go rust nodejs java r
 docker\build.cmd python         :: a single language
 ```
 

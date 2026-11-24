@@ -43,3 +43,10 @@ Thumbs.db
 
 # Logs
 *.log
+# Fortran binding artifacts (gfortran module file and the compiled example)
+*.mod
+bindings/fortran/example
+
+# Visual Studio local state (created by a local dotnet run)
+.vs/
+*.suo

@@ -88,6 +88,20 @@ separately by `sqlite_core_sqlite_version()`.
   adds only the compiler + cmake the library needs, then runs the example
   against the Linux shared object; julia joins `build_all.cmd` (eleven
   languages).
+- **Fortran binding** (`bindings/fortran`): `libsqlite.f90` declares the
+  frozen 34-symbol surface with `iso_c_binding` (`interface` blocks with
+  `bind(c, name=...)` plus `bind(C)` derived types), and the union of
+  `sqlite_core_param_t` is represented by a single `(addr, len, max_len)`
+  type where `dVal`/`iVal` share bytes with `blob_or_text.ptr` (written with
+  `transfer()`). The reader callback is a Fortran function passed with
+  `c_funloc`. Fortran's memory rule — `c_loc()` of a local buffer would
+  dangle — is documented, and every string the C side read is owned by the
+  caller.
+- **Fortran container**: `docker/bindings/fortran.Dockerfile` runs on
+  `ubuntu:24.04`, because the official `gcc:<ver>` images cannot install
+  `gfortran` (the Debian `gfortran` alternatives package fails its
+  post-installation script there); it compiles the module first (gfortran
+  emits `libsqlite.mod`) and runs the example.
 - **R shim no longer calls engine internals**: the JSON path used
   `sqlite3_mprintf` / `sqlite3_realloc` / `sqlite3_free`, which the frozen
   export list does not contain (they link on Linux, where the shared object

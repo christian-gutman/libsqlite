@@ -17,6 +17,39 @@ written once keeps working for the whole 1.x line.
 | Text | The API speaks UTF-8 (`char*`). Convert from/to the host string type explicitly. |
 | Errors | `>= 0` success (bytes/rows written for value functions, `1` for flag ones); `SQLITE_MISUSE`, `SQLITE_CANTOPEN`, negative SQLite codes for failures; `-2` `BUFFER_TOO_SMALL`, `-3` `BLOB_TOO_SMALL`. |
 
+## Platform coverage
+
+**Windows and Linux are verified in CI on every push.**
+
+The sources also target macOS and the build produces `libsqlite3.dylib`
+(either `bin/arm64-Darwin/…` or `bin/x64-Darwin/…`, see the
+[build options](../README.md#cmake-options) in the root README), but
+**macOS is not CI-verified**. This repository has no access to
+GitHub-hosted macOS runners:
+
+| `runs-on` | Result | Why |
+|---|---|---|
+| `macos-14`, `macos-15` (arm64) | rejected instantly | *"The configuration `macos-14-arm64-us-default` is not supported"* |
+| `macos-13` (x64, pinned) | valid, queues forever | the label is accepted but no runner is ever assigned |
+
+None of this affects the code: the engine and the wrapper carry explicit
+`__APPLE__` paths, the same CMake project builds on a Mac, and every
+binding in this table links against that same `.dylib`. The limitation is
+runner access, not the sources.
+
+To verify Darwin locally, on a Mac:
+
+```bash
+cmake -S src/sqlite -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
+```
+
+Registering a **self-hosted Mac runner** is the only way to restore CI
+coverage for macOS (tracked in [`docs/ROADMAP.md`](../docs/ROADMAP.md)).
+The Python binding in [`python/`](python) shows the canonical example for
+every platform.
+
 ## The canonical example
 
 Every language ships `example_full.*` implementing the **same** flow, so

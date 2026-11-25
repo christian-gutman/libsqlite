@@ -2,8 +2,9 @@
 
 **English** · [Español](ROADMAP.es.md)
 
-Status snapshot after the 1.0.0 release (tag `v1.0.0`, CI green on
-Windows Win32/x64, Linux, macOS, shared and static). Ordered by effort,
+Status snapshot after the 1.0.0 release (tag `v1.0.0`). CI is green on
+Windows Win32/x64 and Linux x64 (shared + static); macOS is not
+CI-verified for lack of runner access — see item 12. Ordered by effort,
 not by priority.
 
 | # | Item | Platform(s) | Effort | Status / notes |
@@ -18,7 +19,8 @@ not by priority.
 | 8 | **FoxPro FLL** | Windows | M | Deliberate separate deliverable: rebuild the FLL against the renamed `sqlite_core_*` API (removed from this repository in milestone 0). |
 | 9 | **API documentation site** | web | S/L | The headers already carry Doxygen comments; `doxygen` + GitHub Pages would publish them. |
 | 10 | **Package managers** (vcpkg/conan ports) | all | M | The CMake package (`find_package(libsqlite3)`) and install rules already exist; a port is mostly packaging. |
-| 11 | **Language bindings** (`bindings/`) | all | S→L | **In progress** — Python, C#, C++, Swift, Ruby, Julia, Kotlin, Nim, Fortran, Go, Rust, Node.js, Java and R verified (each with a Linux container; see `docker/bindings/*.Dockerfile` and `docker/build_all.cmd`). Remaining: Dart/Flutter (deliberately last) and the rest of the modern list in `bindings/README.md`. |
+| 11 | **Language bindings** (`bindings/`) | all | S→L | **In progress** — Python, C#, C++, Swift, Ruby, Julia, Kotlin, Nim, Fortran, Go, Rust, Node.js, Java, R and PHP verified (each with a Linux container; see `docker/bindings/*.Dockerfile` and `docker/build_all.cmd`). Remaining: Dart/Flutter (deliberately last) and the rest of the modern list in `bindings/README.md`. |
+| 12 | **macOS CI coverage** | CI | S | **Blocked by GitHub Actions** — `macos-14`/`macos-15` (arm64) are rejected with *"configuration `macos-14-arm64-us-default` is not supported"*, and `macos-13` (x64, the pinned label) is accepted but queues indefinitely with no runner assigned. Windows and Linux stay verified on every push; the macOS code path and the `.dylib` output are unaffected. Restoring it needs a **self-hosted Mac runner**. Details in `bindings/README.md` → *Platform coverage*. |
 
 Only item 1 needs a human with repository access; 5 is the next
 engineering item, 6–7 extend the "one engine everywhere" story, and 11

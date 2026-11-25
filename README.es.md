@@ -65,6 +65,15 @@ instalar SQLite en el sistema — ideal para distribución XCOPY.
 
 El código es C11 estándar y compila sin advertencias (`/W4` en MSVC).
 
+> **Cobertura del CI:** Windows (Win32/x64) y Linux (x64) se verifican en el
+> CI en cada push, tanto en modo compartido como estático. Las fuentes
+> también apuntan a macOS y el build produce `libsqlite3.dylib`, pero
+> **no se verifica en el CI**: este repositorio no tiene acceso a runners
+> macOS alojados en GitHub (`macos-14`/`macos-15` arm64 se rechazan,
+> `macos-13` x64 no consigue runner). El código no está afectado — ver
+> [bindings/README.md → Platform coverage](bindings/README.md#platform-coverage)
+> para el detalle, y [README.md](README.md) para la versión en inglés.
+
 ## Inicio rápido
 
 Clona y compila la DLL compartida Win32 (o usa el helper incluido

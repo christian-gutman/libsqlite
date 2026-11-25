@@ -64,6 +64,16 @@ SQLite installation to deploy — ideal for XCOPY deployments.
 
 The code is standard C11 and compiles warning-clean (`/W4` on MSVC).
 
+> **CI coverage:** Windows (Win32/x64) and Linux (x64) are verified in CI on
+> every push, both shared and static. The sources also target macOS and the
+> build produces `libsqlite3.dylib`, but it is **not CI-verified**: this
+> repository has no access to GitHub-hosted macOS runners
+> (`macos-14`/`macos-15` arm64 are rejected, `macos-13` x64 gets no runner).
+> The code is unaffected — see
+> [bindings/README.md → Platform coverage](bindings/README.md#platform-coverage)
+> for the details, and
+> [README.es.md](README.es.md) for the Spanish version.
+
 ## Quickstart
 
 Clone and build a shared Win32 DLL (or use the included helper

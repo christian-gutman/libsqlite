@@ -4,7 +4,7 @@
 > canónica está en inglés (ver `CONTRIBUTING.md`); este fichero conserva
 > la versión en español.
 
-**English** · [Español](pragmas.md)
+[English](pragmas.md) · **Español**
 
 Cinco ajustes suelen proponerse juntos para una conexión SQLite "amigable
 con la concurrencia". Esta página explica **qué hace cada uno**, **dónde

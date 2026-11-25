@@ -4,7 +4,7 @@
 > canónica está en inglés (ver `CONTRIBUTING.md`); este fichero conserva la
 > versión en español.
 
-**English** · [Español](README.md)
+[English](README.md) · **Español**
 
 `libsqlite.php` declara los 34 símbolos congelados con la extensión
 **FFI incluida en PHP** — sin paquetes externos y sin compilar.

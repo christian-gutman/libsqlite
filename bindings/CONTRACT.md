@@ -153,29 +153,43 @@ compiled trampoline — as `bindings/r/src/libsqlite_shim.c`,
 
 ## 8. Current compliance (measured, not assumed)
 
-Checked by scanning every `example_full.*` for the symbol names it calls.
-"Observed" means the symbol name appears; it is a heuristic and each binding
+Checked by scanning every `example_full.*` for the symbol names it calls,
+using the per-language names from §3 (not the literal C symbol — an earlier
+draft matched only the C names and reported C++ at 11/17, when it actually
+exercises 16: `db.command()` is `execute_command`, `db.read_rows()` is
+`execute_reader`, `db.scalar_int()` is `execute_scalar`). "Observed" means
+one of the documented names appears; it is still a heuristic and each binding
 should confirm its own row.
 
-| Binding | Observed 17-symbol coverage | Known gaps |
-|---------|------------------------------|------------|
+| Binding | Observed coverage | Known gaps |
+|---------|-------------------|------------|
 | Fortran | 17/17 | — |
 | Go | 17/17 | — |
 | Nim | 17/17 | — |
 | Ruby | 17/17 | — |
-| FoxPro | 15/17 | `error_code`, `error_message` (no ANSI conversion path on VFP) |
+| C++ | 16/17 | `error_code` |
+| Julia | 16/17 | `execute_reader` |
+| Kotlin | 16/17 | `execute_scalar` |
+| Swift | 16/17 | `error_code` |
+| FoxPro | 15/17 | `error_code`, `error_message` |
+| Python | 17/17 | — |
+| Java | 17/17 | — |
 | C# | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
-| Java | 14/17 | same |
-| PHP (FFI) | 14/17 | same, plus `execute_reader`/`json_writer_callback` via the shim |
-| Python | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
 | R | 14/17 | same |
 | Rust | 14/17 | same |
-| Julia | 14/17 | `execute_command`, `execute_reader`, `execute_scalar` |
-| Kotlin | 13/17 | `execute_command`, `execute_scalar`, `commit_transaction`, `reader_to_json` |
-| C++ | 11/17 | `execute_command`, `execute_reader`, `execute_scalar`, `commit_transaction`, `rollback_transaction`, `error_code` |
-| Node.js | 13/17 | `execute_scalar`, `commit_transaction`, `error_*` |
-| Swift | 12–14/17 | `execute_command`, `commit_transaction`, `error_code` |
+| PHP (FFI) | 14/17 | same, plus `execute_reader`/`json_writer_callback` via the shim |
+| Node.js | 13/17 | `execute_scalar`, `set_busy_timeout`, `error_code`, `error_message` |
 | Clipper | — | loads symbols by name via `FnLoad`/`_dllfn`; a separate scan is needed |
+
+**The obligations this table creates:** every row with a gap either
+(a) extends its example to close it, or (b) records in its README why the
+language cannot reach that symbol. A silent gap is not acceptable, because
+the next person assumes the symbol was tested.
+
+**The most common gap is small:** `set_busy_timeout`, `error_code` and
+`error_message` — all three are one-liners against the frozen API, and they
+are simply not exercised yet. That is the cheapest coverage to add, and the
+first batch to close.
 
 **The obligations this table creates:** every row with a gap either
 (a) extends its example to close it, or (b) records in its README why the

@@ -196,7 +196,21 @@ public final class ExampleFull {
                 "multi-statement rejected");
 
         // 12. close
-        check(lib.sqlite_core_close(db) == 1, "close");
+        // error diagnostics + busy timeout: the three one-liner symbols every
+    // binding must exercise (bindings/CONTRACT.md). error_message is static
+    // library data: read it with string(), never takeAndFree().
+    check(lib.sqlite_core_set_busy_timeout(db, 1000) == 1, "set_busy_timeout");
+    lib.sqlite_core_execute_non_query(db,
+        "SELECT * FROM no_such_table", null, 0, err, err.length);
+    check(lib.sqlite_core_error_code(db) != LibSqlite.SQLITE_OK,
+          "error_code reports the engine failure");
+    check(lib.sqlite_core_error_code_extended(db) != LibSqlite.SQLITE_OK,
+          "error_code_extended reports the engine failure");
+    Pointer msg = lib.sqlite_core_error_message(db);
+    check(msg != null && !LibSqlite.string(msg).isEmpty(),
+          "error_message reports the last failure");
+
+    check(lib.sqlite_core_close(db) == 1, "close");
 
         for (String f : Arrays.asList(DB, FIXTURE)) {
             new File(f).delete();

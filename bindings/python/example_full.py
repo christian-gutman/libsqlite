@@ -152,6 +152,20 @@ def main():
         db, b"SELECT 1; SELECT 2", None, 0, err, len(err)) == SQLITE_MISUSE,
         "multi-statement rejected")
 
+    # error diagnostics + busy timeout: the three one-liner symbols that
+    # every binding must exercise (see bindings/CONTRACT.md). error_message
+    # is static library data: read it with lib.string, never lib.take.
+    check(lib.lib.sqlite_core_set_busy_timeout(db, 1000) == 1,
+          "set_busy_timeout")
+    lib.lib.sqlite_core_execute_non_query(
+        db, b"SELECT * FROM no_such_table", None, 0, err, len(err))
+    check(lib.lib.sqlite_core_error_code(db) != SQLITE_OK,
+          "error_code reports the engine failure")
+    check(lib.lib.sqlite_core_error_code_extended(db) != SQLITE_OK,
+          "error_code_extended reports the engine failure")
+    check(bool(lib.string(lib.lib.sqlite_core_error_message(db))),
+          "error_message reports the last failure")
+
     check(lib.lib.sqlite_core_close(db) == 1, "close")
 
     for f in (DB, FIXTURE):

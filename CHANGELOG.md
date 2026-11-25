@@ -161,7 +161,7 @@ separately by `sqlite_core_sqlite_version()`.
 - **PHP binding** (`bindings/php`): `libsqlite.php` declares the frozen
   34-symbol surface with PHP's compiled-in FFI (no external packages) and
   `example_full.php` runs the canonical example. Verified in the Linux
-  container: 19 checks, 0 failures, CTest 7/7.
+  container: 22 checks, 0 failures, CTest 7/7.
   What the container forced (all of it encoded in the files):
   1. The official `php:*` images are compiled from source **without FFI**
      (`php -m` shows no FFI and there is no `/etc/php/*/mods-available`
@@ -197,14 +197,31 @@ separately by `sqlite_core_sqlite_version()`.
   11. **PHP FFI has no callback mechanism at all** (`FFI::callback` does
       not exist — the full method list is cdef, load, scope, new, free,
       cast, type, typeof, arrayType, addr, sizeof, alignof, memcpy,
-      memcmp, memset, string, isNull). `sqlite_core_execute_reader`
-      therefore cannot be driven from PHP, and
-      `sqlite_core_json_writer_callback` — declared like every other
-      frozen symbol — cannot be handed to it either. This is the same
-      limitation the Java, C#, Go, C++ and Kotlin bindings hit: the
-      reader is exercised through the exported
-      `execute_reader_to_json`, the documented path on a shared build.
-      A real row callback needs a C trampoline (R, Swift).
+      memcmp, memset, string, isNull), so pure FFI cannot drive
+      `sqlite_core_execute_reader` nor hand it the exported
+      `sqlite_core_json_writer_callback` — the same limitation the Java,
+      C#, Go, C++ and Kotlin bindings hit.
+- **PHP C shim** (`bindings/php/src/php_shim.c`, built as
+  `libsqlite_shim.so` / `.dll`): ~120 lines that close that gap without
+  re-implementing any behaviour, exactly like the R shim and the Swift
+  trampoline. `sqlite_php_reader_rows` drives `execute_reader` through a C
+  trampoline; `sqlite_php_reader_json` drives it with the exported
+  `sqlite_core_json_writer_callback` plus a `sqlite_core_json_builder_t`
+  context, wrapping the document with the same `"[\n"…"\n]"` protocol
+  `execute_reader_to_json` uses; `sqlite_php_json_writer_callback` exposes
+  the frozen callback's address. The example compares the shim's document
+  with `execute_reader_to_json` **byte for byte**. The shim is compiled
+  inside each container for the platform that runs it, so nothing prebuilt
+  is shipped, and it includes `<stdint.h>` for `uintptr_t` (the same fix
+  `sqlite_core_builder.c` needed on Linux).
+- **Two PHP containers, neither in CI**:
+  `docker/bindings/php.Dockerfile` (`debian:bookworm-slim` + `php-cli`/
+  `php8.2-ffi`, verified: 22 checks, 0 failures) and
+  `docker/bindings/php-windows.Dockerfile`
+  (`mcr.microsoft.com/windows/servercore`, MinGW-w64), which needs a
+  Windows host and is written but not yet verified there. No binding
+  container is wired into `ci.yml`; `docker/readme.md` now says so
+  explicitly, and why.
 - **CI macOS runners**: `macos-latest` stopped being assigned a runner —
   the macOS jobs sat in the queue with `steps: []` and `runner_id: 0`
   (not a single step executed, not even the checkout) and were cancelled

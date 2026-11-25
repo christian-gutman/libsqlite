@@ -58,3 +58,11 @@ bindings/kotlin/out/
 bindings/nim/.nimcache/
 bindings/nim/example_full
 bindings/nim/nimcache/
+
+# PHP binding artifacts: the compiled shim (built inside each container, for
+# the platform that runs it) and the example's local databases
+bindings/php/libsqlite_shim.so
+bindings/php/libsqlite_shim.dll
+bindings/php/php_demo.db
+bindings/php/php_fixture.bin
+bindings/php/php_oversize.bin

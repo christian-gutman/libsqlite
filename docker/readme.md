@@ -7,8 +7,44 @@ and runs the suites (and one language example) against the real artifact.
 |------|---------|
 | `Dockerfile` | Plain Linux build: shared + static, full CTest suite. |
 | `bindings/<lang>.Dockerfile` | Builds the library, runs the suites, then compiles and runs the `bindings/<lang>` canonical example. |
+| `bindings/php-windows.Dockerfile` | **Windows variant** of the PHP container (see below). Not part of CI. |
 | `build.cmd <lang>` | Build the image, run it, **remove the image** and print `docker system df` (keeps disk usage flat). |
 | `build_all.cmd [langs...]` | Runs every binding container one after the other and prints the pass/fail matrix. No arguments = all languages. |
+
+## Not part of CI
+
+**No binding container is wired into `.github/workflows/ci.yml`.** They all run
+from `docker/build.cmd` on a machine that has Docker. This is deliberate:
+
+- The CI matrix (Windows Win32/x64, Linux x64, shared and static) already
+  covers the library and the CTest suites, which is what CI is for.
+- Binding containers need one toolchain image each (dotnet, swift, rust,
+  node, kotlin, julia, nimlang, gfortran, r-base, php, ...). Running the
+  whole matrix in CI would multiply runner minutes for no added coverage of
+  the library itself.
+- macOS runners are not available to this account at all (see
+  `bindings/README.md` → *Platform coverage*), so a matrix that included
+  them would only add red runs.
+
+### The Windows containers
+
+`php.Dockerfile` (Linux) and `php-windows.Dockerfile` (Windows) are a pair:
+same flow, same canonical example, different host toolchain. The shim
+(`bindings/php/src/php_shim.c`) is compiled **inside each container** for the
+platform that will run it, so nothing prebuilt is ever shipped.
+
+Windows containers need a **Windows host** to run (they share the host
+kernel), so they cannot run in Linux CI and are launched locally:
+
+```bat
+docker\build.cmd php-windows    :: needs a Windows host (Docker in Windows container mode)
+```
+
+> **Status:** the Linux container is verified (22 checks, 0 failures, CTest
+> 7/7). The Windows container is written and documented but **not yet
+> verified on a Windows host** — it needs a machine with Docker in Windows
+> container mode. Any Windows-specific fix lands in that Dockerfile with the
+> reason recorded, the same way the other containers' notes do.
 
 ```bat
 docker\build.cmd python

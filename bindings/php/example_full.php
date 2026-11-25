@@ -33,12 +33,36 @@ function check(bool $cond, string $msg): void
 }
 
 $libPath = $argv[1] ?? null;
+$shimPath = $argv[2] ?? null;
+
+if ($shimPath === null) {
+    fwrite(STDERR, "usage: php example_full.php <libsqlite3.so> <libsqlite_shim.so>\n");
+    exit(2);
+}
+if (!is_file($shimPath)) {
+    fwrite(STDERR, "shim not found: $shimPath (build it with docker/build.cmd php)\n");
+    exit(2);
+}
+
 $lib = new LibSqlite($libPath);
 $core = $lib->lib;
+
+/* The ~40-line C shim that closes PHP FFI's missing callback mechanism.
+ * Separate FFI scope, separate .so: it only forwards to the frozen API. */
+$shimCdef = <<<'FFI'
+typedef int sqlite3;
+int sqlite_php_reader_rows(sqlite3 *db, const char *sql, int *out_rows,
+                           int *out_columns, char *err_buf, int err_buf_max);
+int sqlite_php_reader_json(sqlite3 *db, const char *sql, char **out_json,
+                           int *out_rows, char *err_buf, int err_buf_max);
+void *sqlite_php_json_writer_callback(void);
+FFI;
+$shim = FFI::cdef($shimCdef, $shimPath);
 
 echo "libsqlite3 PHP binding\n";
 echo "  library " . $lib->staticString($core->sqlite_core_version()) .
      " / engine " . $lib->staticString($core->sqlite_core_sqlite_version()) . "\n";
+echo "  shim   " . $shimPath . "\n";
 
 // Clean up from previous runs
 foreach ([$DB, $FIXTURE] as $f) {
@@ -83,31 +107,50 @@ $affected = $core->sqlite_core_execute_non_query(
 );
 check($affected === 1, 'named parameter insert');
 
-// ---- 4. reader: rows are read through the exported JSON surface ----
-// PHP FFI cannot create a C function pointer from a closure (the extension
-// has no callback mechanism), so execute_reader is not reachable from PHP.
-// The exported execute_reader_to_json is the documented reader path on a
-// shared build — see libsqlite.php readerCallbackSupport().
-$jsonPtrA = $core->new('void*', false);
-$rowsA = $core->sqlite_core_execute_reader_to_json(
+// ---- 4. execute_reader through the C shim (closes the FFI callback gap) ----
+// PHP FFI cannot turn a PHP closure into a C function pointer, so the shim
+// supplies the trampoline. See libsqlite.php readerCallbackSupport().
+$rowsOut = $core->new('int');
+$colsOut = $core->new('int');
+$rcReader = $shim->sqlite_php_reader_rows(
     $db,
     'SELECT id, name FROM person ORDER BY id',
-    null,
-    0,
-    FFI::addr($jsonPtrA),
+    FFI::addr($rowsOut),
+    FFI::addr($colsOut),
     $err,
     256
 );
-$docA = FFI::isNull($jsonPtrA) ? null : $lib->takeString(FFI::cast('char*', $jsonPtrA));
-$decodedA = $docA === null ? null : json_decode($docA, true);
 check(
-    $rowsA === 1
-    && is_array($decodedA)
-    && count($decodedA) === 1
-    && (int)($decodedA[0]['id'] ?? 0) === 42
-    && ($decodedA[0]['name'] ?? '') === 'Ada',
-    'reader visits the row (json path)'
+    $rcReader === 1 && $rowsOut->cdata === 1 && $colsOut->cdata === 2,
+    'execute_reader visits the row (shim trampoline)'
 );
+
+// ---- 4b. reader driven by the exported json_writer_callback ----
+$jsonPtrB = $core->new('void*', false);
+$rowsB = $core->new('int');
+$rcJson = $shim->sqlite_php_reader_json(
+    $db,
+    'SELECT id, name FROM person ORDER BY id',
+    FFI::addr($jsonPtrB),
+    FFI::addr($rowsB),
+    $err,
+    256
+);
+$docB = FFI::isNull($jsonPtrB) ? null : $lib->takeString(FFI::cast('char*', $jsonPtrB));
+$decodedB = $docB === null ? null : json_decode($docB, true);
+check(
+    $rcJson === 0
+    && $rowsB->cdata === 1
+    && is_array($decodedB)
+    && count($decodedB) === 1
+    && (int)($decodedB[0]['id'] ?? 0) === 42
+    && ($decodedB[0]['name'] ?? '') === 'Ada',
+    'json_writer_callback drives the reader'
+);
+
+// ---- 4c. the frozen callback's own address is reachable ----
+$cbAddr = $shim->sqlite_php_json_writer_callback();
+check(!FFI::isNull($cbAddr), 'json_writer_callback address resolved');
 
 // ---- 5. execute_scalar (COUNT(*)) ----
 $out = $core->new('sqlite_core_param_t', false);
@@ -137,6 +180,7 @@ $rows = $core->sqlite_core_execute_reader_to_json(
 );
 $doc = FFI::isNull($jsonPtr) ? null : $lib->takeString(FFI::cast('char*', $jsonPtr));
 check($rows === 1 && $doc !== null && str_starts_with($doc, '['), 'reader to json');
+check($doc === $docB, 'shim json matches execute_reader_to_json byte for byte');
 echo "  json: " . ($doc ?? '') . "\n";
 
 // ---- 7. insert_json batch ----

@@ -11,6 +11,15 @@
 `example_full.php` es el flujo canónico. Único requisito: `php-cli` con la
 extensión FFI cargada.
 
+## Ficheros
+
+| Fichero | Qué es |
+|---------|--------|
+| `libsqlite.php` | El binding FFI: scope, constructores de parámetros, helpers de la regla del alocador |
+| `example_full.php` | Flujo canónico (22 checks) |
+| `src/php_shim.c` | ~120 líneas de C que cierran la ausencia de callbacks en PHP FFI |
+| `libsqlite_shim.so` | El shim compilado (lo construye el contenedor, ignorado por git) |
+
 ## Requisitos
 
 ```bash
@@ -28,20 +37,69 @@ Detéctala con `extension_loaded('ffi')` / `class_exists('FFI')` —
 > instalación local en Debian/Ubuntu:
 > `apt-get install php-cli php8.2-ffi`.
 
+## Compilar el shim
+
+`example_full.php` necesita el shim, porque PHP FFI no puede crear un
+puntero a función C (ver *El hueco del callback* más abajo):
+
+```bash
+LIB=/path/to/libsqlite3.so
+LIBDIR=$(dirname "$LIB")
+cc -shared -fPIC -O2 -I ../../src/sqlite/core src/php_shim.c \
+   -L "$LIBDIR" -lsqlite3 -Wl,-rpath,"$LIBDIR" -o libsqlite_shim.so
+```
+
 ## Compilar y ejecutar
 
 ```bash
-php example_full.php ../../bin/x64-Linux/shared/Release/libsqlite3.so
+php example_full.php ../../bin/x64-Linux/shared/Release/libsqlite3.so ./libsqlite_shim.so
 ```
 
-## Contenedor
+## Contenedores
+
+Dos contenedores, ambos se lanzan con `docker/build.cmd` y **ninguno forma
+parte del CI** (ver `docker/readme.md`):
+
+| Contenedor | Base | Compila el shim con | Verifica |
+|------------|------|---------------------|----------|
+| `php.Dockerfile` | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` | `cc` dentro del contenedor | Construye la librería, CTest, y luego el ejemplo contra el `.so` |
+| `php-windows.Dockerfile` | `mcr.microsoft.com/windows/servercore` | MSVC (`cl`) | El mismo flujo contra el `.dll` + la biblioteca de importación |
 
 ```bat
 docker\build.cmd php
 ```
 
-`debian:bookworm-slim` + `php-cli`/`php8.2-ffi`: compila la librería, corre
-la suite CTest y luego el ejemplo contra el objeto compartido de Linux.
+El shim se compila dentro de cada contenedor para la plataforma que lo va a
+ejecutar, así que no hay binario precompilado que publicar.
+
+## El hueco del callback, y cómo lo cierra el shim
+
+PHP FFI **no puede** convertir un closure de PHP en un puntero a función C:
+la extensión no tiene ningún mecanismo de callback (la lista completa de
+métodos es cdef, load, scope, new, free, cast, type, typeof, arrayType,
+addr, sizeof, alignof, memcpy, memcmp, memset, string, isNull — verificado
+en PHP 8.2, y no existe `FFI::callback`).
+
+Eso deja dos de los 34 símbolos congelados inalcanzables desde FFI puro, y
+el shim los cubre sin reimplementar ningún comportamiento — el mismo
+enfoque que el shim de R (`bindings/r/src/libsqlite_shim.c`) y el
+trampolín de Swift:
+
+| Función del shim | Qué cierra |
+|------------------|------------|
+| `sqlite_php_reader_rows(db, sql, &rows, &columns, err, max)` | Conduce `sqlite_core_execute_reader` mediante un trampolín en C y devuelve los contadores de filas y columnas |
+| `sqlite_php_reader_json(db, sql, &json, &rows, err, max)` | Conduce `sqlite_core_execute_reader` con el exportado `sqlite_core_json_writer_callback` y un contexto `sqlite_core_json_builder_t`, envolviendo el documento con el mismo protocolo `"[\n"…"\n]"` que usa `sqlite_core_execute_reader_to_json` |
+| `sqlite_php_json_writer_callback()` | La dirección del callback congelado, para quien quiera pasarlo por su cuenta |
+
+El ejemplo compara el documento del shim con el de
+`execute_reader_to_json` **byte a byte**, así que el envoltorio está
+probado, no supuesto. Verificado en el contenedor: **22 checks, 0 fallos**,
+CTest 7/7.
+
+Quien solo quiera la capa FFI (sin shim) sigue teniendo los otros 32
+símbolos: el reader se alcanza con el exportado
+`sqlite_core_execute_reader_to_json`, la vía documentada en un build
+compartido.
 
 ## Lo que añade la capa PHP
 
@@ -58,7 +116,9 @@ la suite CTest y luego el ejemplo contra el objeto compartido de Linux.
 - `takeString()` lee un string del alocador de SQLite, lo copia a PHP y
   libera el original con `sqlite_core_string_free` (nunca del lado PHP);
 - `scalarOutText()` reserva el buffer de destino que `execute_scalar`
-  necesita para resultados TEXT.
+  necesita para resultados TEXT;
+- `readerCallbackSupport()` informa exactamente de lo que la capa FFI sola
+  no puede hacer, para que nadie tenga que adivinarlo.
 
 ## Notas aprendidas al construir este binding
 
@@ -95,14 +155,9 @@ la suite CTest y luego el ejemplo contra el objeto compartido de Linux.
    `sizeof`, `string`, `isNull` y `cast` caen por el `__call` del objeto
    FFI a una búsqueda de función C y fallan con "undefined C function".
    Esos dos van con `$lib->`, el resto siguen estáticos.
-10. **No hay callbacks en absoluto** — PHP FFI no tiene mecanismo para
-    convertir un closure en puntero a función C (`FFI::callback` no
-    existe). Es la misma limitación que tienen los bindings de Java, C#,
-    Go, C++ y Kotlin: `sqlite_core_execute_reader` no se puede conducir
-    desde PHP, y `sqlite_core_json_writer_callback` — declarado como el
-    resto de símbolos congelados — tampoco puede pasársele. El reader se
-    ejercita con `sqlite_core_execute_reader_to_json`, la vía documentada
-    en un build compartido. Un callback real requiere un trampolín en C,
-    como el que llevan R y Swift.
-
-Verificado en el contenedor: **19 checks, 0 fallos**, CTest 7/7.
+10. **No hay callbacks en absoluto** — ver *El hueco del callback*: por eso
+    existe el shim, y por eso el reader no se conduce desde FFI puro.
+11. **`uintptr_t` necesita `<stdint.h>`** — `SIZE_MAX`/`uintptr_t` no
+    están disponibles con las cabeceras que MSVC incluye de forma
+    transitiva, así que el shim incluye `<stdint.h>` explícitamente (el
+    mismo arreglo que necesitó `sqlite_core_builder.c` en Linux).

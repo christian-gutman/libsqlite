@@ -273,35 +273,37 @@ FFI;
         return FFI::string($ptr, $len);
     }
 
-    /* ---- reader callback: a documented limitation ---- */
+    /* ---- reader callback: pure FFI cannot, the shim can ---- */
 
     /**
-     * PHP FFI CANNOT turn a PHP closure into a C function pointer: the
+     * PHP FFI cannot turn a PHP closure into a C function pointer: the
      * extension has no callback mechanism at all (the complete method list
      * is cdef, load, scope, new, free, cast, type, typeof, arrayType, addr,
      * sizeof, alignof, memcpy, memcmp, memset, string, isNull — verified on
      * PHP 8.2, and there is no FFI::callback()).
      *
-     * `sqlite_core_execute_reader` therefore cannot be driven from PHP, and
-     * `sqlite_core_json_writer_callback` — although declared here, like every
-     * other frozen symbol — cannot be handed to it either, because there is
-     * no way to take the address of a symbol bound through FFI.
+     * So this class alone cannot drive `sqlite_core_execute_reader`, and
+     * cannot hand `sqlite_core_json_writer_callback` to it either (there is
+     * no way to take the address of a symbol bound through FFI).
      *
-     * This is the same limitation the Java, C#, Go, C++ and Kotlin bindings
-     * hit and document: the callback is bound as part of the frozen surface,
-     * but the reader is exercised through the exported
+     * Both are covered by the C shim that ships next to this file
+     * (`src/php_shim.c`, built as `libsqlite_shim.so`): it supplies a
+     * trampoline and drives the exported JSON writer, exactly like the R
+     * shim and the Swift trampoline. The example therefore runs with the
+     * shim and exercises those two symbols for real.
+     *
+     * Callers that only want the FFI layer (no shim) still work for the
+     * other 32 symbols: the reader is reached through the exported
      * `sqlite_core_execute_reader_to_json`, which is the documented path on
      * a shared build.
-     *
-     * Callers that need a real row callback must run a C trampoline, the way
-     * the R and Swift bindings do.
      */
     public function readerCallbackSupport(): array
     {
         return [
-            'php_callbacks' => false,
-            'execute_reader' => 'unavailable from PHP (needs a C callback)',
-            'reader_path' => 'sqlite_core_execute_reader_to_json',
+            'php_closure_to_c_pointer' => false,
+            'execute_reader' => 'via src/php_shim.c (libsqlite_shim.so)',
+            'json_writer_callback' => 'via src/php_shim.c (libsqlite_shim.so)',
+            'reader_without_shim' => 'sqlite_core_execute_reader_to_json',
         ];
     }
 }

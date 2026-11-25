@@ -19,14 +19,21 @@ include!("libsqlite.rs");
 
 use std::io::Write;
 
-static mut CHECKS: i32 = 0;
-static mut FAILURES: i32 = 0;
+// Interior mutability, not `static mut`: rustc warns on shared references to
+// mutable statics (`static_mut_refs`) and turns it into an error under edition
+// 2024. AtomicI32 is Sync, needs no `unsafe`, and keeps the counters global.
+use std::sync::atomic::{AtomicI32, Ordering};
+
+static CHECKS: AtomicI32 = AtomicI32::new(0);
+static FAILURES: AtomicI32 = AtomicI32::new(0);
 
 fn check(cond: bool, msg: &str) {
-    unsafe {
-        CHECKS += 1;
-        if cond { println!("  ok   - {}", msg); }
-        else { FAILURES += 1; println!("  FAIL - {}", msg); }
+    CHECKS.fetch_add(1, Ordering::Relaxed);
+    if cond {
+        println!("  ok   - {}", msg);
+    } else {
+        FAILURES.fetch_add(1, Ordering::Relaxed);
+        println!("  FAIL - {}", msg);
     }
 }
 
@@ -38,7 +45,8 @@ fn write_fixture(path: &str, size: usize) {
 fn fixture_bytes(path: &str) -> Vec<u8> { std::fs::read(path).unwrap() }
 
 fn main() {
-    unsafe { run(); let f = FAILURES; std::process::exit(f); }
+    unsafe { run(); }   // run() calls the frozen API through raw pointers
+    std::process::exit(FAILURES.load(Ordering::Relaxed));
 }
 
 unsafe fn run() {
@@ -150,5 +158,7 @@ unsafe fn run() {
     for f in ["rust_demo.db", "rust_fixture.bin", "rust_oversize.bin"] {
         let _ = std::fs::remove_file(f);
     }
-    unsafe { println!("\n{} checks, {} failures", CHECKS, FAILURES); }
+    println!("\n{} checks, {} failures",
+             CHECKS.load(Ordering::Relaxed),
+             FAILURES.load(Ordering::Relaxed));
 }

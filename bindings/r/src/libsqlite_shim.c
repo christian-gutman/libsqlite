@@ -630,3 +630,33 @@ SEXP sqlite_r_json(SEXP db, SEXP what, SEXP a, SEXP b, SEXP params)
     params_free(&pa);
     return json_result(rows, err, json);
 }
+
+/* ------------------------------------------------------------------ */
+/* registration                                                        */
+/* ------------------------------------------------------------------ */
+/* The shim was loaded with dyn.load() and its symbols resolved with
+ * getNativeSymbolInfo(), which leaves R unable to check the argument
+ * count of any routine - hence the "stack imbalance" warnings it printed
+ * on every call. Registering the entry points gives R the exact counts,
+ * so it can validate the SEXP stack. Dynamic symbols stay enabled because
+ * that is how libsqlite.R looks the routines up. */
+static const R_CallMethodDef R_CallSymbols[] = {
+    {"sqlite_r_open", (DL_FUNC)&sqlite_r_open, 3},
+    {"sqlite_r_close", (DL_FUNC)&sqlite_r_close, 1},
+    {"sqlite_r_connection", (DL_FUNC)&sqlite_r_connection, 3},
+    {"sqlite_r_message", (DL_FUNC)&sqlite_r_message, 1},
+    {"sqlite_r_string", (DL_FUNC)&sqlite_r_string, 3},
+    {"sqlite_r_param_clean_prefix", (DL_FUNC)&sqlite_r_param_clean_prefix, 1},
+    {"sqlite_r_execute", (DL_FUNC)&sqlite_r_execute, 5},
+    {"sqlite_r_get_blob", (DL_FUNC)&sqlite_r_get_blob, 2},
+    {"sqlite_r_write_blob", (DL_FUNC)&sqlite_r_write_blob, 7},
+    {"sqlite_r_json", (DL_FUNC)&sqlite_r_json, 5},
+    {NULL, NULL, 0}
+};
+
+/* Called by R when the shim is dyn.load()ed. */
+void R_init_libsqlite_shim(DllInfo *dll)
+{
+    R_registerRoutines(dll, NULL, R_CallSymbols, NULL, NULL);
+    R_useDynamicSymbols(dll, TRUE);
+}

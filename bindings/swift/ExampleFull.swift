@@ -135,6 +135,8 @@ check(db.nonQuery("SELECT 1; SELECT 2", params: nil).rc == Sqlite.MISUSE,
 let broken = db.command("CREATE TABLE person(id INTEGER PRIMARY KEY)")
 check(broken.rc == Sqlite.ERROR, "duplicate create fails")
 check(!db.errorMessage.isEmpty, "error_message reports the last failure")
+    check(db.errorCode != 0, "error_code reports the engine failure")
+    check(db.errorCodeExtended != 0, "error_code_extended reports the engine failure")
 check(db.isReadonly == 0, "is_readonly false on a read-write handle")
 check(db.setBusyTimeout(1000) == 1, "set_busy_timeout")
 check(paramCleanPrefix(":name") == "name", "param_clean_prefix strips the prefix")

@@ -185,6 +185,10 @@ int main(int argc, char **argv)
               SQLITE_ERROR,
           "duplicate create fails");
     check(!db.error_message().empty(), "error_message reports the last failure");
+    check(db.error_code() != SQLITE_OK,
+          "error_code reports the engine failure");
+    check(db.error_code_extended() != SQLITE_OK,
+          "error_code_extended reports the engine failure");
     check(!db.is_readonly(), "is_readonly false on a read-write handle");
     check(db.set_busy_timeout(1000) == 1, "set_busy_timeout");
     check(std::string(libsqlite::static_string(sqlite_core_param_clean_prefix(":name"))) == "name",

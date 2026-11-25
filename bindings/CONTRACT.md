@@ -153,32 +153,35 @@ compiled trampoline — as `bindings/r/src/libsqlite_shim.c`,
 
 ## 8. Current compliance (measured, not assumed)
 
-Checked by scanning every `example_full.*` for the symbol names it calls,
-using the per-language names from §3 (not the literal C symbol — an earlier
-draft matched only the C names and reported C++ at 11/17, when it actually
-exercises 16: `db.command()` is `execute_command`, `db.read_rows()` is
-`execute_reader`, `db.scalar_int()` is `execute_scalar`). "Observed" means
-one of the documented names appears; it is still a heuristic and each binding
-should confirm its own row.
+Checked by scanning every `example_full.*` for the names it calls.
+
+> **Read this before trusting a number.** This table is a **heuristic**, and
+> three successive drafts of it were wrong in the same way: the scanner only
+> knew one spelling per symbol. `db.command()` is `execute_command`;
+> `db.read_rows()` is `execute_reader`; `db.scalar_int()` / `scalarInt` /
+> `reader_count` are `execute_scalar` / `execute_reader` under another name.
+> Each of those under-counted a binding that was in fact complete. **Every
+> binding must confirm its own row before the number is believed** — the scan
+> finds candidates, not proof.
 
 | Binding | Observed coverage | Known gaps |
 |---------|-------------------|------------|
+| C++ | 17/17 | — |
 | Fortran | 17/17 | — |
 | Go | 17/17 | — |
-| Nim | 17/17 | — |
-| Ruby | 17/17 | — |
-| C++ | 16/17 | `error_code` |
-| Julia | 16/17 | `execute_reader` |
-| Kotlin | 16/17 | `execute_scalar` |
-| Swift | 16/17 | `error_code` |
-| FoxPro | 15/17 | `error_code`, `error_message` |
-| Python | 17/17 | — |
 | Java | 17/17 | — |
+| Julia | 17/17 | — |
+| Kotlin | 17/17 | — |
+| Nim | 17/17 | — |
+| Python | 17/17 | — |
+| Ruby | 17/17 | — |
+| Swift | 17/17 | — |
+| FoxPro | 15/17 | `error_code`, `error_message` |
 | C# | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
+| PHP (FFI) | 14/17 | same, plus `execute_reader`/`json_writer_callback` via the shim |
 | R | 14/17 | same |
 | Rust | 14/17 | same |
-| PHP (FFI) | 14/17 | same, plus `execute_reader`/`json_writer_callback` via the shim |
-| Node.js | 13/17 | `execute_scalar`, `set_busy_timeout`, `error_code`, `error_message` |
+| Node.js | 13/17 | `set_busy_timeout`, `error_code`, `error_message`; `execute_scalar` is avoided **on purpose and documented** — it reads the scalar through JSON "avoids the out-struct in this example" |
 | Clipper | — | loads symbols by name via `FnLoad`/`_dllfn`; a separate scan is needed |
 
 **The obligations this table creates:** every row with a gap either

@@ -161,33 +161,35 @@ compilado — como hacen `bindings/r/src/libsqlite_shim.c`, `bindings/swift` y
 
 ## 8. Cumplimiento actual (medido, no supuesto)
 
-Comprobado escaneando cada `example_full.*` por los nombres de símbolo que
-llama, usando los nombres por lenguaje del §3 (no el símbolo C literal: un
-borrador anterior comparó solo contra los nombres C y reportó C++ en 11/17,
-cuando en realidad ejercita 16 — `db.command()` es `execute_command`,
-`db.read_rows()` es `execute_reader`, `db.scalar_int()` es
-`execute_scalar`). "Observado" significa que aparece uno de los nombres
-documentados; sigue siendo una heurística y cada binding debe confirmar su
-propia fila.
+Comprobado escaneando cada `example_full.*` por los nombres que llama.
+
+> **Leé esto antes de confiar en un número.** Esta tabla es una
+> **heurística**, y tres borradores seguidos se equivocaron de la misma
+> forma: el escáner solo conocía una ortografía por símbolo. `db.command()`
+> es `execute_command`; `db.read_rows()` es `execute_reader`; `scalar_int` /
+> `scalarInt` / `reader_count` son `execute_scalar` / `execute_reader` con
+> otro nombre. Cada una de esas infravaloró un binding que de hecho estaba
+> completo. **Cada binding debe confirmar su propia fila antes de creer el
+> número**: el escaneo encuentra candidatos, no pruebas.
 
 | Binding | Cobertura observada | Huecos conocidos |
 |---------|---------------------|------------------|
+| C++ | 17/17 | — |
 | Fortran | 17/17 | — |
 | Go | 17/17 | — |
+| Java | 17/17 | — |
+| Julia | 17/17 | — |
+| Kotlin | 17/17 | — |
 | Nim | 17/17 | — |
+| Python | 17/17 | — |
 | Ruby | 17/17 | — |
-| C++ | 16/17 | `error_code` |
-| Julia | 16/17 | `execute_reader` |
-| Kotlin | 16/17 | `execute_scalar` |
-| Swift | 16/17 | `error_code` |
+| Swift | 17/17 | — |
 | FoxPro | 15/17 | `error_code`, `error_message` |
 | C# | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
-| Python | 17/17 | — |
-| Java | 17/17 | — |
-| R | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
-| Rust | 14/17 | ídem |
 | PHP (FFI) | 14/17 | ídem, más `execute_reader`/`json_writer_callback` vía el shim |
-| Node.js | 13/17 | `execute_scalar`, `set_busy_timeout`, `error_code`, `error_message` |
+| R | 14/17 | ídem |
+| Rust | 14/17 | ídem |
+| Node.js | 13/17 | `set_busy_timeout`, `error_code`, `error_message`; `execute_scalar` se evita **a propósito y está documentado**: lee el escalar por JSON "avoids the out-struct in this example" |
 | Clipper | — | carga los símbolos por nombre con `FnLoad`/`_dllfn`; hace falta un escaneo aparte |
 
 **Las obligaciones que crea esta tabla:** cada fila con huecos, o
@@ -195,7 +197,7 @@ propia fila.
 lenguaje no alcanza ese símbolo. Un hueco silencioso no es aceptable, porque
 la siguiente persona asume que el símbolo se probó.
 
-**El huego más común es pequeño:** `set_busy_timeout`, `error_code` y
+**El hueco más común es pequeño:** `set_busy_timeout`, `error_code` y
 `error_message` — los tres son de una línea contra la API congelada, y
 simplemente aún no se ejercitan. Es la cobertura más barata de añadir, y el
 primer lote en cerrarse.

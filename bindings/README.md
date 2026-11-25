@@ -5,6 +5,11 @@ symbols exported by `libsqlite3` (`src/sqlite/core/sqlite.def`). Because
 the export list is frozen and enforced by the `exports` CTest, a binding
 written once keeps working for the whole 1.x line.
 
+**The interface contract all of them must satisfy** — naming, parameters,
+data types, return codes, the allocator rule, the canonical 19-step flow and
+the current compliance per language — is in **[CONTRACT.md](CONTRACT.md)**
+([español](CONTRACT.es.md)). A new binding is not done until it matches it.
+
 ## Common rules (all languages)
 
 | Topic | Rule |

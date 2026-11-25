@@ -1,0 +1,28 @@
+// libsqlite extension — Windows build (php-sdk buildconf: buildconf.bat,
+// then nmake / "PHP Build").
+//
+// Links against the libsqlite3 this repository produces for Windows:
+//   bin/x64-Windows/shared/Release/libsqlite3.dll  + libsqlite3.lib
+// or an equivalent build. Pass --with-libsqlite3-dir to point at it.
+
+ARG_ENABLE("libsqlite", "enable libsqlite extension support", "no");
+ARG_WITH("libsqlite3-dir", "directory containing the libsqlite3 library", "no");
+
+if (PHP_LIBSQLITE == "yes") {
+
+	var LIB_DIR = PHP_LIBSQLITE3_DIR;
+
+	EXTENSION("libsqlite", "libsqlite.c", "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+	AC_DEFINE('HAVE_LIBSQLITE', 1, 'Define if you have the libsqlite extension');
+
+	if (LIB_DIR == "no") {
+		WARNING("libsqlite: no libsqlite3-dir given, the import library is expected on the default LIB path");
+	} else {
+		ADD_FLAG("CFLAGS_LIBSQLITE", "/I " + LIB_DIR + "\\include");
+		ADD_FLAG("LDFLAGS_LIBSQLITE", "/libpath:" + LIB_DIR + "\\lib");
+	}
+
+	// The repository ships the import library next to the DLL; name it
+	// exactly, the way the Rust binding's #[link] does.
+	ADD_FLAG("LDFLAGS_LIBSQLITE", "libsqlite3.lib");
+}

@@ -12,7 +12,7 @@ with the FFI extension loaded.
 | File | What it is |
 |------|------------|
 | `libsqlite.php` | The FFI binding: scope, parameter builders, allocator-rule helpers |
-| `example_full.php` | Canonical flow (22 checks) |
+| `example_full.php` | Canonical flow (26 checks) |
 | `src/php_shim.c` | ~120 lines of C that close PHP FFI's missing callback mechanism |
 | `libsqlite_shim.so` | The compiled shim (built by the container, git-ignored) |
 
@@ -90,7 +90,7 @@ take:
 
 The example compares the shim's document with the one from
 `execute_reader_to_json` **byte for byte**, so the wrapping is proven, not
-assumed. Verified in the container: **22 checks, 0 failures**, CTest 7/7.
+assumed. Verified in the container: **26 checks, 0 failures**, CTest 7/7.
 
 Callers that want only the FFI layer (no shim) still work for the other 32
 symbols: the reader is reached through the exported

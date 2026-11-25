@@ -16,7 +16,7 @@ extensión FFI cargada.
 | Fichero | Qué es |
 |---------|--------|
 | `libsqlite.php` | El binding FFI: scope, constructores de parámetros, helpers de la regla del alocador |
-| `example_full.php` | Flujo canónico (22 checks) |
+| `example_full.php` | Flujo canónico (26 checks) |
 | `src/php_shim.c` | ~120 líneas de C que cierran la ausencia de callbacks en PHP FFI |
 | `libsqlite_shim.so` | El shim compilado (lo construye el contenedor, ignorado por git) |
 
@@ -93,7 +93,7 @@ trampolín de Swift:
 
 El ejemplo compara el documento del shim con el de
 `execute_reader_to_json` **byte a byte**, así que el envoltorio está
-probado, no supuesto. Verificado en el contenedor: **22 checks, 0 fallos**,
+probado, no supuesto. Verificado en el contenedor: **26 checks, 0 fallos**,
 CTest 7/7.
 
 Quien solo quiera la capa FFI (sin shim) sigue teniendo los otros 32

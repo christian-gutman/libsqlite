@@ -161,7 +161,7 @@ separately by `sqlite_core_sqlite_version()`.
 - **PHP binding** (`bindings/php`): `libsqlite.php` declares the frozen
   34-symbol surface with PHP's compiled-in FFI (no external packages) and
   `example_full.php` runs the canonical example. Verified in the Linux
-  container: 22 checks, 0 failures, CTest 7/7.
+  container: 26 checks, 0 failures, CTest 7/7.
   What the container forced (all of it encoded in the files):
   1. The official `php:*` images are compiled from source **without FFI**
      (`php -m` shows no FFI and there is no `/etc/php/*/mods-available`
@@ -216,7 +216,7 @@ separately by `sqlite_core_sqlite_version()`.
   `sqlite_core_builder.c` needed on Linux).
 - **Two PHP containers, neither in CI**:
   `docker/bindings/php.Dockerfile` (`debian:bookworm-slim` + `php-cli`/
-  `php8.2-ffi`, verified: 22 checks, 0 failures) and
+  `php8.2-ffi`, verified: 26 checks, 0 failures) and
   `docker/bindings/php-windows.Dockerfile`
   (`mcr.microsoft.com/windows/servercore`, MinGW-w64), which needs a
   Windows host and is written but not yet verified there. No binding

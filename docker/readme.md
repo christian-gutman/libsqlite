@@ -33,17 +33,38 @@ same flow, same canonical example, different host toolchain. The shim
 (`bindings/php/src/php_shim.c`) is compiled **inside each container** for the
 platform that will run it, so nothing prebuilt is ever shipped.
 
-Windows containers need a **Windows host** to run (they share the host
-kernel), so they cannot run in Linux CI and are launched locally:
+Windows containers need a **Windows host kernel** to run: they share it, so
+they cannot run on the Linux runners this project uses in CI, and they are
+launched locally. Two clarifications that matter:
+
+- They run **unattended** — `servercore` is headless, no GUI and no
+  interactive session are needed.
+- The host here is **Windows 10 Pro**, which supports Hyper-V and the
+  Containers feature, so it is *capable* of running them.
+
+What blocks verifying it from this machine is the engine switch, not the
+platform. Docker's daemon is currently in Linux-container mode, and moving it
+to Windows containers needs elevation these shells do not have:
 
 ```bat
-docker\build.cmd php-windows    :: needs a Windows host (Docker in Windows container mode)
+docker\build.cmd php-windows    :: needs Docker in Windows-container mode (ask before switching the engine)
 ```
+
+```bat
+& 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchWindowsEngine
+:: -> switching to windows mode: context canceled   (non-elevated)
+Get-WindowsOptionalFeature -Online -FeatureName Containers
+:: -> La operacion solicitada requiere elevacion
+```
+
+Switching the engine is a machine-level change: **ask before running it**,
+run it from an elevated shell, confirm the Containers feature is `Enabled`,
+and switch back with `-SwitchLinuxEngine` when done.
 
 > **Status:** the Linux container is verified (22 checks, 0 failures, CTest
 > 7/7). The Windows container is written and documented but **not yet
-> verified on a Windows host** — it needs a machine with Docker in Windows
-> container mode. Any Windows-specific fix lands in that Dockerfile with the
+> verified on a Windows host** — it needs the engine switched, which requires
+> elevation. Any Windows-specific fix lands in that Dockerfile with the
 > reason recorded, the same way the other containers' notes do.
 
 ```bat

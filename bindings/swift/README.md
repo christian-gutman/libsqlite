@@ -5,12 +5,15 @@
 Two files make up the binding:
 
 - `include/libsqlite.h` + `module.modulemap` — the C module Swift imports
+
   (`import libsqlite3`). It declares the frozen 34-symbol surface, the
   `sqlite_core_param_t` struct (with its union) and the row callback type,
   so the binding needs nothing from the repository sources.
 - `LibSqlite.swift` — the Swift layer: `Connection` (a class that closes
   the database in `deinit`), `ParamSet` (named parameters that own their
   native text) and the allocator rule in one place (`takeString`).
+
+Verified in the Linux container (`docker\build.cmd swift`): **34 checks, 0 failures**.
 
 `ExampleFull.swift` is the canonical flow.
 

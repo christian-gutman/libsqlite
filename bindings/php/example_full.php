@@ -280,6 +280,26 @@ check($core->sqlite_core_execute_non_query(
     256
 ) === SQLITE_MISUSE, 'multi-statement rejected');
 
+// error diagnostics + busy timeout: the three one-liner symbols every
+// binding must exercise (bindings/CONTRACT.md). error_message is static
+// library data; PHP FFI already returns it as a string, so nothing is freed.
+check($core->sqlite_core_set_busy_timeout($db, 1000) === 1, 'set_busy_timeout');
+$core->sqlite_core_execute_non_query(
+    $db,
+    'SELECT * FROM no_such_table',
+    null,
+    0,
+    $err,
+    256
+);
+check($core->sqlite_core_error_code($db) !== 0,
+      'error_code reports the engine failure');
+check($core->sqlite_core_error_code_extended($db) !== 0,
+      'error_code_extended reports the engine failure');
+$msg = $core->sqlite_core_error_message($db);
+check(is_string($msg) && $msg !== '',
+      'error_message reports the last failure');
+
 // ---- close ----
 check($core->sqlite_core_close($db) === 1, 'close');
 

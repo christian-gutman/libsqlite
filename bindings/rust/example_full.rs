@@ -135,6 +135,16 @@ unsafe fn run() {
         std::ptr::null_mut(), 0, err.as_mut_ptr(), 256) == SQLITE_MISUSE,
         "multi-statement rejected");
 
+    // error diagnostics + busy timeout: the three one-liner symbols every
+    // binding must exercise (bindings/CONTRACT.md). error_message is static
+    // library data, so static_str copies it and frees nothing.
+    check(sqlite_core_set_busy_timeout(db, 1000) == 1, "set_busy_timeout");
+    sqlite_core_execute_non_query(db, cs("SELECT * FROM no_such_table"),
+        std::ptr::null_mut(), 0, err.as_mut_ptr(), 256);
+    check(sqlite_core_error_code(db) != SQLITE_OK, "error_code reports the engine failure");
+    check(sqlite_core_error_code_extended(db) != SQLITE_OK, "error_code_extended reports the engine failure");
+    check(!static_str(sqlite_core_error_message(db)).is_empty(), "error_message reports the last failure");
+
     check(sqlite_core_close(db) == 1, "close");
 
     for f in ["rust_demo.db", "rust_fixture.bin", "rust_oversize.bin"] {

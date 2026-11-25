@@ -120,7 +120,16 @@ Check(Lib.sqlite_core_open_readonly("missing.db", ref rc2) == IntPtr.Zero &&
 Check(Lib.sqlite_core_execute_non_query(db, "SELECT 1; SELECT 2", null, 0,
           err, err.Length) == Lib.SQLITE_MISUSE, "multi-statement rejected");
 
-Check(Lib.sqlite_core_close(db) == 1, "close");
+// error diagnostics + busy timeout: the three one-liner symbols every
+    // binding must exercise (bindings/CONTRACT.md). error_message is static
+    // library data: PtrToStringAnsi reads it and frees nothing.
+    Check(Lib.sqlite_core_set_busy_timeout(db, 1000) == 1, "set_busy_timeout");
+    Check(Lib.sqlite_core_error_code(db) != 0, "error_code reports the engine failure");
+    Check(Lib.sqlite_core_error_code_extended(db) != 0, "error_code_extended reports the engine failure");
+    Check(!string.IsNullOrEmpty(Lib.PtrToStringAnsi(Lib.sqlite_core_error_message(db))),
+          "error_message reports the last failure");
+
+    Check(Lib.sqlite_core_close(db) == 1, "close");
 
 foreach (var f in new[] { "csharp_demo.db", fixture, oversize })
     File.Delete(f);

@@ -181,18 +181,29 @@ Checked by scanning every `example_full.*` for the names it calls.
 | PHP (FFI) | 14/17 | same, plus `execute_reader`/`json_writer_callback` via the shim |
 | R | 14/17 | same |
 | Rust | 14/17 | same |
-| Node.js | 13/17 | `set_busy_timeout`, `error_code`, `error_message`; `execute_scalar` is avoided **on purpose and documented** — it reads the scalar through JSON "avoids the out-struct in this example" |
-| Clipper | — | loads symbols by name via `FnLoad`/`_dllfn`; a separate scan is needed |
+| Node.js | 16/17 | `execute_scalar` is avoided **on purpose and documented** — it reads the scalar through JSON "avoids the out-struct in this example" |
+| Clipper | 0/17 | `libsqlite.prg` declares the frozen surface (34/34 per `verify_symbols.py`), but `example_full.prg` is a **stub**: it contains only the helpers (`Check`, `FnLoad`, `Fixture`, `RowCount`) and calls **no symbol at all**, so the canonical flow is not implemented. The README's claim that `example_full.prg` "implements the canonical flow" is wrong. |
 
 **The obligations this table creates:** every row with a gap either
 (a) extends its example to close it, or (b) records in its README why the
 language cannot reach that symbol. A silent gap is not acceptable, because
 the next person assumes the symbol was tested.
 
-**The most common gap is small:** `set_busy_timeout`, `error_code` and
-`error_message` — all three are one-liners against the frozen API, and they
-are simply not exercised yet. That is the cheapest coverage to add, and the
-first batch to close.
+**Batch closed:** the most common gap was `set_busy_timeout`, `error_code` and
+`error_message`. C#, PHP, R, Rust and Node.js now assert all three (Node.js
+reading them after the deliberate multi-statement failure it already provokes),
+and C++ and Swift gained `error_code`/`error_code_extended`. R also needed
+those three wrappers added to its R-facing surface — the shim had them
+(`sqlite_r_connection` op 2/3/4/5) but nothing exposed them. Fourteen bindings
+now reach 17/17.
+
+**What remains needs a toolchain this repository cannot exercise:**
+FoxPro's `error_code`/`error_message`, whose string handling is VFP-specific
+(and whose example declares `sqlite_core_string_free` as `STRING` while
+`binding.prg` declares it `void`); and Clipper, whose canonical flow is a stub
+and needs Harbour/xHarbour to write and run. Both are recorded as documented
+limitations under 8(b), because writing them blind risks breaking an example
+that currently stands.
 
 **The obligations this table creates:** every row with a gap either
 (a) extends its example to close it, or (b) records in its README why the

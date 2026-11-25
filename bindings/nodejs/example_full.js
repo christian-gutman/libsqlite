@@ -120,6 +120,17 @@ check(!F.open_readonly("missing.db", rc2) && rc2[0] === C.SQLITE_CANTOPEN,
 check(F.execute_non_query(handle, "SELECT 1; SELECT 2", null, 0,
     err, err.length) === C.SQLITE_MISUSE, "multi-statement rejected");
 
+// error diagnostics + busy timeout: the three one-liner symbols every
+// binding must exercise (bindings/CONTRACT.md). error_message is static
+// library data and koffi hands it back as a JS string, so nothing is freed.
+check(F.set_busy_timeout(handle, 1000) === 1, "set_busy_timeout");
+check(F.error_code(handle) !== 0, "error_code reports the engine failure");
+check(F.error_code_extended(handle) !== 0,
+    "error_code_extended reports the engine failure");
+check(typeof F.error_message(handle) === "string" &&
+      F.error_message(handle).length > 0,
+      "error_message reports the last failure");
+
 check(F.close(handle) === 1, "close");
 for (const f of [db, fixture, oversize]) if (fs.existsSync(f)) fs.unlinkSync(f);
 

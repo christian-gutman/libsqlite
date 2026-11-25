@@ -131,6 +131,28 @@ libsqlite_close <- function(db) {
   shim_call("sqlite_r_close", db)
 }
 
+# --- connection state and diagnostics -----------------------------------
+# The shim's sqlite_r_connection dispatches by op: 0 is_readonly,
+# 1 last_insert_rowid, 2 set_busy_timeout, 3 error_code,
+# 4 error_code_extended, 5 error message. These three were missing from the
+# R-facing surface, so no example could exercise them (bindings/CONTRACT.md
+# section 8). error_message returns the library's static data.
+set_busy_timeout <- function(db, ms) {
+  as.integer(shim_call("sqlite_r_connection", db, 2L, as.integer(ms)))
+}
+
+error_code <- function(db) {
+  as.integer(shim_call("sqlite_r_connection", db, 3L, 0L))
+}
+
+error_code_extended <- function(db) {
+  as.integer(shim_call("sqlite_r_connection", db, 4L, 0L))
+}
+
+error_message <- function(db) {
+  as.character(shim_call("sqlite_r_connection", db, 5L, 0L))
+}
+
 # --- statement execution (kind 0 command, 1 transaction, 2 non_query,
 #     3 scalar, 4 reader) -----------------------------------------------
 execute <- function(db, sql, kind = 0L, params = NULL, txexpected = 0L) {

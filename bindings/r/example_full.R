@@ -106,6 +106,14 @@ check(is.null(opened2$db) && opened2$rc == 14L, "open missing file fails")
 rc <- execute_non_query(db, "SELECT 1; SELECT 2")
 check(rc$rc == 21L, "multi-statement rejected")
 
+# error diagnostics + busy timeout: the three one-liner symbols every
+# binding must exercise (bindings/CONTRACT.md). error_message is static
+# library data, so it is copied and never freed.
+check(set_busy_timeout(db, 1000L) == 1L, "set_busy_timeout")
+check(error_code(db) != 0L, "error_code reports the engine failure")
+check(error_code_extended(db) != 0L, "error_code_extended reports the engine failure")
+check(nzchar(error_message(db)), "error_message reports the last failure")
+
 # 12. close
 rc <- libsqlite_close(db)
 check(rc == 1L, "close")

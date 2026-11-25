@@ -110,6 +110,9 @@ check(rc$rc == 21L, "multi-statement rejected")
 # binding must exercise (bindings/CONTRACT.md). error_message is static
 # library data, so it is copied and never freed.
 check(set_busy_timeout(db, 1000L) == 1L, "set_busy_timeout")
+# error_code mirrors the *engine's* last result, so the multi-statement
+# guard above leaves it at SQLITE_OK: provoke a real engine error first.
+execute_non_query(db, "SELECT * FROM no_such_table")
 check(error_code(db) != 0L, "error_code reports the engine failure")
 check(error_code_extended(db) != 0L, "error_code_extended reports the engine failure")
 check(nzchar(error_message(db)), "error_message reports the last failure")

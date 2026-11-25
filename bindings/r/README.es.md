@@ -13,4 +13,4 @@ handle `sqlite3*` sería inalcanzable), no puede construir
 pide `execute_reader`. El shim no reimplementa nada: llama a la API
 congelada, lee y libera sus cadenas con `sqlite_core_string_free`, y hasta
 ejercita `sqlite_core_json_writer_callback`. Verificado en el contenedor
-Linux: 21 checks, 0 fallos.
+Linux: 25 checks, 0 fallos.

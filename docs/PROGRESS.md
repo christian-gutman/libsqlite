@@ -86,8 +86,12 @@ request.
 
 Housekeeping:
 
-- force-move tag `v1.0.0` to HEAD, push and push tags (established
-  pattern at the end of each batch).
+- **force-move tag `v1.0.0` to HEAD — done.** The tag was still at `d716f62`,
+  the original release commit, ten commits behind HEAD. It now points at HEAD
+  both locally and on the remote, so the tag carries the contract, the PHP
+  binding with its shim, and the nine examples verified in containers.
+  (Established pattern at the end of each batch: `git tag -f v1.0.0 HEAD` and
+  `git push -f origin v1.0.0`.)
 - GitHub Release page for `v1.0.0`: the API answered 401 (no PAT); it
   needs either the user in the UI or a token.
 

@@ -71,6 +71,6 @@ runs this example against `bin/x64-Linux/shared/Release/libsqlite3.so`.
   (`sqlite3_int64`), never `int`.
 - **Callbacks**: implement `RowCallback` (`Callback`); the object must
   stay reachable for the whole `execute_reader` call.
-- Verified locally against the x64 build: **20 checks, 0 failures**, and
+- Verified locally against the x64 build: **24 checks, 0 failures**, and
   again in the Linux container (`docker\build.cmd java`).
 

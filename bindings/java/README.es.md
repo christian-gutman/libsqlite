@@ -10,4 +10,4 @@ Binding Java completo con JNA: `LibSqlite.java` (los 34 símbolos congelados
 que se descarga con `get_jna.ps1` y **no** se versiona. Trampas documentadas:
 forzar `jna.encoding=UTF-8`, la lista `getFieldOrder()` terminante, los
 pines de memoria nativa, y `toArray(n)` para los arrays de parámetros
-contiguos. Verificado: 20 checks, 0 fallos (local x64 y contenedor Linux).
+contiguos. Verificado: 24 checks, 0 fallos (local x64 y contenedor Linux).

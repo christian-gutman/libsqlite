@@ -40,4 +40,4 @@ run):
   parameter kinds; `as_i64` reads an integer value out of the union.
 - The row callback is a plain `extern "C"` function; its context is a
   pointer to a Rust value (used only during the call).
-- Verified against the x64 build: 19 checks, 0 failures.
+- Verified against the x64 build: 23 checks, 0 failures.

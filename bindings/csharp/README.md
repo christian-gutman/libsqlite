@@ -20,4 +20,4 @@ Notes:
 - `Lib.Text` keeps the parameter text in unmanaged memory
   (`StringToHGlobalAnsi`) — release the handles after the call
   (`Marshal.FreeHGlobal`) as the example does.
-- Verified against the x64 build: 19 checks, 0 failures.
+- Verified against the x64 build: 23 checks, 0 failures.

@@ -124,6 +124,11 @@ Check(Lib.sqlite_core_execute_non_query(db, "SELECT 1; SELECT 2", null, 0,
     // binding must exercise (bindings/CONTRACT.md). error_message is static
     // library data: PtrToStringAnsi reads it and frees nothing.
     Check(Lib.sqlite_core_set_busy_timeout(db, 1000) == 1, "set_busy_timeout");
+    // error_code mirrors the *engine's* last result, so a guard rejection
+    // (multi-statement) leaves it at SQLITE_OK: provoke a real engine error
+    // first, the way the C++ example's duplicate CREATE does.
+    Lib.sqlite_core_execute_non_query(db, "SELECT * FROM no_such_table", null, 0,
+        err, err.Length);
     Check(Lib.sqlite_core_error_code(db) != 0, "error_code reports the engine failure");
     Check(Lib.sqlite_core_error_code_extended(db) != 0, "error_code_extended reports the engine failure");
     Check(!string.IsNullOrEmpty(Lib.PtrToStringAnsi(Lib.sqlite_core_error_message(db))),

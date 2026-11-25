@@ -7,6 +7,8 @@ plus a thin C++ layer on top; `example_full.cpp` is the canonical flow.
 No library of its own is built: compile the header straight into your
 binary and link against `libsqlite3`.
 
+Verified in the Linux container (`docker\build.cmd cpp`): **30 checks, 0 failures**.
+
 ## Build and run
 
 ```bash

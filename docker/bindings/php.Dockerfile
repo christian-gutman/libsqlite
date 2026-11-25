@@ -4,11 +4,17 @@
 # examples) and then the PHP canonical example against the produced
 # bin/x64-Linux/shared/Release/libsqlite3.so. The image is removed after
 # the run (see docker/build.cmd), keeping disk usage flat.
+#
+# NOTE: the official "php:*" images are compiled from source WITHOUT the
+# FFI extension (verified: `php -m` shows no FFI, and there is no
+# /etc/php/*/mods-available tree to phpenmod it). The binding therefore
+# uses Debian's packaged PHP, where php8.2-ffi exists and is loaded.
 
-FROM php:8.2-bookworm
+FROM debian:bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential cmake \
+    && apt-get install -y --no-install-recommends \
+       build-essential cmake php-cli php8.2-ffi \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src

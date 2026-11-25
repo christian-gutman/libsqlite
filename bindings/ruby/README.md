@@ -1,5 +1,7 @@
 # Ruby (ffi gem)
 
+**English** · [Español](README.es.md)
+
 `libsqlite.rb` declares the full frozen API (34 symbols) with the `ffi` gem
 and `example_full.rb` is the canonical flow. One dependency:
 
@@ -68,14 +70,3 @@ converts it to the C signature (`callback :row_callback, [...]` +
   `#get_pointer` give the bytes and addresses; `pointer.null?` is the NULL
   test for pointers returned by attached functions.
 
-## Resumen (español)
-
-Binding Ruby con la gema `ffi` (Fiddle de la stdlib queda descartado porque
-`Fiddle::Closure` está roto en Ruby 3.x): los 34 símbolos congelados
-enlazados uno a uno con su firma exacta, `ParamSet` que construye
-`sqlite_core_param_t[]` en memoria cruda con desplazamientos válidos en LP64
-e ILP32, `take_string` siguiendo la regla del alocador, buffers de salida
-para `int*`, `long long` y `char**`, callback de filas con un `Proc` (ffi lo
-convierte al firma C), lectura de BLOB que crece el buffer, y el documento
-JSON también construido con `sqlite_core_json_writer_callback`. Verificado en
-el contenedor `ruby:3.3`.

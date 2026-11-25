@@ -45,7 +45,7 @@ error paths → close) is implemented for other languages; see
 [`bindings/README.md`](../../bindings/README.md) for the rules and the
 full table.
 
-Covered so far — 14 languages verified end to end in containers
+Covered so far — 15 languages verified end to end in containers
 (library built, CTest suite green, canonical example green):
 
 | Language | Folder | Status | Checks |
@@ -65,12 +65,13 @@ Covered so far — 14 languages verified end to end in containers
 | Kotlin | `bindings/kotlin` | ✅ verified, container | 31 |
 | Nim | `bindings/nim` | ✅ verified, container | 34 |
 | Fortran | `bindings/fortran` | ✅ verified, container | 33 |
+| PHP | `bindings/php` | ✅ verified, container | 19 |
 
 ### 🟡 Written, pending container verification
 
 | Language | Folder | Status | Checks |
 |----------|--------|--------|--------|
-| PHP | `bindings/php` | 🟡 FFI binding + example written, needs container run | 19 (planned) |
+| — | — | — | — |
 
 Also declared (34 symbols each) but outside the container matrix:
 

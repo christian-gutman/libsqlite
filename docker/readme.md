@@ -40,7 +40,7 @@ results are comparable line by line.
 
 | Container | Base image | Language dependency | Canonical example |
 |-----------|------------|---------------------|-------------------|
-| `bindings/php.Dockerfile` | `php:8.2-bookworm` | none (FFI) | 19 checks |
+| `bindings/php.Dockerfile` | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` | none (FFI is compiled in) | 19 checks |
 | `bindings/python.Dockerfile` | `python:3.12-bookworm` | none (ctypes) | 19 checks |
 | `bindings/csharp.Dockerfile` | `mcr.microsoft.com/dotnet/sdk:8.0` | `dotnet publish` | 19 checks |
 | `bindings/go.Dockerfile` | `golang:1.22-bookworm` | cgo | 19 checks |

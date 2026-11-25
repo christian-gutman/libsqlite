@@ -400,10 +400,13 @@ parseadas y enlazadas por parámetros (sin concatenar cadenas, sin inyección).
 |-----------|-----------|
 | [docs/behavior.es.md](docs/behavior.es.md) | Contrato de comportamiento con .NET: correspondencia por función, códigos de retorno, JSON, codificación (el contrato de aceptación) |
 | [docs/behavior.md](docs/behavior.md) | El mismo contrato, en inglés |
-| [docs/pragmas.md](docs/pragmas.md) | PRAGMAs de conexion
-| [docs/PROGRESS.md](docs/PROGRESS.md) | Avances de bindings: que lenguajes estan verificados hoy, el matrix de contenedores, la API congelada de 34 simbolos y que queda pendiente | (WAL, synchronous, busy_timeout, foreign_keys, temp_store): que hace cada uno, su alcance y como aplicarlos al abrir |
+| [docs/pragmas.md](docs/pragmas.md) | El mismo paquete de PRAGMAs, en inglés |
+| [docs/PROGRESS.md](docs/PROGRESS.md) | Los mismos avances, en inglés |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | La misma hoja de ruta, en inglés |
+| [docs/pragmas.es.md](docs/pragmas.es.md) | Paquete de PRAGMAs (WAL, synchronous, busy_timeout, foreign_keys, temp_store): qué hace cada uno, su alcance y cómo aplicarlos al abrir |
+| [docs/PROGRESS.es.md](docs/PROGRESS.es.md) | Avances de bindings: qué lenguajes están verificados hoy, el matrix de contenedores, la API congelada de 34 símbolos y qué queda pendiente |
 | [README.md](README.md) | Este README en inglés |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Qué queda pendiente: Android/Flutter, iOS, WASM, FLL de FoxPro, release |
+| [docs/ROADMAP.es.md](docs/ROADMAP.es.md) | Qué queda pendiente: Android/Flutter, iOS, WASM, FLL de FoxPro, release |
 | [CHANGELOG.md](CHANGELOG.md) | Historial de versiones y cambios incompatibles |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Flujo de build/tests, reglas para ampliar la API congelada |
 | [SECURITY.md](SECURITY.md) | Cómo reportar vulnerabilidades |

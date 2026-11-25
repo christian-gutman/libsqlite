@@ -1,5 +1,7 @@
 # Nim (importc + dynlib)
 
+**English** · [Español](README.es.md)
+
 `libsqlite.nim` declares the full frozen API (34 symbols) with
 `{.importc, dynlib: libname.}` — Nim resolves them in `libsqlite3.so` /
 `libsqlite3.dll` / `libsqlite3.dylib` at run time, so there is **no wrapper
@@ -64,13 +66,3 @@ library, runs the CTest suite and then compiles and runs the example with
 - **Nim's `seq[Param]` memory is contiguous**, so `addr ps.items[0]` is the
   `sqlite_core_param_t *` the API expects.
 
-## Resumen (español)
-
-Binding Nim sin librería envolvente ni enlazado en tiempo de compilación:
-los 34 símbolos congelados se declaran con `{.importc, dynlib: libname.}`
-y se resuelven en tiempo de ejecución. La unión de `sqlite_core_param_t` se
-modela con el pragma `{.union.}` (los 16 bytes de LP64 exactos),
-`ParamSet` es dueño de las copias `cstring`, el callback de filas es un
-`proc` de alto nivel `{.cdecl.}` (no captura entorno) y las cadenas
-devueltas se liberan con `sqlite_core_string_free`. Verificado en el
-contenedor `nimlang/nim:2.0.14`.

@@ -1,5 +1,7 @@
 # Swift
 
+**English** · [Español](README.es.md)
+
 Two files make up the binding:
 
 - `include/libsqlite.h` + `module.modulemap` — the C module Swift imports
@@ -92,11 +94,3 @@ Every one of these was hit while building (and is encoded in the files):
   time, which is why `run.sh` passes `-Wl,-rpath` instead of a path
   argument.
 
-## Resumen (español)
-
-Binding Swift: `include/libsqlite.h` + `module.modulemap` declaran la
-superficie congelada (34 símbolos) para que `import libsqlite3` la importe
-sin depender de las fuentes del repo, y `LibSqlite.swift` añade `Connection`
-(clase que cierra en `deinit`), `ParamSet` (dueño de la memoria nativa de
-nombre y valor) y `takeString`/`staticString` (regla del alocador). Verificado
-en el contenedor `swift:6.0`.

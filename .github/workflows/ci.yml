@@ -11,6 +11,7 @@ jobs:
   build-shared:
     name: shared / ${{ matrix.os }} / ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -21,8 +22,8 @@ jobs:
             arch: x64
           - os: ubuntu-latest
             arch: x64
-          - os: macos-latest
-            arch: x64
+          - os: macos-14
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -78,6 +79,7 @@ jobs:
   build-static:
     name: static / ${{ matrix.os }} / ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -86,8 +88,8 @@ jobs:
             arch: x64
           - os: ubuntu-latest
             arch: x64
-          - os: macos-latest
-            arch: x64
+          - os: macos-14
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
 

@@ -57,6 +57,7 @@ container) · 🟡 written, needs toolchain · ⬜ planned.
 | Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | `extern "C"` | 19 | `rust:1-bookworm` |
 | Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | koffi | 18 | `node:24-bookworm` |
 | Java | `java/LibSqlite.java` | `java/ExampleFull.java` | JNA | 20 | `eclipse-temurin:17-jammy` |
+| PHP | `php/libsqlite.php` | `php/example_full.php` | FFI (native, no packages) | 19 | `debian:bookworm-slim` + php-cli/php8.2-ffi |
 | R | `r/libsqlite.R` | `r/example_full.R` | shim + `R CMD SHLIB` | 21 | `r-base:latest` |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ffi gem | 29 | `ruby:3.3-bookworm` |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | `ccall` + `@cfunction` | 32 | `julia:1.11-bookworm` |

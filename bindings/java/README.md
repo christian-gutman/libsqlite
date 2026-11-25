@@ -1,5 +1,7 @@
 # Java (JNA)
 
+**English** · [Español](README.es.md)
+
 `LibSqlite.java` declares the full frozen API (34 symbols) as a JNA
 `Library` interface — including `sqlite_core_param_t` (`Param`,
 `ParamValue`, `BlobOrText`) and `sqlite_core_row_callback_fn`
@@ -72,12 +74,3 @@ runs this example against `bin/x64-Linux/shared/Release/libsqlite3.so`.
 - Verified locally against the x64 build: **20 checks, 0 failures**, and
   again in the Linux container (`docker\build.cmd java`).
 
-## Resumen (español)
-
-Binding Java completo con JNA: `LibSqlite.java` (los 34 símbolos congelados
-+ las estructuras `sqlite_core_param_t` y el callback de filas) y
-`ExampleFull.java` (el flujo canónico). Dependencia única: el jar de JNA,
-que se descarga con `get_jna.ps1` y **no** se versiona. Trampas documentadas:
-forzar `jna.encoding=UTF-8`, la lista `getFieldOrder()` terminante, los
-pines de memoria nativa, y `toArray(n)` para arreglos de parámetros
-contiguos. Verificado: 20 checks, 0 fallos (local x64 y contenedor Linux).

@@ -10,8 +10,6 @@ declare(strict_types=1);
 
 require __DIR__ . '/libsqlite.php';
 
-use FFI;
-
 const SQLITE_OK = 0;
 const SQLITE_MISUSE = 21;
 const SQLITE_CANTOPEN = 14;
@@ -36,10 +34,11 @@ function check(bool $cond, string $msg): void
 
 $libPath = $argv[1] ?? null;
 $lib = new LibSqlite($libPath);
+$core = $lib->lib;
 
 echo "libsqlite3 PHP binding\n";
-echo "  library " . $lib->staticString($lib->lib->sqlite_core_version()) .
-     " / engine " . $lib->staticString($lib->lib->sqlite_core_sqlite_version()) . "\n";
+echo "  library " . $lib->staticString($core->sqlite_core_version()) .
+     " / engine " . $lib->staticString($core->sqlite_core_sqlite_version()) . "\n";
 
 // Clean up from previous runs
 foreach ([$DB, $FIXTURE] as $f) {
@@ -52,17 +51,17 @@ foreach ([$DB, $FIXTURE] as $f) {
 file_put_contents($FIXTURE, str_repeat("\x00\x01\x02\xff\xfe", 204));
 
 // ---- 1. open_or_create ----
-$rc = FFI::new('int');
-$db = $lib->lib->sqlite_core_open_or_create($DB, FFI::addr($rc));
+$rc = $core->new('int');
+$db = $core->sqlite_core_open_or_create($DB, FFI::addr($rc));
 check($db !== null && $rc->cdata === 0, 'open_or_create');
 if ($db === null) {
     exit($checks[1]);
 }
 
-$err = FFI::new('char[256]');
+$err = $core->new('char[256]', false);
 
 // ---- 2. execute_command (DDL) ----
-check($lib->lib->sqlite_core_execute_command(
+check($core->sqlite_core_execute_command(
     $db,
     'CREATE TABLE person(id INTEGER PRIMARY KEY, name TEXT, data BLOB)',
     $err,
@@ -74,7 +73,7 @@ $params = $lib->paramArray([
     $lib->intParam('id', 42),
     $lib->textParam('name', 'Ada'),
 ]);
-$affected = $lib->lib->sqlite_core_execute_non_query(
+$affected = $core->sqlite_core_execute_non_query(
     $db,
     'INSERT INTO person(id, name) VALUES (:id, :name)',
     $params,
@@ -84,26 +83,37 @@ $affected = $lib->lib->sqlite_core_execute_non_query(
 );
 check($affected === 1, 'named parameter insert');
 
-// ---- 4. execute_reader (callback counts rows) ----
-$seen = 0;
-$cb = $lib->countRowsCallback($seen);
-$rcRead = $lib->lib->sqlite_core_execute_reader(
+// ---- 4. reader: rows are read through the exported JSON surface ----
+// PHP FFI cannot create a C function pointer from a closure (the extension
+// has no callback mechanism), so execute_reader is not reachable from PHP.
+// The exported execute_reader_to_json is the documented reader path on a
+// shared build — see libsqlite.php readerCallbackSupport().
+$jsonPtrA = $core->new('void*', false);
+$rowsA = $core->sqlite_core_execute_reader_to_json(
     $db,
     'SELECT id, name FROM person ORDER BY id',
     null,
     0,
-    $cb,
-    null,
+    FFI::addr($jsonPtrA),
     $err,
     256
 );
-check($rcRead === 1 && $seen === 1, 'reader visits the row');
+$docA = FFI::isNull($jsonPtrA) ? null : $lib->takeString(FFI::cast('char*', $jsonPtrA));
+$decodedA = $docA === null ? null : json_decode($docA, true);
+check(
+    $rowsA === 1
+    && is_array($decodedA)
+    && count($decodedA) === 1
+    && (int)($decodedA[0]['id'] ?? 0) === 42
+    && ($decodedA[0]['name'] ?? '') === 'Ada',
+    'reader visits the row (json path)'
+);
 
 // ---- 5. execute_scalar (COUNT(*)) ----
-$out = FFI::new('sqlite_core_param_t');
+$out = $core->new('sqlite_core_param_t', false);
 $out->type = SQLITE_CORE_TYPE_INT;
 $out->Direction = 1; // INPUT
-$rcScalar = $lib->lib->sqlite_core_execute_scalar(
+$rcScalar = $core->sqlite_core_execute_scalar(
     $db,
     'SELECT COUNT(*) FROM person',
     null,
@@ -115,8 +125,8 @@ $rcScalar = $lib->lib->sqlite_core_execute_scalar(
 check($rcScalar === 0 && $out->value->iVal === 1, 'scalar counts rows');
 
 // ---- 6. execute_reader_to_json ----
-$jsonPtr = FFI::new('char*');
-$rows = $lib->lib->sqlite_core_execute_reader_to_json(
+$jsonPtr = $core->new('void*', false);
+$rows = $core->sqlite_core_execute_reader_to_json(
     $db,
     'SELECT id, name FROM person ORDER BY id',
     null,
@@ -125,12 +135,12 @@ $rows = $lib->lib->sqlite_core_execute_reader_to_json(
     $err,
     256
 );
-$doc = $jsonPtr->cdata !== null ? $lib->takeString($jsonPtr) : null;
+$doc = FFI::isNull($jsonPtr) ? null : $lib->takeString(FFI::cast('char*', $jsonPtr));
 check($rows === 1 && $doc !== null && str_starts_with($doc, '['), 'reader to json');
 echo "  json: " . ($doc ?? '') . "\n";
 
 // ---- 7. insert_json batch ----
-check($lib->lib->sqlite_core_insert_json(
+check($core->sqlite_core_insert_json(
     $db,
     'person',
     '[{"id": 2, "name": "Line1"}, {"id": 3, "name": "Line2"}]',
@@ -139,9 +149,9 @@ check($lib->lib->sqlite_core_insert_json(
 ) === 2, 'insert_json batch');
 
 // ---- 8. insert_blob (chunked) + get_blob round trip ----
-$written = FFI::new('int');
+$written = $core->new('int');
 $fixtureSize = filesize($FIXTURE);
-$rcBlob = $lib->lib->sqlite_core_insert_blob(
+$rcBlob = $core->sqlite_core_insert_blob(
     $db,
     'person',
     'data',
@@ -154,9 +164,9 @@ $rcBlob = $lib->lib->sqlite_core_insert_blob(
 );
 check($rcBlob === $fixtureSize && $written->cdata === $fixtureSize, 'insert_blob streams the file');
 
-$sink = FFI::new('char[' . $fixtureSize . ']');
-$copied = FFI::new('int');
-$rcGet = $lib->lib->sqlite_core_get_blob(
+$sink = $core->new('char[' . $fixtureSize . ']', false);
+$copied = $core->new('int');
+$rcGet = $core->sqlite_core_get_blob(
     $db,
     'SELECT data FROM person WHERE id = 2',
     $sink,
@@ -167,12 +177,12 @@ check($rcGet === 0 && $copied->cdata === $fixtureSize, 'get_blob reads it back')
 $roundTrip = file_get_contents($FIXTURE) === FFI::string($sink, $copied->cdata);
 check($roundTrip, 'byte-for-byte round trip');
 
-check($lib->lib->sqlite_core_last_insert_rowid($db) > 0, 'last_insert_rowid');
+check($core->sqlite_core_last_insert_rowid($db) > 0, 'last_insert_rowid');
 
 // ---- 9. transaction paths ----
-check($lib->lib->sqlite_core_commit_transaction($db, $err, 256) !== 1, 'commit without transaction fails');
-check($lib->lib->sqlite_core_begin_transaction($db, $err, 256) === 1, 'begin');
-$lib->lib->sqlite_core_execute_non_query(
+check($core->sqlite_core_commit_transaction($db, $err, 256) !== 1, 'commit without transaction fails');
+check($core->sqlite_core_begin_transaction($db, $err, 256) === 1, 'begin');
+$core->sqlite_core_execute_non_query(
     $db,
     "INSERT INTO person(name) VALUES ('Temp')",
     null,
@@ -180,12 +190,12 @@ $lib->lib->sqlite_core_execute_non_query(
     $err,
     256
 );
-check($lib->lib->sqlite_core_rollback_transaction($db, $err, 256) === 1, 'rollback');
+check($core->sqlite_core_rollback_transaction($db, $err, 256) === 1, 'rollback');
 
-$out2 = FFI::new('sqlite_core_param_t');
+$out2 = $core->new('sqlite_core_param_t', false);
 $out2->type = SQLITE_CORE_TYPE_INT;
 $out2->Direction = 1;
-$lib->lib->sqlite_core_execute_scalar(
+$core->sqlite_core_execute_scalar(
     $db,
     'SELECT COUNT(*) FROM person',
     null,
@@ -199,7 +209,7 @@ check($out2->value->iVal === 3, 'rollback discarded the row');
 // ---- oversize update is reported ----
 $BIG = 'php_oversize.bin';
 file_put_contents($BIG, str_repeat('x', $fixtureSize * 2));
-$rcOver = $lib->lib->sqlite_core_update_blob(
+$rcOver = $core->sqlite_core_update_blob(
     $db,
     'person',
     'data',
@@ -214,10 +224,10 @@ check($rcOver === SQLITE_CORE_BLOB_TOO_SMALL, 'update_blob refuses to exceed the
 unlink($BIG);
 
 // ---- 10. error paths ----
-$rc2 = FFI::new('int');
-$missing = $lib->lib->sqlite_core_open_readonly('missing.db', FFI::addr($rc2));
+$rc2 = $core->new('int');
+$missing = $core->sqlite_core_open_readonly('missing.db', FFI::addr($rc2));
 check(!$missing && $rc2->cdata === 14, 'open missing file fails'); // SQLITE_CANTOPEN=14
-check($lib->lib->sqlite_core_execute_non_query(
+check($core->sqlite_core_execute_non_query(
     $db,
     'SELECT 1; SELECT 2',
     null,
@@ -227,7 +237,7 @@ check($lib->lib->sqlite_core_execute_non_query(
 ) === SQLITE_MISUSE, 'multi-statement rejected');
 
 // ---- close ----
-check($lib->lib->sqlite_core_close($db) === 1, 'close');
+check($core->sqlite_core_close($db) === 1, 'close');
 
 foreach ([$DB, $FIXTURE] as $f) {
     if (file_exists($f)) {

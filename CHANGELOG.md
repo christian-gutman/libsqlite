@@ -158,6 +158,62 @@ separately by `sqlite_core_sqlite_version()`.
   (`core/sqlite_core_internal.h`): single-statement guard, UTF-8 prepare
   helper, identifier quoting and error copying now live in
   `sqlite_core.c`, so the modules cannot drift apart.
+- **PHP binding** (`bindings/php`): `libsqlite.php` declares the frozen
+  34-symbol surface with PHP's compiled-in FFI (no external packages) and
+  `example_full.php` runs the canonical example. Verified in the Linux
+  container: 19 checks, 0 failures, CTest 7/7.
+  What the container forced (all of it encoded in the files):
+  1. The official `php:*` images are compiled from source **without FFI**
+     (`php -m` shows no FFI and there is no `/etc/php/*/mods-available`
+     tree to phpenmod it), so the Dockerfile uses `debian:bookworm-slim`
+     with `php-cli` + `php8.2-ffi`.
+  2. FFI must be detected with `extension_loaded('ffi')` /
+     `class_exists('FFI')` — `defined('FFI_SCOPE')` is **false** even when
+     FFI is loaded, so that check rejected every valid runtime.
+  3. `die()` exits with status **0**, which masks a failure in a container
+     CMD that reports the example's exit code: the binding writes to STDERR
+     and `exit(2)`.
+  4. `FFI::load()` takes one argument (a header *file*); declaring inline
+     code and linking a library is `FFI::cdef($code, $lib)`.
+  5. Types are declared in C syntax (`int(*)(void*,int,int,void*)`), not
+     PHP closure syntax — `FFI::type()` raises a ParserException on the
+     latter.
+  6. Custom structs must be allocated through the **instance**
+     (`$lib->new('sqlite_core_param_t', ...)`): the static `FFI::new()`
+     resolves against the preloaded scope, which does not know this cdef.
+  7. FFI refuses to assign an **owned** pointer into a struct's `char *`
+     field ("Attempt to perform assign of owned C pointer"), so parameter
+     buffers are created non-owned and pinned in a keep-list.
+  8. A C function returning `char *` is converted by FFI into a PHP
+     string, destroying the pointer before it can be released; the
+     heap-returning functions are declared `void *` so the allocator rule
+     (`sqlite_core_string_free`) can still be honoured.
+  9. `memcpy` of `strlen+1` bytes from a PHP string raises "Attempt to
+     read over string boundary": copy the length and terminate by hand.
+  10. `addr`, `memcpy`, `sizeof`, `string`, `isNull` and `cast` have **no
+      instance form** (the FFI object's `__call` falls through to a C
+      function lookup) — only `new` and `type` do; those two go through
+      the instance, the rest are static.
+  11. **PHP FFI has no callback mechanism at all** (`FFI::callback` does
+      not exist — the full method list is cdef, load, scope, new, free,
+      cast, type, typeof, arrayType, addr, sizeof, alignof, memcpy,
+      memcmp, memset, string, isNull). `sqlite_core_execute_reader`
+      therefore cannot be driven from PHP, and
+      `sqlite_core_json_writer_callback` — declared like every other
+      frozen symbol — cannot be handed to it either. This is the same
+      limitation the Java, C#, Go, C++ and Kotlin bindings hit: the
+      reader is exercised through the exported
+      `execute_reader_to_json`, the documented path on a shared build.
+      A real row callback needs a C trampoline (R, Swift).
+- **CI macOS runners**: `macos-latest` stopped being assigned a runner —
+  the macOS jobs sat in the queue with `steps: []` and `runner_id: 0`
+  (not a single step executed, not even the checkout) and were cancelled
+  after 15 minutes, while every Windows and Ubuntu job passed. A commit
+  that only touched READMEs "failed" the same way, which confirms it was
+  never the code. The matrix pins `macos-14` (arm64, matching the
+  documented `bin/arm64-Darwin` output) and both jobs carry
+  `timeout-minutes: 30`, so a queue problem now fails fast instead of
+  hanging.
 
 ### Fixed
 

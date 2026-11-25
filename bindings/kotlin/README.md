@@ -1,5 +1,7 @@
 # Kotlin (JNA)
 
+**English** · [Español](README.es.md)
+
 Mirror of the Java binding: `libsqlite.kt` declares the full frozen API
 (34 symbols) as a JNA `Library` interface plus a Kotlin layer
 (`Sqlite.ParamSet`, `Sqlite.Connection`), and `ExampleFull.kt` is the
@@ -65,14 +67,3 @@ library, runs the CTest suite and then compiles and runs the example with
   with `getString(0, "UTF-8")` (and releases when the pointer is the
   library's heap).
 
-## Resumen (español)
-
-Binding Kotlin con JNA (espejo del de Java): la interfaz `Core` declara los
-34 símbolos congelados con su firma exacta y `libsqlite.kt` añade
-`Sqlite.ParamSet` (que construye `sqlite_core_param_t[]` en memoria nativa y
-conserva las copias de nombre/valor — igual que Ruby y Fortran, evitando
-subclassificar `Structure`/`Union` de JNA) y `Sqlite.Connection` (handle +
-todas las operaciones). El callback de filas es un `fun interface ...
-Callback` (SAM) y las cadenas devueltas se liberan con
-`sqlite_core_string_free`. Verificado en el contenedor
-(`eclipse-temurin:17` + Kotlin + JNA).

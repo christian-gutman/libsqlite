@@ -1,5 +1,7 @@
 # C++ (header-only)
 
+**English** · [Español](README.es.md)
+
 `libsqlite.hpp` declares the full frozen API (34 symbols) as `extern "C"`
 plus a thin C++ layer on top; `example_full.cpp` is the canonical flow.
 No library of its own is built: compile the header straight into your
@@ -73,13 +75,3 @@ CTest suite running first.
   only `sqlite_core_string_free` may release; `reader_json()` returns it
   as `std::string` after freeing the original.
 
-## Resumen (español)
-
-Binding C++ sin archivos propios que compilar: `libsqlite.hpp` declara los
-34 símbolos congelados (`extern "C"`) y añade una capa fina —`ParamSet`
-(dueño de la memoria nativa de nombre y valor, con el puntero capturado
-antes de empujar el nombre), `Connection` (RAII), `take_string` /
-`static_string` (regla del alocador), `get_blob` que crece el buffer,
-`scalar_text` con su buffer de salida, y `static_assert` que detectan
-cualquier deriva del layout de `sqlite_core_param_t`—. Verificado en el
-contenedor Linux con `g++ -std=c++17 -Wall -Wextra`.

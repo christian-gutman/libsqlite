@@ -1,5 +1,7 @@
 # Julia (ccall)
 
+**English** · [Español](README.es.md)
+
 `libsqlite.jl` declares the full frozen API (34 symbols) with `ccall`, and
 `example_full.jl` is the canonical flow. No packages and no compilation:
 Julia's `ccall` talks to the built library directly.
@@ -62,13 +64,3 @@ and `cmake`, which the library itself needs).
   `string_ptr` is allocated by the SQLite allocator: it must be released
   with `sqlite_core_string_free` (mirroring the other bindings).
 
-## Resumen (español)
-
-Binding Julia sin paquetes: `ccall` con la forma de solo nombre (la librería
-se carga con `Libdl.dlopen(..., RTLD_GLOBAL)`), `ParamSet` que construye
-`sqlite_core_param_t[]` en memoria cruda con desplazamientos derivados de
-`Sys.WORD_SIZE ÷ 8`, `take_string`/`static_string` siguiendo la regla del
-alocador, callback de filas con `@cfunction` (el estado vive en `Ref`s
-globales porque los closures no sirven ahí) y el documento JSON también
-construido con `sqlite_core_json_writer_callback`. Verificado en el
-contenedor `julia:1.11`.

@@ -124,6 +124,10 @@ check(F.execute_non_query(handle, "SELECT 1; SELECT 2", null, 0,
 // binding must exercise (bindings/CONTRACT.md). error_message is static
 // library data and koffi hands it back as a JS string, so nothing is freed.
 check(F.set_busy_timeout(handle, 1000) === 1, "set_busy_timeout");
+// error_code mirrors the *engine's* last result, so the multi-statement
+// guard above leaves it at SQLITE_OK: provoke a real engine error first.
+F.execute_non_query(handle, "SELECT * FROM no_such_table", null, 0,
+    err, err.length);
 check(F.error_code(handle) !== 0, "error_code reports the engine failure");
 check(F.error_code_extended(handle) !== 0,
     "error_code_extended reports the engine failure");

@@ -22,4 +22,4 @@ Notes learned while building this binding (all applied in the files):
 - **Callbacks**: `koffi.register(fn, koffi.pointer(proto))` where the
   proto is `koffi.proto("name", "int", ["void *", "int", "int", "void *"])`;
   the proto must be declared before the function table that uses it.
-- Verified against the x64 build: 18 checks, 0 failures.
+- Verified against the x64 build: 22 checks, 0 failures.

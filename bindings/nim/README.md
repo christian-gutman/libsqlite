@@ -15,7 +15,7 @@ canonical flow.
 ## Container
 
 ```bat
-docker\build.cmd.cmd    :: compiles with nim c -d:release and runs it
+docker\build.cmd nim       :: compiles with nim c -d:release and runs it
 ```
 
 `docker/bindings/nim.Dockerfile` uses `nimlang/nim:2.0.14`, builds the

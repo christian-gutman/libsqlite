@@ -169,7 +169,7 @@ docker\build.cmd cpp      :: g++ -std=c++17 against the header-only binding
 docker\build.cmd swift    :: swiftc -I include + module.modulemap
 docker\build.cmd ruby     :: the ffi gem (Fiddle::Closure is broken in Ruby 3.x)
 docker\build.cmd julia    :: ccall/@cfunction, no dependencies
-docker\build.cmd.cmd    :: gfortran (iso_c_binding); the module is compiled first
+docker\build.cmd fortran    :: gfortran (iso_c_binding); the module is compiled first
 docker\build.cmd go
 docker\build.cmd rust     :: plain rustc + the platform #[link] name
 docker\build.cmd nodejs   :: npm install koffi inside the container

@@ -22,8 +22,8 @@ jobs:
             arch: x64
           - os: ubuntu-latest
             arch: x64
-          - os: macos-14
-            arch: arm64
+          - os: macos-13
+            arch: x64
     steps:
       - uses: actions/checkout@v4
 
@@ -88,8 +88,8 @@ jobs:
             arch: x64
           - os: ubuntu-latest
             arch: x64
-          - os: macos-14
-            arch: arm64
+          - os: macos-13
+            arch: x64
     steps:
       - uses: actions/checkout@v4
 

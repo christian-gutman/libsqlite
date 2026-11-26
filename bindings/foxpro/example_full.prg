@@ -2,11 +2,13 @@
 * Win32 DLL loaded with DECLARE DLL; every call is checked.
 * Exit code (FoxPro convention): 1 = ok, 2 = failed checks.
 
-LOCAL lcDll, lcDb, lcFixture, lcBig, lcErr, lnRc, lnChecks, lnFail
-LOCAL db, rc, rows, written, copied, rowid, seen
-LOCAL ARRAY aErr[1], aSink[1], aProbe[1]
+PUBLIC lcDll, lcDb, lcFixture, lcBig, lcErr, lnRc, lnChecks, lnFail
+PUBLIC db, rc, Nrows, written, copied, rowid, seen
+PUBLIC ARRAY aErrn[1], aSink[1], aProbe[1]
 
-lcDll   = "libsqlite3.dll"
+LOCAL lcDll
+lcDll = "..\..\bin\x32-Windows\shared\Release\libsqlite3.dll"
+
 lcDb    = "foxpro_demo.db"
 lcFixture = "foxpro_fixture.bin"
 lcBig   = "foxpro_oversize.bin"
@@ -70,74 +72,80 @@ DECLARE STRING   sqlite_core_string_free IN (lcDll) INTEGER @str
 
 rc = 0
 db = sqlite_core_open_or_create(lcDb, @rc)
-DO CheckWith(db != 0 AND rc = 0, "open_or_create")
-IF db = 0 THEN RETURN 2
+?db
+?rc
+=CheckWith(db != 0 AND rc = 0, "open_or_create")
+IF db = 0 
+ RETURN 2
+EndIf 
 
 lcErr = SPACE(0)
 * FoxPro passes buffers as STRING @; use the helpers in binding.prg
 lnRc = sqlite_core_execute_command(db, "CREATE TABLE person(id INTEGER PRIMARY KEY, name TEXT, data BLOB)", @lcErr, LEN(lcErr))
-DO CheckWith(lnRc = 0, "create table")
+=CheckWith(lnRc = 0, "create table")
 
 * named parameters: the parameter array is a C struct layout; see
 * bindings/foxpro/binding.prg (ParamInit/ParamSet) for the memory layout.
 DIMENSION aParams[2 * 6]   && 2 parameters x 6 fields
 = ParamSet(@aParams, 0, "id",  2, 1, "I", 42)      && INTEGER value
 = ParamSet(@aParams, 1, "name", 6, 1, "T", "Ada")  && TEXT value
-rows = sqlite_core_execute_non_query(db, "INSERT INTO person(id, name) VALUES (:id, :name)", ;
+Nrows = sqlite_core_execute_non_query(db, "INSERT INTO person(id, name) VALUES (:id, :name)", ;
         INTEGER(aParams[1]), 2, @lcErr, LEN(lcErr))
-DO CheckWith(rows = 1, "named parameter insert")
+=CheckWith(Nrows = 1, "named parameter insert")
 
 seen = 0
-rows = sqlite_core_execute_reader(db, "SELECT id, name FROM person ORDER BY id", 0, 0, ;
+Nrows = sqlite_core_execute_reader(db, "SELECT id, name FROM person ORDER BY id", 0, 0, ;
         (OnRowCount(@seen)), 0, @lcErr, LEN(lcErr))
-DO CheckWith(rows = 0 AND seen = 1, "reader visits the row")
+=CheckWith(Nrows = 0 AND seen = 1, "reader visits the row")
 
 dimension aOut[6]
 = ParamInit(@aOut)
 lnRc = sqlite_core_execute_scalar(db, "SELECT COUNT(*) FROM person", 0, 0, ;
         INTEGER(aOut[1]), @lcErr, LEN(lcErr))
-DO CheckWith(lnRc = 0, "scalar executes")
+=CheckWith(lnRc = 0, "scalar executes")
 
 dimension aJson[1]
 aJson = 0
-rows = sqlite_core_execute_reader_to_json(db, "SELECT id, name FROM person ORDER BY id", 0, 0, ;
+Nrows = sqlite_core_execute_reader_to_json(db, "SELECT id, name FROM person ORDER BY id", 0, 0, ;
         @aJson[1], @lcErr, LEN(lcErr))
-DO CheckWith(rows = 1, "reader to json")
-IF aJson[1] != 0 THEN sqlite_core_string_free(aJson[1])
+=CheckWith(Nrows = 1, "reader to json")
+IF aJson[1] != 0 
+ sqlite_core_string_free(aJson[1])
+EndIf 
 
-rows = sqlite_core_insert_json(db, "person", ;
+Nrows = sqlite_core_insert_json(db, "person", ;
         '[{"id": 2, "name": "Line1"}, {"id": 3, "name": "Line2"}]', @lcErr, LEN(lcErr))
-DO CheckWith(rows = 2, "insert_json batch")
+=CheckWith(Nrows = 2, "insert_json batch")
 
 written = 0
-DO CheckWith(sqlite_core_insert_blob(db, "person", "data", 2, lcFixture, 0, @written, @lcErr, LEN(lcErr)) = 1024 ;
+=CheckWith(sqlite_core_insert_blob(db, "person", "data", 2, lcFixture, 0, @written, @lcErr, LEN(lcErr)) = 1024 ;
         AND written = 1024, "insert_blob streams the file")
 
 copied = 0
 aSink = REPLICATE(CHR(0), 1024)
-DO CheckWith(sqlite_core_get_blob(db, "SELECT data FROM person WHERE id = 2", @aSink, 1024, @copied) = 0 ;
+=CheckWith(sqlite_core_get_blob(db, "SELECT data FROM person WHERE id = 2", @aSink, 1024, @copied) = 0 ;
         AND copied = 1024, "get_blob reads it back")
-DO CheckWith(LEFT(aSink, 3) = LEFT(lcFixture, 3), "byte-for-byte round trip")
+=CheckWith(LEFT(aSink, 3) = LEFT(lcFixture, 3), "byte-for-byte round trip")
 
-DO CheckWith(sqlite_core_last_insert_rowid(db) > 0, "last_insert_rowid")
+=CheckWith(sqlite_core_last_insert_rowid(db) > 0, "last_insert_rowid")
 
-DO CheckWith(sqlite_core_commit_transaction(db, @lcErr, LEN(lcErr)) != 0, "commit without transaction fails")
-DO CheckWith(sqlite_core_begin_transaction(db, @lcErr, LEN(lcErr)) = 1, "begin")
+=CheckWith(sqlite_core_commit_transaction(db, @lcErr, LEN(lcErr)) != 0, "commit without transaction fails")
+=CheckWith(sqlite_core_begin_transaction(db, @lcErr, LEN(lcErr)) = 1, "begin")
 sqlite_core_execute_non_query(db, "INSERT INTO person(name) VALUES ('Temp')", 0, 0, @lcErr, LEN(lcErr))
-DO CheckWith(sqlite_core_rollback_transaction(db, @lcErr, LEN(lcErr)) = 1, "rollback")
+=CheckWith(sqlite_core_rollback_transaction(db, @lcErr, LEN(lcErr)) = 1, "rollback")
 = ParamInit(@aOut)
 sqlite_core_execute_scalar(db, "SELECT COUNT(*) FROM person", 0, 0, INTEGER(aOut[1]), @lcErr, LEN(lcErr))
-DO CheckWith(ParamGetInt(@aOut) = 3, "rollback discarded the row")
+=CheckWith(ParamGetInt(@aOut) = 3, "rollback discarded the row")
 
-DO CheckWith(sqlite_core_update_blob(db, "person", "data", 2, lcBig, 0, @written, @lcErr, LEN(lcErr)) = -3, ;
+=CheckWith(sqlite_core_update_blob(db, "person", "data", 2, lcBig, 0, @written, @lcErr, LEN(lcErr)) = -3, ;
         "update_blob refuses to exceed the column")
 
 rc = 0
-DO CheckWith(sqlite_core_open_readonly("missing.db", @rc) = 0 AND rc = 14, "open missing file fails")
-DO CheckWith(sqlite_core_execute_non_query(db, "SELECT 1; SELECT 2", 0, 0, @lcErr, LEN(lcErr)) = 21, ;
+=CheckWith(sqlite_core_open_readonly("missing.db", @rc) = 0 AND rc = 14, "open missing file fails")
+=CheckWith(sqlite_core_execute_non_query(db, "SELECT 1; SELECT 2", 0, 0, @lcErr, LEN(lcErr)) = 21, ;
         "multi-statement rejected")
 
-DO CheckWith(sqlite_core_close(db) = 1, "close")
+=CheckWith(sqlite_core_close(db) = 1, "close")
 
 
 IF FILE(lcDb)      
@@ -158,7 +166,13 @@ RETURN IIF(lnFail = 0, 1, 2)
 
 PROCEDURE CheckWith(tlCond, tcMsg)
     lnChecks = lnChecks + 1
-    IF tlCond THEN ?? "  ok   - " + tcMsg ELSE lnFail = lnFail + 1 AND ?? "  FAIL - " + tcMsg
+    IF tlCond 
+     ?? "  ok   - " + tcMsg
+    Else
+     ?tcMsg
+     ?lnFail 
+     *lnFail = lnFail + 1 AND ?? "  FAIL - " + tcMsg
+    EndIf  
 ENDPROC
 
 PROCEDURE OnRowCount(tnSeen)
@@ -177,8 +191,12 @@ FUNCTION ParamSet(taParams, tnIndex, tcName, tnType, tnDir, tcKind, tvValue)
     taParams[n+1] = 0
     taParams[n+2] = tnType
     taParams[n+3] = tnDir
-    IF tcKind == "I" THEN taParams[n+4] = tvValue && integer union slot
-    IF tcKind == "T" THEN taParams[n+5] = tvValue && text pointer slot
+    IF tcKind == "I" 
+     taParams[n+4] = tvValue && integer union slot
+    EndIf 
+    IF tcKind == "T" 
+       taParams[n+5] = tvValue && text pointer slot
+    EndIf 
     RETURN .T.
 ENDFUNC
 

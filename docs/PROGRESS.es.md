@@ -15,15 +15,20 @@ Los hitos 0–5 están cerrados: higiene, compilación multiplataforma
 paridad con .NET, la API congelada, la suite de pruebas con CI y la
 documentación bilingüe.
 
-El proyecto de bindings está en la **etapa 13 del plan**: 15 lenguajes
+El proyecto de bindings está en la **etapa 13 del plan**: 16 lenguajes
 están *verificados de extremo a extremo dentro de contenedores* (se
 compila la librería, corre la suite CTest y el ejemplo canónico), otros
 dos (Visual FoxPro y Clipper) tienen sólo la declaración completa de los
-34 símbolos y quedan excluidos a propósito del matrix de contenedores, uno
-(PHP como **extensión Zend**, `bindings/phpext`) está en construcción — su
-contenedor lo compila con phpize y los métodos de `Connection` del §3 de
-`bindings/CONTRACT.md` siguen sin escribir — y los objetivos modernos y
-heredados restantes están pendientes.
+34 símbolos y quedan excluidos a propósito del matrix de contenedores, y
+los objetivos modernos y heredados restantes están pendientes.
+
+PHP aparece dos veces a propósito, y la diferencia es el punto:
+`bindings/php` es la vía FFI (sin toolchain, pero sin puntero a función C,
+así que el reader pasa por un shim en C) y `bindings/phpext` es la
+extensión Zend nativa (necesita phpize, y alcanza
+`sqlite_core_execute_reader` con un `callable` de PHP real y
+`sqlite_core_json_writer_callback` por su propia dirección).
+
 
 ---
 
@@ -68,10 +73,11 @@ plano.
 | 13 | Java | `java/LibSqlite.java` + `ExampleFull.java` | JNA | 24 | `eclipse-temurin:17-jammy` |
 | 14 | R | `r/libsqlite.R` + `example_full.R` | `.Call` vía `dyn.load` | 25 | `r-base:latest` |
 | 15 | PHP | `php/libsqlite.php` + `example_full.php` | FFI + el shim en C (`php/src/php_shim.c`), que cierra el mecanismo de callback que a FFI le falta | 26 | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` |
+| 16 | PHP (Zend) | `phpext/libsqlite.c` + `example_full.php` | extensión nativa (`phpize`), habilitada mediante un `.ini` real | 40 | `debian:bookworm-slim` + `php-cli`/`php-dev` |
 
 *Los checks son de la última corrida en contenedor de cada lenguaje; Fortran
 (33) y Go (19) se midieron de nuevo al sincronizar la documentación, el resto
-viene de su corrida de verificación original. Las 15 PASSED.*
+viene de su corrida de verificación original. Las 16 PASSED.*
 
 Los contadores difieren porque cada ejemplo afirma un subconjunto distinto de
 los mismos 34 símbolos — por eso un número más bajo (Go, 19) es perfectamente
@@ -89,7 +95,6 @@ Ambos declaran los 34 símbolos (verificado por `verify_symbols.py`) pero
 
 | Etapa | Objetivos | Notas |
 |---|---|---|
-| **En curso** | **PHP (extensión Zend)** — `bindings/phpext` | paso 2 del plan de PHP: el contenedor existe, los métodos de `Connection` del §3 del contrato todavía no están escritos |
 | Modernos | **D**, Haskell, Perl, Zig, LuaJIT, Tcl, MATLAB | uno por vez |
 | Modernos (al final) | Dart / Flutter | diferido por el usuario |
 | Heredados | Delphi / FPC, VB6, COBOL, PowerBuilder, RPG | hay que acordar el *método de verificación* (la mayoría no corre en un contenedor Linux) |
@@ -108,7 +113,7 @@ Mantenimiento:
 
 ```bat
 docker\build.cmd nim      :: compila -> corre -> elimina la imagen
-docker\build_all.cmd       :: el matrix de 15 lenguajes + impresión PASSED/FAILED
+docker\build_all.cmd       :: el matrix de 16 lenguajes + impresión PASSED/FAILED
 python bindings\verify_symbols.py   :: 34 símbolos contra sqlite.def
 ```
 

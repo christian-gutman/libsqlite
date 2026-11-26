@@ -14,14 +14,19 @@ are closed: hygiene, cross-platform build (Win32 / Win32-static / x64 /
 Linux / macOS, shared + static), .NET parity, the frozen API, the test
 suite with CI, and bilingual documentation.
 
-The binding project is **stage 13 of the plan**: 15 languages are
+The binding project is **stage 13 of the plan**: 16 languages are
 *verified end to end inside containers* (library built, CTest suite, and
 the canonical example), 2 more (Visual FoxPro and Clipper) have their
 full 34-symbol declarations only and are deliberately excluded from the
-container matrix, one (PHP as a **Zend extension**, `bindings/phpext`)
-is under construction — its container compiles it with phpize and the
-`Connection` methods of `bindings/CONTRACT.md` §3 are still unwritten —
-and the remaining modern and legacy targets are pending.
+container matrix, and the remaining modern and legacy targets are
+pending.
+
+PHP appears twice on purpose, and the difference is the point:
+`bindings/php` is the FFI route (no toolchain, but no C function pointer
+either, so the reader goes through a C shim) and `bindings/phpext` is the
+native Zend extension (needs phpize, and reaches
+`sqlite_core_execute_reader` with a real PHP `callable` and
+`sqlite_core_json_writer_callback` by its own address).
 
 ---
 
@@ -66,10 +71,11 @@ flat.
 | 13 | Java | `java/LibSqlite.java` + `ExampleFull.java` | JNA | 24 | `eclipse-temurin:17-jammy` |
 | 14 | R | `r/libsqlite.R` + `example_full.R` | `.Call` via `dyn.load` | 25 | `r-base:latest` |
 | 15 | PHP | `php/libsqlite.php` + `example_full.php` | FFI + the C shim (`php/src/php_shim.c`), which closes the callback mechanism FFI lacks | 26 | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` |
+| 16 | PHP (Zend) | `phpext/libsqlite.c` + `example_full.php` | native extension (`phpize`), enabled through a real `.ini` | 40 | `debian:bookworm-slim` + `php-cli`/`php-dev` |
 
 *Checks are from the last container run of each language; Fortran (33) and Go
 (19) were re-measured at the documentation sync, the rest come from their
-original verification run. All 15 PASSED.*
+original verification run. All 16 PASSED.*
 
 The check counters differ because each example asserts a different subset of
 the same 34 symbols — that is what makes a lower number (Go, 19) perfectly
@@ -88,7 +94,6 @@ request.
 
 | Stage | Targets | Notes |
 |---|---|---|
-| **In progress** | **PHP (Zend extension)** — `bindings/phpext` | step 2 of the PHP plan: the container exists, the `Connection` methods of `CONTRACT.md` §3 are not written yet |
 | Modern | **D**, Haskell, Perl, Zig, LuaJIT, Tcl, MATLAB | one at a time |
 | Modern (last) | Dart / Flutter | deferred by the user |
 | Legacy | Delphi / FPC, VB6, COBOL, PowerBuilder, RPG | the *verification method* must be agreed (most of these cannot run in a Linux container) |
@@ -111,7 +116,7 @@ Housekeeping:
 
 ```bat
 docker\build.cmd nim      :: build -> run -> remove the image
-docker\build_all.cmd       :: the 14-language matrix + PASSED/FAILED print
+docker\build_all.cmd       :: the 16-language matrix + PASSED/FAILED print
 python bindings\verify_symbols.py   :: 34 symbols vs sqlite.def
 ```
 

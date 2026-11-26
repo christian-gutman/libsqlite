@@ -175,6 +175,7 @@ Checked by scanning every `example_full.*` for the names it calls.
 | Kotlin | 17/17 | — |
 | Nim | 17/17 | — |
 | PHP (FFI) | 17/17 | — (the reader reaches the C API through `php/src/php_shim.c`, which closes FFI's missing callback mechanism) |
+| PHP (Zend) | 17/17 | — (`bindings/phpext`, 40 checks in its container). The reader takes a real PHP callable and `json_writer_callback` is its own address: the two symbols FFI reaches only through a shim. `string_format` is forwarded with a three-argument cap, documented in its README. |
 | Python | 17/17 | — |
 | R | 17/17 | — (the three wrappers were added to the R-facing surface; see `bindings/r/README.md`) |
 | Ruby | 17/17 | — |
@@ -182,10 +183,9 @@ Checked by scanning every `example_full.*` for the names it calls.
 | Swift | 17/17 | — |
 | Node.js | 16/17 | `execute_scalar` is avoided **on purpose and documented** — it reads the scalar through JSON "avoids the out-struct in this example" |
 | FoxPro | 15/17 | `error_code`, `error_message` |
-| PHP (Zend) | 0/17 | `bindings/phpext` is step 2 of the PHP plan. The container (`docker/bindings/phpext.Dockerfile`) builds it with phpize, and §3 above fixes every method name and signature — but the `Connection` methods are unwritten, so `make` fails inside the container. No example exists yet, hence 0/17 rather than a gap list. |
 | Clipper | 0/17 | `libsqlite.prg` declares the frozen surface (34/34 per `verify_symbols.py`), but `example_full.prg` is a **stub**: it contains only the helpers (`Check`, `FnLoad`, `Fixture`, `RowCount`) and calls **no symbol at all**, so the canonical flow is not implemented. The README's claim that `example_full.prg` "implements the canonical flow" is wrong. |
 
-**Fourteen bindings reach 17/17**, each verified by running its canonical
+**Fifteen bindings reach 17/17**, each verified by running its canonical
 example against the built library — in a Linux container for the modern ones
 (see `docker/readme.md`), and by declaration only for the legacy ones.
 
@@ -201,8 +201,14 @@ and C++ and Swift gained `error_code`/`error_code_extended`. R also needed
 those three wrappers added to its R-facing surface — the shim had them
 (`sqlite_r_connection` op 2/3/4/5) but nothing exposed them.
 
-**What remains needs either a toolchain or code this repository does not have
-yet:**
+The second batch was **PHP as a Zend extension** (`bindings/phpext`). It
+started at 0/17 with the container failing at `make` because the
+`Connection` class methods were unwritten, and it now runs the canonical
+example at 40 checks, 0 failures. It closes what PHP FFI cannot: the
+`sqlite_core_execute_reader` callback and
+`sqlite_core_json_writer_callback`'s own address, both without a C shim.
+
+**What remains is a toolchain problem, not a code problem:**
 
 - **Node.js `execute_scalar`** — a documented 16/17: the out-struct is
   avoided and the value is read through `execute_reader_to_json` instead.
@@ -213,9 +219,8 @@ yet:**
   `STRING` while `binding.prg` declares it `void`). Needs VFP 9.
 - **Clipper's canonical flow** — a stub that needs Harbour/xHarbour to write
   and run.
-- **PHP (Zend)** — code, not toolchain: the `Connection` methods listed in §3.
 
-All four are recorded as documented limitations under 8(b), because writing
+All three are recorded as documented limitations under 8(b), because writing
 them blind risks breaking an example that currently stands.
 
 ## 9. Adding a binding (checklist)

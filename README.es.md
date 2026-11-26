@@ -444,6 +444,7 @@ comparar resultados):
 | Kotlin | [`bindings/kotlin`](bindings/kotlin) |
 | Nim | [`bindings/nim`](bindings/nim) |
 | PHP | [`bindings/php`](bindings/php) |
+| PHP (extensión Zend) | [`bindings/phpext`](bindings/phpext) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 

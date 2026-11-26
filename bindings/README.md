@@ -83,7 +83,7 @@ Legend: ✅ verified (example compiles and runs green against the built
 library — "container" means the same example also ran in its Linux
 container) · 🟡 written, needs toolchain · ⬜ planned.
 
-### ✅ Verified in container (15/15)
+### ✅ Verified in container (16/16)
 
 Checks are the number printed by the last container run of each language.
 They differ by design: every example asserts a different subset of the same
@@ -100,7 +100,8 @@ compliance per language is in [`CONTRACT.md`](CONTRACT.md) §8.
 | Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | `extern "C"` | 23 | `rust:1-bookworm` |
 | Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | koffi | 22 | `node:24-bookworm` |
 | Java | `java/LibSqlite.java` | `java/ExampleFull.java` | JNA | 24 | `eclipse-temurin:17-jammy` |
-| PHP | `php/libsqlite.php` | `php/example_full.php` | FFI + the C shim (`php/src/php_shim.c`, compiled in-container) | 26 | `debian:bookworm-slim` + php-cli/php8.2-ffi |
+| PHP (FFI) | `php/libsqlite.php` | `php/example_full.php` | FFI + the C shim (`php/src/php_shim.c`, compiled in-container) | 26 | `debian:bookworm-slim` + php-cli/php8.2-ffi |
+| PHP (Zend extension) | `phpext/libsqlite.c` | `phpext/example_full.php` | native extension (`phpize`) | 40 | `debian:bookworm-slim` + php-cli/php-dev |
 | R | `r/libsqlite.R` | `r/example_full.R` | shim + `R CMD SHLIB` | 25 | `r-base:latest` |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ffi gem | 29 | `ruby:3.3-bookworm` |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | `ccall` + `@cfunction` | 32 | `julia:1.11-bookworm` |
@@ -123,7 +124,6 @@ have no Linux container — they consume the Win32/x64 DLL from a legacy
 
 | Language | Binding | Example | Status |
 |----------|---------|---------|--------|
-| PHP (Zend extension) | `phpext/libsqlite.c` | — (no example yet) | 🟡 **in progress**: `bindings/phpext` already has a container (`docker/bindings/phpext.Dockerfile`) that compiles it with phpize, and `CONTRACT.md` §3 gives the exact `Connection` method names; the methods themselves are still unwritten, so `make` fails inside the container until they are. This is step 2 of the PHP plan — step 1 (the C shim) is done and verified. |
 | Dart / Flutter | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ deferred by the user |
 | D | `d/libsqlite.d` | `d/example_full.d` | ⬜ |
 | Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | ⬜ |
@@ -182,12 +182,15 @@ docker\build.cmd java     :: also fetches the JNA jar from Maven Central
 docker\build.cmd kotlin  :: Kotlin compiler + JNA jar, kotlinc + kotlin
 docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
 docker\build.cmd php      :: FFI + the C shim compiled in-container
+docker\build.cmd phpext   :: phpize, the .ini that enables it, then the example
 
-docker\build_all.cmd      :: the fifteen of them in sequence + pass/fail matrix
+docker\build_all.cmd      :: the sixteen of them in sequence + pass/fail matrix
 ```
 
-`phpext` is **not** in that matrix: its container is a compile probe for the
-Zend extension, which is not finished (see *Pending — Modern*).
+`phpext` is in that matrix now: its container compiles the extension with
+phpize against the freshly built library, writes `30-libsqlite.ini` into the
+conf.d `php -i` reports, and runs `example_full.php` through that `.ini` —
+loading the extension the way an installation does, not with a `-d` flag.
 
 FoxPro and Clipper are deliberately **not** containerized: they consume
 the Windows DLL from a 16/32-bit legacy runtime and cannot run in a Linux

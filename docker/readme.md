@@ -8,7 +8,7 @@ and runs the suites (and one language example) against the real artifact.
 | `Dockerfile` | Plain Linux build: shared + static, full CTest suite. |
 | `bindings/<lang>.Dockerfile` | Builds the library, runs the suites, then compiles and runs the `bindings/<lang>` canonical example. |
 | `bindings/php-windows.Dockerfile` | **Windows variant** of the PHP container (see below). Not part of CI. |
-| `bindings/phpext.Dockerfile` | Build environment for the **Zend extension** (`bindings/phpext`): phpize + `config.m4`. Not part of CI. It compiles the extension, which is **step 2 of the PHP plan** and does not build yet — the `Connection` class methods are still unwritten. |
+| `bindings/phpext.Dockerfile` | Builds the **Zend extension** (`bindings/phpext`) with phpize against the freshly built library, writes `30-libsqlite.ini` into the conf.d `php -i` reports, and runs the canonical example. Not part of CI. |
 | `build.cmd <lang>` | Build the image, run it, **remove the image** and print `docker system df` (keeps disk usage flat). |
 | `build_all.cmd [langs...]` | Runs every binding container one after the other and prints the pass/fail matrix. No arguments = all languages. |
 
@@ -76,7 +76,7 @@ docker\build.cmd cpp       :: g++ -std=c++17 (header-only binding)
 docker\build.cmd swift     :: swiftc -I include + module.modulemap
 docker\build.cmd ruby      :: installs the ffi gem, runs the example
 docker\build.cmd julia     :: ccall/@cfunction, no dependencies
-docker\build_all.cmd       :: php python csharp cpp go rust nodejs java r swift ruby julia kotlin nim fortran
+docker\build_all.cmd       :: php phpext python csharp cpp go rust nodejs java r swift ruby julia kotlin nim fortran
 ```
 
 Flow of a language container:
@@ -112,6 +112,7 @@ results are comparable line by line.
 | `bindings/fortran.Dockerfile` | `ubuntu:24.04` + gfortran | none (iso_c_binding) | 33 checks |
 | `bindings/kotlin.Dockerfile` | `eclipse-temurin:17` + Kotlin + JNA | kotlinc + the JNA jar | 31 checks |
 | `bindings/nim.Dockerfile` | `nimlang/nim:2.0.14` | none ({.importc, dynlib}) | 34 checks |
+| `bindings/phpext.Dockerfile` | `debian:bookworm-slim` + `php-cli`/`php-dev` | none (phpize builds the extension; the `.ini` enables it) | 40 checks |
 
 Check counts are from the last container run of each language and differ
 by design: every example asserts a different subset of the same 34 frozen
@@ -124,12 +125,13 @@ symbols, so a lower number is not a lower coverage (see
 does not exist in a Linux container, so they stay on the
 "declarations + README" level and are verified on Windows instead.
 
-**Not in this matrix either:** `bindings/phpext`. Its container exists
-(`bindings/phpext.Dockerfile`) and is the *only* place the Zend extension
-can be compiled on this host, but the extension itself is incomplete — the
-`Connection` class methods of §3 in `bindings/CONTRACT.md` are not written
-yet, so `make` fails inside the container on purpose. That failure is the
-container's job: it tells you exactly which method is still missing.
+**The Zend extension is in the matrix** (`bindings/phpext`). Its container is
+the only place on a Linux host where a PHP extension can be compiled against
+this library, and it also checks something no other container can: that the
+built `.so` actually declares `libsqlite3.so` as a dependency. A link line
+that resolves to nothing produces a `.so` that builds, loads, and fails at
+the first call — the container asserts the DT_NEEDED before writing the
+`.ini`, so that failure mode has a name.
 
 The examples mutate files only inside the container; the host repository
 is never written to.

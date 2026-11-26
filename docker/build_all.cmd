@@ -1,18 +1,19 @@
 @echo off
 rem Runs every language container that works on Linux, one after the
 rem other, removing each image afterwards (keeps docker system df flat).
-rem The fifteen languages below are the ones with a verified container;
+rem The sixteen languages below are the ones with a verified container;
 rem Visual FoxPro and Clipper are excluded on purpose: they are 16/32-bit
 rem Windows-only consumers of the DLL and cannot run in a Linux container.
-rem phpext is also excluded: its container is a compile probe for an
-rem extension that is not finished yet, not a runnable example.
+rem phpext is in the matrix as of this run: its container compiles the
+rem extension with phpize against the freshly built library and runs
+rem example_full.php through a real .ini, not a -d flag.
 rem
 rem Usage: docker\build_all.cmd            (all languages)
 rem        docker\build_all.cmd go java    (only these)
 
 setlocal EnableDelayedExpansion
 
-set LANGS=python csharp cpp swift ruby julia kotlin nim fortran go rust nodejs java r php
+set LANGS=python csharp cpp swift ruby julia kotlin nim fortran go rust nodejs java r php phpext
 if not "%~1"=="" set LANGS=%*
 
 set PASSED=
@@ -28,7 +29,7 @@ for %%L in (%LANGS%) do (
 
 echo.
 echo ============================================================
-echo container matrix:  python csharp cpp swift ruby julia kotlin nim fortran go rust nodejs java r php
+echo container matrix:  python csharp cpp swift ruby julia kotlin nim fortran go rust nodejs java r php phpext
 if not "!PASSED!"=="" echo PASSED:!PASSED!
 if not "!FAILED!"=="" echo FAILED:!FAILED!
 echo ============================================================

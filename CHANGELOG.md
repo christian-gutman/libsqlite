@@ -26,6 +26,51 @@ separately by `sqlite_core_sqlite_version()`.
   it now fails at `make` **on purpose**: the `Connection` class methods of
   `bindings/CONTRACT.md` §3 are still unwritten, so the container reports
   exactly which method is missing. Not part of CI.
+- **PHP as a native Zend extension** (`bindings/phpext`) - the second of the
+  two PHP routes, and the one that reaches what FFI cannot.
+  `bindings/phpext/libsqlite.c` is a complete Zend extension over the frozen
+  34-symbol API: `LibSqlite\Connection` carries the 25 symbols that need a
+  handle, with the `sqlite3*` owned by the object and closed from its
+  destructor, seven module-level functions cover the string and version
+  helpers, and the five `LIBSQLITE_TYPE_*` constants are registered as
+  globals.
+
+  **The reader takes a real PHP callable.** `sqlite_core_execute_reader`'s
+  callback is a C function pointer built from a PHP callable, and
+  `sqlite_core_json_writer_callback` is exposed by its own address. Both are
+  the two frozen symbols PHP FFI cannot reach - which is why this extension
+  exists alongside `bindings/php`. `example_full.php` runs the canonical
+  flow at **40 checks, 0 failures**.
+
+  Pair of READMEs (`bindings/phpext/README.md` + `README.es.md`) carry the
+  one-to-one C -> PHP mapping and the ten extension-specific findings.
+
+### Fixed
+
+- **`config.m4` did not put the library on the link line.** The link rule
+  uses `$(LIBSQLITE_SHARED_LIBADD)`, and assigning it (directly, or through
+  `PHP_EVAL_LIBLINE` / `PHP_ADD_LIBRARY_WITH_PATH`) left the generated
+  Makefile without it. The `.so` built with **every** `sqlite_core_*` symbol
+  unresolved - `ld` allows that in a shared module - and `dlopen` failed at
+  load time with `undefined symbol: sqlite_core_json_writer_callback` while
+  `readelf -d` showed a DT_NEEDED holding only `libc.so.6`. Now
+  `PHP_SUBST(LIBSQLITE_SHARED_LIBADD)` after the assignment, and `-lsqlite3`
+  (not `-llibsqlite3`, which would look for `liblibsqlite3.so`). The
+  container asserts the DT_NEEDED before writing the `.ini`, so that failure
+  mode has a name.
+- The extension is enabled through **a real `.ini`**
+  (`30-libsqlite.ini` in the conf.d `php -i` reports), not a `-d` flag on
+  the command line: the difference between proving the `.so` exists and
+  proving the engine loads it.
+
+### Limitations
+
+- `libsqlite_string_format` accepts **at most three arguments**. PHP cannot
+  build a C `va_list` at run time, so the wrapper dispatches on each
+  argument's PHP type. Every combination of up to three int/float/string
+  arguments works; a fourth, or any other type, raises.
+- `sqlite_core_string_free` is internal: the extension copies every returned
+  `char*` into a `zend_string`, so PHP never owns a library pointer.
 
 ### Fixed
 

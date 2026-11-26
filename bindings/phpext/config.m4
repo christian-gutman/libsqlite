@@ -32,14 +32,21 @@ if test "$PHP_LIBSQLITE" != "no"; then
     [AS_HELP_STRING([--with-libsqlite3-dir=DIR],
       [Directory containing the built libsqlite3 shared library])],
     [
-      # Names the file exactly: -llibsqlite3 would double the "lib" prefix
-      # against an artifact that is already called libsqlite3.so.
-      PHP_LIBSQLITE_LIBS="-L$withval -l:libsqlite3.so -Wl,-rpath,$withval"
+      # -lsqlite3, NOT -llibsqlite3: the artifact is already called
+      # libsqlite3.so, so -llibsqlite3 would look for liblibsqlite3.so.
+      # PHP_SUBST is what actually puts the value into the generated
+      # Makefile's LIBSQLITE_SHARED_LIBADD, which the link rule uses. The
+      # baroque helpers (PHP_ADD_LIBRARY_WITH_PATH, PHP_EVAL_LIBLINE) left
+      # that variable empty, so the .so linked with every sqlite_core_*
+      # symbol unresolved - ld allows it in a shared module - and dlopen
+      # failed at load time with a DT_NEEDED holding only libc.
+      LIBSQLITE_SHARED_LIBADD="-L$withval -lsqlite3 -Wl,-rpath,$withval"
+      PHP_SUBST(LIBSQLITE_SHARED_LIBADD)
       AC_MSG_RESULT([$withval])
     ],
     [AC_MSG_RESULT([no])])
 
-  if test -z "$PHP_LIBSQLITE_LIBS"; then
+  if test -z "$LIBSQLITE_SHARED_LIBADD"; then
     AC_MSG_ERROR([--with-libsqlite3-dir is required: this extension has no
                   system libsqlite3 to fall back on, it links the one this
                   repository builds])
@@ -48,7 +55,6 @@ if test "$PHP_LIBSQLITE" != "no"; then
   AC_CHECK_HEADERS([stdint.h], [], [AC_MSG_ERROR([stdint.h is required])])
 
   PHP_EVAL_INCLINE($PHP_LIBSQLITE_CFLAGS)
-  PHP_EVAL_LIBLINE($PHP_LIBSQLITE_LIBS, LIBSQLITE_SHARED_LIBADD)
 
   dnl uintptr_t on macOS needs stdint through the extension's own includes.
 

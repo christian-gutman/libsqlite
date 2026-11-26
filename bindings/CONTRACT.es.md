@@ -183,6 +183,7 @@ Comprobado escaneando cada `example_full.*` por los nombres que llama.
 | Kotlin | 17/17 | - |
 | Nim | 17/17 | - |
 | PHP (FFI) | 17/17 | - (el reader llega a la API C por `php/src/php_shim.c`, que cierra el mecanismo de callback que FFI no tiene) |
+| PHP (Zend) | 17/17 | - (`bindings/phpext`, 40 checks en su contenedor). El reader recibe un callable de PHP real y `json_writer_callback` es su propia dirección: los dos símbolos que FFI solo alcanza por shim. `string_format` se reenvía con un tope de tres argumentos, documentado en su README. |
 | Python | 17/17 | - |
 | R | 17/17 | - (se añadieron los tres wrappers a la superficie R; ver `bindings/r/README.md`) |
 | Ruby | 17/17 | - |
@@ -190,10 +191,9 @@ Comprobado escaneando cada `example_full.*` por los nombres que llama.
 | Swift | 17/17 | - |
 | Node.js | 16/17 | `execute_scalar` se evita **a propósito y está documentado**: lee el escalar por JSON "avoids the out-struct in this example" |
 | FoxPro | 15/17 | `error_code`, `error_message` |
-| PHP (Zend) | 0/17 | `bindings/phpext` es el paso 2 del plan de PHP. El contenedor (`docker/bindings/phpext.Dockerfile`) lo compila con phpize y el §3 fija cada nombre y firma de método, pero los métodos de `Connection` están sin escribir, así que `make` falla dentro del contenedor. Todavía no hay ejemplo, de ahí 0/17 en vez de una lista de huecos. |
 | Clipper | 0/17 | `libsqlite.prg` declara la superficie congelada (34/34 según `verify_symbols.py`), pero `example_full.prg` es un **stub**: contiene solo los helpers (`Check`, `FnLoad`, `Fixture`, `RowCount`) y **no llama a ningún símbolo**, así que el flujo canónico no está implementado. La afirmación del README de que `example_full.prg` "implementa el flujo canónico" es falsa. |
 
-**Catorce bindings llegan a 17/17**, cada uno verificado ejecutando su ejemplo
+**Quince bindings llegan a 17/17**, cada uno verificado ejecutando su ejemplo
 canónico contra la librería construida — en un contenedor Linux para los
 modernos (ver `docker/readme.md`) y solo por declaración para los legacy.
 
@@ -209,7 +209,14 @@ Swift ganaron `error_code`/`error_code_extended`. R también necesitaba esos
 tres wrappers en su superficie R: el shim los tenía (`sqlite_r_connection` op
 2/3/4/5) pero nada los exponía.
 
-**Lo que queda necesita un toolchain, o código, que este repositorio no tiene:**
+El segundo lote fue **PHP como extensión Zend** (`bindings/phpext`). Empezó en
+0/17 con el contenedor fallando en `make` porque los métodos de `Connection`
+estaban sin escribir, y ahora corre el ejemplo canónico con 40 checks y 0
+fallos. Cierra lo que PHP FFI no puede: el callback de
+`sqlite_core_execute_reader` y la dirección propia de
+`sqlite_core_json_writer_callback`, ambos sin shim en C.
+
+**Lo que queda es un problema de toolchain, no de código:**
 
 - **`execute_scalar` de Node.js** — un 16/17 documentado: se evita el
   out-struct y el valor se lee por `execute_reader_to_json`. Cerrarlo implica
@@ -220,11 +227,9 @@ tres wrappers en su superficie R: el shim los tenía (`sqlite_r_connection` op
   `STRING` mientras `binding.prg` lo declara `void`). Necesita VFP 9.
 - **El flujo canónico de Clipper** — un stub que necesita Harbour/xHarbour
   para escribirlo y correrlo.
-- **PHP (Zend)** — código, no toolchain: los métodos de `Connection` del §3.
 
-Los cuatro quedan anotados como limitaciones documentadas bajo 8(b), porque
+Los tres quedan anotados como limitaciones documentadas bajo 8(b), porque
 escribirlos a ciegas arriesga romper un ejemplo que hoy se mantiene.
-
 ## 9. Añadir un binding (checklist)
 
 1. `bindings/<lang>/` con el fichero del binding y `example_full.*`.

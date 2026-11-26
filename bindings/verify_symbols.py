@@ -15,10 +15,15 @@ import sys
 
 # Compared against the file name lower-cased (see binding_files()), so
 # every entry stays in lower case: ".R" here would never match "Lib.R".
+# ".c" is here because two bindings are written in C on purpose: the R and
+# PHP shims (a C trampoline that closes a missing callback mechanism) and,
+# since the PHP Zend extension, the extension itself. Without ".c" the
+# scanner only saw example_full.php and reported 31 missing symbols for a
+# binding whose entire implementation is libsqlite.c.
 EXTENSIONS = (".py", ".cs", ".go", ".rs", ".js", ".dart", ".java", ".r",
               ".hpp", ".cpp", ".swift", ".kt", ".pas", ".vb", ".d", ".nim",
               ".zig", ".rb", ".php", ".lua", ".pl", ".jl", ".f", ".f90",
-              ".hs", ".tcl", ".m", ".prg", ".cmd", ".ps1")
+              ".hs", ".tcl", ".m", ".prg", ".cmd", ".ps1", ".c")
 
 SOURCE_FILES = ("binding.py", "libsqlite.go", "LibSqlite.cs", "LibSqlite.hs",
                 "libsqlite.d", "libsqlite.nim", "libsqlite.zig", "libsqlite.R",

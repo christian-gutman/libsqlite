@@ -95,7 +95,18 @@ Unified contract for every public function:
 - Every function that accepts `err_buf` clears it on entry and fills it with
   the SQLite message on failure.
 - `error_code`, `error_code_extended` and `error_message` mirror
-  `SqlException.Number` / `Message`.
+  `SqlException.Number` / `Message`, **but they describe the engine's last
+  statement, not the library's last call**. A library guard (multi-statement
+  text, forbidden transaction text, NULL arguments) can return
+  `SQLITE_MISUSE` and write its reason to `err_buf` without the engine ever
+  being reached — so `error_code` then reads `SQLITE_OK` and `error_message`
+  reads `"not an error"`.
+
+  **The precedence rule:** the return value is authoritative and alone
+  decides success or failure; the two accessors add engine detail only after
+  a failure the engine actually produced. The full contract, with the exact
+  output of each channel at that moment, is documented where the functions
+  are declared — `sqlite_core_error.h` and `sqlite_core_command.h`.
 
 ## Naming
 

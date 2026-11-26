@@ -65,9 +65,29 @@ CTest suite running first.
   `commit`, `rollback`, `set_busy_timeout` and `is_readonly` all follow
   `docs/behavior.md`: `>= 0` means success and `1` is the "flag" value
   (checking for `SQLITE_OK` fails).
-- **`sqlite_core_error_message` mirrors the engine**: after a successful
-  statement it returns "not an error" rather than an empty string, so the
-  example reads it after a deliberate failure.
+- **The diagnostics are engine-level - check the return value first.**
+  `error_code`, `error_code_extended` and `error_message` wrap
+  `sqlite3_errcode` / `sqlite3_errmsg`, so they can only see failures the
+  engine produced. A library guard (multi-statement text, plain-text
+  transaction control, NULL arguments) rejects **before** any statement is
+  prepared, so at that moment all four channels disagree:
+
+  | Channel | Value |
+  |---------|-------|
+  | the call's return value | `SQLITE_MISUSE` - a failure |
+  | `err_buf` | the real reason ("ERROR CORE: Only one statement...") |
+  | `error_code()` | `SQLITE_OK` (0) - the engine saw nothing |
+  | `error_message()` | "not an error" - **a non-empty string** |
+
+  The rule, in order: **(1)** the return value alone decides success or
+  failure; **(2)** the accessors add engine detail only after a failure the
+  engine produced; **(3)** never decide "did it fail?" from `error_code`
+  alone, and **(4)** never treat a non-empty `error_message` as proof of a
+  failure - "not an error" is non-empty too. This binding exercises it with a
+  real engine failure (duplicate `CREATE TABLE`), not with the guard. Three
+  other bindings got it wrong by reading `error_code` right after a
+  multi-statement rejection; see `bindings/CONTRACT.md` and the Doxygen in
+  `src/sqlite/core/sqlite_core_error.h`.
 - **Empty result in `execute_scalar` is a success** with
   `SQLITE_CORE_TYPE_NULL` (`final_rc = SQLITE_OK` on `SQLITE_DONE`), so a
   text scalar may legitimately come back empty.

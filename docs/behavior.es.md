@@ -101,7 +101,19 @@ Contrato unificado para todas las funciones públicas:
 - Toda función que acepte `err_buf` lo limpia al entrar y lo rellena con el
   mensaje de SQLite en caso de fallo.
 - `error_code`, `error_code_extended` y `error_message` reflejan
-  `SqlException.Number` / `Message`.
+  `SqlException.Number` / `Message`, **pero describen la última sentencia del
+  motor, no la última llamada de la librería**. Un guardia de la librería
+  (texto multi-sentencia, control transaccional en texto plano, argumentos
+  NULL) puede devolver `SQLITE_MISUSE` y escribir su razón en `err_buf` sin
+  que el motor se llegue a alcanzar — así que entonces `error_code` lee
+  `SQLITE_OK` y `error_message` lee `"not an error"`.
+
+  **La regla de precedencia:** el valor de retorno es autoritativo y él solo
+  decide el éxito o el fallo; los dos accesores añaden detalle del motor
+  solo después de un fallo que el motor realmente produjo. El contrato
+  completo, con la salida exacta de cada canal en ese momento, está
+  documentado donde se declaran las funciones — `sqlite_core_error.h` y
+  `sqlite_core_command.h`.
 
 ## Nomenclatura
 

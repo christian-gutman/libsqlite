@@ -122,42 +122,64 @@ compartido.
 
 ## Notas aprendidas al construir este binding
 
-1. **Detección de FFI** — `defined('FFI_SCOPE')` es falso incluso con la
+1. **Los diagnósticos son del motor - primero el valor de retorno.**
+   `error_code` / `error_code_extended` / `error_message` envuelven
+   `sqlite3_errcode` / `sqlite3_errmsg`, así que informan lo que hizo el
+   **motor**, no la librería. Un guardia de la librería (texto
+   multi-sentencia, control transaccional en texto plano, argumentos NULL)
+   rechaza antes de preparar ninguna sentencia, así que en ese momento los
+   cuatro canales se contradicen:
+
+   | Canal | Valor |
+   |-------|-------|
+   | valor de retorno de la llamada | `SQLITE_MISUSE` - un fallo |
+   | `err_buf` | la razón real ("ERROR CORE: Only one statement...") |
+   | `error_code()` | `SQLITE_OK` (0) - el motor no vio nada |
+   | `error_message()` | "not an error" - **un string no vacío** |
+
+   La regla, en orden: **(1)** el valor de retorno decide solo el éxito o el
+   fallo; **(2)** los accesores añaden detalle del motor solo después de un
+   fallo que el motor produjo; **(3)** nunca decidas "¿falló?" solo con
+   `error_code`; **(4)** nunca trates un `error_message` no vacío como prueba
+   - "not an error" también lo es. El ejemplo de este binding los lee tras un
+   fallo real del motor (`SELECT` de una tabla inexistente), nunca tras un
+   guardia.
+2. **Detección de FFI** — `defined('FFI_SCOPE')` es falso incluso con la
    extensión cargada; usa `extension_loaded('ffi')`.
-2. **`die()` sale con código 0** — un `CMD` de contenedor que reporta el
+3. **`die()` sale con código 0** — un `CMD` de contenedor que reporta el
    código de salida del ejemplo trataría un fallo como éxito. El binding
    escribe a STDERR y hace `exit(2)`.
-3. **`FFI::load()` es para ficheros de cabecera** — toma un solo
+4. **`FFI::load()` es para ficheros de cabecera** — toma un solo
    argumento. Para declarar código en línea y enlazar una biblioteca:
    `FFI::cdef($code, $lib)`.
-4. **Sintaxis de tipo C, no de closure PHP** —
+5. **Sintaxis de tipo C, no de closure PHP** —
    `FFI::type('int function(FFI\CData, ...): int')` lanza
    `ParserException`; un puntero a función es
    `int(*)(void*,int,int,void*)`.
-5. **Los structs necesitan el scope de la instancia** — el `FFI::new()`
+6. **Los structs necesitan el scope de la instancia** — el `FFI::new()`
    estático resuelve contra el scope *precargado*, que no conoce este
    cdef, así que `FFI::new('sqlite_core_param_t')` falla con
    "Undefined C type". Usa `$lib->new(...)`.
-6. **Los punteros propios no se asignan a structs** — "Attempt to perform
+7. **Los punteros propios no se asignan a structs** — "Attempt to perform
    assign of owned C pointer". Crea los buffers con
    `$lib->new('char[N]', false)` (no propios) y fíjalos.
-7. **Los retornos `char *` se vuelven strings de PHP** — FFI los
+8. **Los retornos `char *` se vuelven strings de PHP** — FFI los
    convierte al retornar, destruyendo el puntero antes de poder liberarlo.
    Las funciones que devuelven memoria del heap
    (`sqlite_core_string_format`, `sqlite_core_string_concat`,
    `sqlite_core_string_utf8_to_ansi`, `sqlite_core_string_ansi_to_utf8`,
    `sqlite_core_execute_reader_to_json`) se declaran `void *` para poder
    respetar la regla del alocador.
-8. **Límite de string en `memcpy`** — pedir `strlen+1` bytes de un string
+9. **Límite de string en `memcpy`** — pedir `strlen+1` bytes de un string
    de PHP lanza "Attempt to read over string boundary". Copia la longitud
    y termina a mano.
-9. **Solo `new` y `type` tienen forma de instancia** — `addr`, `memcpy`,
+10. **Solo `new` y `type` tienen forma de instancia** — `addr`, `memcpy`,
    `sizeof`, `string`, `isNull` y `cast` caen por el `__call` del objeto
    FFI a una búsqueda de función C y fallan con "undefined C function".
    Esos dos van con `$lib->`, el resto siguen estáticos.
-10. **No hay callbacks en absoluto** — ver *El hueco del callback*: por eso
+11. **No hay callbacks en absoluto** — ver *El hueco del callback*: por eso
     existe el shim, y por eso el reader no se conduce desde FFI puro.
-11. **`uintptr_t` necesita `<stdint.h>`** — `SIZE_MAX`/`uintptr_t` no
+12. **`uintptr_t` necesita `<stdint.h>`** — `SIZE_MAX`/`uintptr_t` no
     están disponibles con las cabeceras que MSVC incluye de forma
     transitiva, así que el shim incluye `<stdint.h>` explícitamente (el
     mismo arreglo que necesitó `sqlite_core_builder.c` en Linux).

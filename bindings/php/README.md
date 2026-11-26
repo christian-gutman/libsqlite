@@ -119,40 +119,60 @@ shared build.
 
 Every one of these was hit, and is encoded in the files:
 
-1. **FFI detection** — `defined('FFI_SCOPE')` is false even when the
+1. **The diagnostics are engine-level - check the return value first.**
+   `error_code` / `error_code_extended` / `error_message` wrap
+   `sqlite3_errcode` / `sqlite3_errmsg`, so they report what the **engine**
+   last did, not what the library last did. A library guard (multi-statement
+   text, plain-text transaction control, NULL arguments) rejects before any
+   statement is prepared, so at that moment all four channels disagree:
+
+   | Channel | Value |
+   |---------|-------|
+   | the call's return value | `SQLITE_MISUSE` - a failure |
+   | `err_buf` | the real reason ("ERROR CORE: Only one statement...") |
+   | `error_code()` | `SQLITE_OK` (0) - the engine saw nothing |
+   | `error_message()` | "not an error" - **a non-empty string** |
+
+   The rule, in order: **(1)** the return value alone decides success or
+   failure; **(2)** the accessors add engine detail only after a failure the
+   engine produced; **(3)** never decide "did it fail?" from `error_code`
+   alone; **(4)** never treat a non-empty `error_message` as proof - "not an
+   error" is non-empty too. This binding's example reads them after a real
+   engine failure (`SELECT` from a missing table), never after a guard.
+2. **FFI detection** - `defined('FFI_SCOPE')` is false even when the
    extension is loaded; use `extension_loaded('ffi')`.
-2. **`die()` exits 0** — a container `CMD` that reports the example's exit
+3. **`die()` exits 0** — a container `CMD` that reports the example's exit
    code would therefore call a crash a success. The binding writes to
    STDERR and `exit(2)`.
-3. **`FFI::load()` is for header files** — it takes one argument. To
+4. **`FFI::load()` is for header files** — it takes one argument. To
    declare inline code and link a shared object: `FFI::cdef($code, $lib)`.
-4. **C type syntax, not PHP closure syntax** —
+5. **C type syntax, not PHP closure syntax** —
    `FFI::type('int function(FFI\CData, ...): int')` raises a
    `ParserException`; a function pointer type is
    `int(*)(void*,int,int,void*)`.
-5. **Structs need the instance scope** — the static `FFI::new()` resolves
+6. **Structs need the instance scope** — the static `FFI::new()` resolves
    against the *preloaded* scope, which does not know this cdef, so
    `FFI::new('sqlite_core_param_t')` fails with "Undefined C type". Use
    `$lib->new(...)`.
-6. **Owned pointers cannot be assigned into structs** — "Attempt to
+7. **Owned pointers cannot be assigned into structs** — "Attempt to
    perform assign of owned C pointer". Create the buffers with
    `$lib->new('char[N]', false)` (non-owned) and pin them.
-7. **`char *` returns become PHP strings** — FFI converts them on return,
+8. **`char *` returns become PHP strings** — FFI converts them on return,
    which destroys the pointer before it can be freed. The
    heap-returning functions (`sqlite_core_string_format`,
    `sqlite_core_string_concat`, `sqlite_core_string_utf8_to_ansi`,
    `sqlite_core_string_ansi_to_utf8`, `sqlite_core_execute_reader_to_json`)
    are declared `void *` so the allocator rule can still be honoured.
-8. **`memcpy` string boundary** — asking for `strlen+1` bytes from a PHP
+9. **`memcpy` string boundary** — asking for `strlen+1` bytes from a PHP
    string raises "Attempt to read over string boundary". Copy the length
    and terminate by hand.
-9. **Only `new` and `type` have instance forms** — `addr`, `memcpy`,
+10. **Only `new` and `type` have instance forms** — `addr`, `memcpy`,
    `sizeof`, `string`, `isNull` and `cast` fall through the FFI object's
    `__call` into a C function lookup and fail with "undefined C
    function". Those two go through `$lib->`, the rest stay static.
-10. **No callbacks at all** — see *The callback gap* above: this is why the
+11. **No callbacks at all** — see *The callback gap* above: this is why the
     shim exists, and why the reader is not driven from pure FFI.
-11. **`uintptr_t` needs `<stdint.h>`** — `SIZE_MAX`/`uintptr_t` are not
+12. **`uintptr_t` needs `<stdint.h>`** — `SIZE_MAX`/`uintptr_t` are not
     available through the headers MSVC pulls in transitively, so the shim
     includes `<stdint.h>` explicitly (the same fix `sqlite_core_builder.c`
     needed on Linux).

@@ -174,23 +174,28 @@ Comprobado escaneando cada `example_full.*` por los nombres que llama.
 
 | Binding | Cobertura observada | Huecos conocidos |
 |---------|---------------------|------------------|
-| C++ | 17/17 | — |
-| Fortran | 17/17 | — |
-| Go | 17/17 | — |
-| Java | 17/17 | — |
-| Julia | 17/17 | — |
-| Kotlin | 17/17 | — |
-| Nim | 17/17 | — |
-| Python | 17/17 | — |
-| Ruby | 17/17 | — |
-| Swift | 17/17 | — |
-| FoxPro | 15/17 | `error_code`, `error_message` |
-| C# | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
-| PHP (FFI) | 14/17 | ídem, más `execute_reader`/`json_writer_callback` vía el shim |
-| R | 14/17 | ídem |
-| Rust | 14/17 | ídem |
+| C++ | 17/17 | - |
+| C# | 17/17 | - |
+| Fortran | 17/17 | - |
+| Go | 17/17 | - |
+| Java | 17/17 | - |
+| Julia | 17/17 | - |
+| Kotlin | 17/17 | - |
+| Nim | 17/17 | - |
+| PHP (FFI) | 17/17 | - (el reader llega a la API C por `php/src/php_shim.c`, que cierra el mecanismo de callback que FFI no tiene) |
+| Python | 17/17 | - |
+| R | 17/17 | - (se añadieron los tres wrappers a la superficie R; ver `bindings/r/README.md`) |
+| Ruby | 17/17 | - |
+| Rust | 17/17 | - |
+| Swift | 17/17 | - |
 | Node.js | 16/17 | `execute_scalar` se evita **a propósito y está documentado**: lee el escalar por JSON "avoids the out-struct in this example" |
+| FoxPro | 15/17 | `error_code`, `error_message` |
+| PHP (Zend) | 0/17 | `bindings/phpext` es el paso 2 del plan de PHP. El contenedor (`docker/bindings/phpext.Dockerfile`) lo compila con phpize y el §3 fija cada nombre y firma de método, pero los métodos de `Connection` están sin escribir, así que `make` falla dentro del contenedor. Todavía no hay ejemplo, de ahí 0/17 en vez de una lista de huecos. |
 | Clipper | 0/17 | `libsqlite.prg` declara la superficie congelada (34/34 según `verify_symbols.py`), pero `example_full.prg` es un **stub**: contiene solo los helpers (`Check`, `FnLoad`, `Fixture`, `RowCount`) y **no llama a ningún símbolo**, así que el flujo canónico no está implementado. La afirmación del README de que `example_full.prg` "implementa el flujo canónico" es falsa. |
+
+**Catorce bindings llegan a 17/17**, cada uno verificado ejecutando su ejemplo
+canónico contra la librería construida — en un contenedor Linux para los
+modernos (ver `docker/readme.md`) y solo por declaración para los legacy.
 
 **Las obligaciones que crea esta tabla:** cada fila con huecos, o
 (a) amplía su ejemplo para cerrarlos, o (b) documenta en su README por qué el
@@ -202,20 +207,23 @@ la siguiente persona asume que el símbolo se probó.
 leyéndolos tras el fallo deliberado de multi-sentencia que ya provoca), y C++ y
 Swift ganaron `error_code`/`error_code_extended`. R también necesitaba esos
 tres wrappers en su superficie R: el shim los tenía (`sqlite_r_connection` op
-2/3/4/5) pero nada los exponía. Catorce bindings llegan a 17/17.
+2/3/4/5) pero nada los exponía.
 
-**Lo que queda necesita un toolchain que este repositorio no puede ejercitar:**
-`error_code`/`error_message` de FoxPro, cuyo manejo de strings es específico
-de VFP (y cuyo ejemplo declara `sqlite_core_string_free` como `STRING`
-mientras `binding.prg` lo declara `void`); y Clipper, cuyo flujo canónico es un
-stub y necesita Harbour/xHarbour para escribirlo y correrlo. Ambos quedan
-anotados como limitaciones documentadas bajo 8(b), porque escribirlos a ciegas
-arriesga romper un ejemplo que hoy se mantiene.
+**Lo que queda necesita un toolchain, o código, que este repositorio no tiene:**
 
-**Las obligaciones que crea esta tabla:** cada fila con huecos, o
-(a) amplía su ejemplo para cerrarlos, o (b) documenta en su README por qué el
-lenguaje no alcanza ese símbolo. Un hueco silencioso no es aceptable, porque
-la siguiente persona asume que el símbolo se probó.
+- **`execute_scalar` de Node.js** — un 16/17 documentado: se evita el
+  out-struct y el valor se lee por `execute_reader_to_json`. Cerrarlo implica
+  reservar el `sqlite_core_param_t` de salida desde koffi, que el binding no
+  hace hoy.
+- **`error_code`/`error_message` de FoxPro** — el manejo de strings es
+  específico de VFP (y su ejemplo declara `sqlite_core_string_free` como
+  `STRING` mientras `binding.prg` lo declara `void`). Necesita VFP 9.
+- **El flujo canónico de Clipper** — un stub que necesita Harbour/xHarbour
+  para escribirlo y correrlo.
+- **PHP (Zend)** — código, no toolchain: los métodos de `Connection` del §3.
+
+Los cuatro quedan anotados como limitaciones documentadas bajo 8(b), porque
+escribirlos a ciegas arriesga romper un ejemplo que hoy se mantiene.
 
 ## 9. Añadir un binding (checklist)
 

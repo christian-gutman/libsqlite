@@ -443,6 +443,7 @@ comparar resultados):
 | Fortran | [`bindings/fortran`](bindings/fortran) |
 | Kotlin | [`bindings/kotlin`](bindings/kotlin) |
 | Nim | [`bindings/nim`](bindings/nim) |
+| PHP | [`bindings/php`](bindings/php) |
 | Visual FoxPro (legacy) | [`bindings/foxpro`](bindings/foxpro) |
 | Clipper (legacy) | [`bindings/clipper`](bindings/clipper) |
 

@@ -19,8 +19,11 @@ El proyecto de bindings está en la **etapa 13 del plan**: 15 lenguajes
 están *verificados de extremo a extremo dentro de contenedores* (se
 compila la librería, corre la suite CTest y el ejemplo canónico), otros
 dos (Visual FoxPro y Clipper) tienen sólo la declaración completa de los
-34 símbolos y quedan excluidos a propósito del matrix de contenedores, y
-los objetivos modernos y heredados restantes están pendientes.
+34 símbolos y quedan excluidos a propósito del matrix de contenedores, uno
+(PHP como **extensión Zend**, `bindings/phpext`) está en construcción — su
+contenedor lo compila con phpize y los métodos de `Connection` del §3 de
+`bindings/CONTRACT.md` siguen sin escribir — y los objetivos modernos y
+heredados restantes están pendientes.
 
 ---
 
@@ -35,7 +38,7 @@ los objetivos modernos y heredados restantes están pendientes.
    subconjunto distinto de esos mismos 34 símbolos.** El ejemplo canónico
    es un flujo de 19 pasos; cada lenguaje escribe sus propias
    aserciones, así que Nim reporta 34 checks, Fortran 33, Kotlin 31,
-   R 21… pero todos *declaran y usan* las mismas 34 funciones, que es
+   R 25… pero todos *declaran y usan* las mismas 34 funciones, que es
    justo lo que exige `bindings/verify_symbols.py` (y lo que detectó los
    tres símbolos ausentes de Julia antes de entregarse).
 
@@ -50,23 +53,29 @@ plano.
 
 | # | Lenguaje | Binding + ejemplo | Técnica | Checks | Imagen base |
 |---|----------|-------------------|---------|--------|-------------|
-| 1 | Python | `python/binding.py` + `example_full.py` | `ctypes` | 19 | `python:3.12-bookworm` |
-| 2 | C# | `csharp/LibSqlite.cs` + `ExampleFull.cs` | P/Invoke | 19 | `mcr.microsoft.com/dotnet/sdk:8.0` |
-| 3 | C++ | `cpp/libsqlite.hpp` + `example_full.cpp` | C ABI directo | 28 | `gcc:14-bookworm` |
-| 4 | Swift | `swift/LibSqlite.swift` + `ExampleFull.swift` | C ABI directo | 32 | `swift:6.0-jammy` |
+| 1 | Python | `python/binding.py` + `example_full.py` | `ctypes` | 23 | `python:3.12-bookworm` |
+| 2 | C# | `csharp/LibSqlite.cs` + `ExampleFull.cs` | P/Invoke | 23 | `mcr.microsoft.com/dotnet/sdk:8.0` |
+| 3 | C++ | `cpp/libsqlite.hpp` + `example_full.cpp` | C ABI directo | 30 | `gcc:14-bookworm` |
+| 4 | Swift | `swift/LibSqlite.swift` + `ExampleFull.swift` | C ABI directo | 34 | `swift:6.0-jammy` |
 | 5 | Ruby | `ruby/libsqlite.rb` + `example_full.rb` | `ffi` (Fiddle::Closure está roto en Ruby 3.x) | 29 | `ruby:3.3-bookworm` |
 | 6 | Julia | `julia/libsqlite.jl` + `example_full.jl` | `ccall` + `@cfunction`, `RTLD_GLOBAL` | 32 | `julia:1.11-bookworm` |
 | 7 | Kotlin | `kotlin/libsqlite.kt` + `ExampleFull.kt` | JNA (`jna.encoding=UTF-8`) | 31 | `eclipse-temurin:17-jammy` + kotlinc |
 | 8 | Nim | `nim/libsqlite.nim` + `example_full.nim` | `{.importc, dynlib.}` + `{.union.}` | 34 | `nimlang/nim:2.0.14` |
 | 9 | Fortran | `fortran/libsqlite.f90` + `example_full.f90` | `iso_c_binding`, `c_loc` necesita `target` | 33 | `ubuntu:24.04` + gfortran |
 | 10 | Go | `go/example_full.go` (+ `go.mod`) | cgo | 19 | `golang:1.22-bookworm` |
-| 11 | Rust | `rust/libsqlite.rs` + `example_full.rs` | `extern "C"` + callback `#[no_mangle]` | 19 | `rust:1-bookworm` |
-| 12 | Node.js | `nodejs/libsqlite.js` + `example_full.js` | koffi | 18 | `node:24-bookworm` |
-| 13 | Java | `java/LibSqlite.java` + `ExampleFull.java` | JNA | 20 | `eclipse-temurin:17-jammy` |
-| 14 | R | `r/libsqlite.R` + `example_full.R` | `.Call` vía `dyn.load` | 21 | `r-base:latest` |
-| 15 | PHP | `php/libsqlite.php` + `example_full.php` | FFI (sin closure → callback C: el reader pasa por `execute_reader_to_json`) | 19 | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` |
+| 11 | Rust | `rust/libsqlite.rs` + `example_full.rs` | `extern "C"` + callback `#[no_mangle]` | 23 | `rust:1-bookworm` |
+| 12 | Node.js | `nodejs/libsqlite.js` + `example_full.js` | koffi | 22 | `node:24-bookworm` |
+| 13 | Java | `java/LibSqlite.java` + `ExampleFull.java` | JNA | 24 | `eclipse-temurin:17-jammy` |
+| 14 | R | `r/libsqlite.R` + `example_full.R` | `.Call` vía `dyn.load` | 25 | `r-base:latest` |
+| 15 | PHP | `php/libsqlite.php` + `example_full.php` | FFI + el shim en C (`php/src/php_shim.c`), que cierra el mecanismo de callback que a FFI le falta | 26 | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` |
 
-*Verificado en la última corrida completa (`docker/build_all.cmd`): las 14 PASSED.*
+*Los checks son de la última corrida en contenedor de cada lenguaje; Fortran
+(33) y Go (19) se midieron de nuevo al sincronizar la documentación, el resto
+viene de su corrida de verificación original. Las 15 PASSED.*
+
+Los contadores difieren porque cada ejemplo afirma un subconjunto distinto de
+los mismos 34 símbolos — por eso un número más bajo (Go, 19) es perfectamente
+compatible con el cumplimiento 17/17 de `bindings/CONTRACT.md` §8.
 
 ## 4. Declarados pero fuera del matrix
 
@@ -80,9 +89,13 @@ Ambos declaran los 34 símbolos (verificado por `verify_symbols.py`) pero
 
 | Etapa | Objetivos | Notas |
 |---|---|---|
-| Modernos | **D**, Haskell, Perl | uno por vez |
+| **En curso** | **PHP (extensión Zend)** — `bindings/phpext` | paso 2 del plan de PHP: el contenedor existe, los métodos de `Connection` del §3 del contrato todavía no están escritos |
+| Modernos | **D**, Haskell, Perl, Zig, LuaJIT, Tcl, MATLAB | uno por vez |
 | Modernos (al final) | Dart / Flutter | diferido por el usuario |
 | Heredados | Delphi / FPC, VB6, COBOL, PowerBuilder, RPG | hay que acordar el *método de verificación* (la mayoría no corre en un contenedor Linux) |
+
+La lista completa, con la carpeta que ocupará cada uno, está en
+`bindings/README.md` → *Coverage* → *Pending*.
 
 Mantenimiento:
 
@@ -95,7 +108,7 @@ Mantenimiento:
 
 ```bat
 docker\build.cmd nim      :: compila -> corre -> elimina la imagen
-docker\build_all.cmd       :: el matrix de 14 lenguajes + impresión PASSED/FAILED
+docker\build_all.cmd       :: el matrix de 15 lenguajes + impresión PASSED/FAILED
 python bindings\verify_symbols.py   :: 34 símbolos contra sqlite.def
 ```
 

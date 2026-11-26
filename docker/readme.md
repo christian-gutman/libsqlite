@@ -8,6 +8,7 @@ and runs the suites (and one language example) against the real artifact.
 | `Dockerfile` | Plain Linux build: shared + static, full CTest suite. |
 | `bindings/<lang>.Dockerfile` | Builds the library, runs the suites, then compiles and runs the `bindings/<lang>` canonical example. |
 | `bindings/php-windows.Dockerfile` | **Windows variant** of the PHP container (see below). Not part of CI. |
+| `bindings/phpext.Dockerfile` | Build environment for the **Zend extension** (`bindings/phpext`): phpize + `config.m4`. Not part of CI. It compiles the extension, which is **step 2 of the PHP plan** and does not build yet — the `Connection` class methods are still unwritten. |
 | `build.cmd <lang>` | Build the image, run it, **remove the image** and print `docker system df` (keeps disk usage flat). |
 | `build_all.cmd [langs...]` | Runs every binding container one after the other and prints the pass/fail matrix. No arguments = all languages. |
 
@@ -97,26 +98,38 @@ results are comparable line by line.
 
 | Container | Base image | Language dependency | Canonical example |
 |-----------|------------|---------------------|-------------------|
-| `bindings/php.Dockerfile` | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` | none (FFI is compiled in) | 19 checks |
-| `bindings/python.Dockerfile` | `python:3.12-bookworm` | none (ctypes) | 19 checks |
-| `bindings/csharp.Dockerfile` | `mcr.microsoft.com/dotnet/sdk:8.0` | `dotnet publish` | 19 checks |
+| `bindings/php.Dockerfile` | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` | none (FFI is compiled in) | 26 checks |
+| `bindings/python.Dockerfile` | `python:3.12-bookworm` | none (ctypes) | 23 checks |
+| `bindings/csharp.Dockerfile` | `mcr.microsoft.com/dotnet/sdk:8.0` | `dotnet publish` | 23 checks |
 | `bindings/go.Dockerfile` | `golang:1.22-bookworm` | cgo | 19 checks |
-| `bindings/rust.Dockerfile` | `rust:1-bookworm` | plain `rustc` (the binding carries the platform-specific `#[link]` name) | 19 checks |
-| `bindings/nodejs.Dockerfile` | `node:24-bookworm` | `npm install koffi` | 18 checks |
-| `bindings/java.Dockerfile` | `eclipse-temurin:17-jammy` | JNA jar from Maven Central | 20 checks |
-| `bindings/r.Dockerfile` | `r-base:latest` | `R CMD SHLIB` (the shim) | 21 checks |
-| `bindings/swift.Dockerfile` | `swift:6.0-jammy` | none (the binding ships its own C module) | 32 checks |
+| `bindings/rust.Dockerfile` | `rust:1-bookworm` | plain `rustc` (the binding carries the platform-specific `#[link]` name) | 23 checks |
+| `bindings/nodejs.Dockerfile` | `node:24-bookworm` | `npm install koffi` | 22 checks |
+| `bindings/java.Dockerfile` | `eclipse-temurin:17-jammy` | JNA jar from Maven Central | 24 checks |
+| `bindings/r.Dockerfile` | `r-base:latest` | `R CMD SHLIB` (the shim) | 25 checks |
+| `bindings/swift.Dockerfile` | `swift:6.0-jammy` | none (the binding ships its own C module) | 34 checks |
 | `bindings/ruby.Dockerfile` | `ruby:3.3-bookworm` | `gem install ffi` | 29 checks |
 | `bindings/julia.Dockerfile` | `julia:1.11-bookworm` | none (`ccall`/`@cfunction`) | 32 checks |
 | `bindings/fortran.Dockerfile` | `ubuntu:24.04` + gfortran | none (iso_c_binding) | 33 checks |
 | `bindings/kotlin.Dockerfile` | `eclipse-temurin:17` + Kotlin + JNA | kotlinc + the JNA jar | 31 checks |
 | `bindings/nim.Dockerfile` | `nimlang/nim:2.0.14` | none ({.importc, dynlib}) | 34 checks |
 
+Check counts are from the last container run of each language and differ
+by design: every example asserts a different subset of the same 34 frozen
+symbols, so a lower number is not a lower coverage (see
+`bindings/CONTRACT.md` §8).
+
 **Not containerized:** Visual FoxPro (`bindings/foxpro`) and Clipper
 (`bindings/clipper`). Both are Windows-only legacy consumers of the DLL
 (`DECLARE DLL` / `hb_libLoad`); they need a 16/32-bit Windows runtime that
 does not exist in a Linux container, so they stay on the
 "declarations + README" level and are verified on Windows instead.
+
+**Not in this matrix either:** `bindings/phpext`. Its container exists
+(`bindings/phpext.Dockerfile`) and is the *only* place the Zend extension
+can be compiled on this host, but the extension itself is incomplete — the
+`Connection` class methods of §3 in `bindings/CONTRACT.md` are not written
+yet, so `make` fails inside the container on purpose. That failure is the
+container's job: it tells you exactly which method is still missing.
 
 The examples mutate files only inside the container; the host repository
 is never written to.

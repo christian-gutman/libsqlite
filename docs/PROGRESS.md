@@ -18,8 +18,10 @@ The binding project is **stage 13 of the plan**: 15 languages are
 *verified end to end inside containers* (library built, CTest suite, and
 the canonical example), 2 more (Visual FoxPro and Clipper) have their
 full 34-symbol declarations only and are deliberately excluded from the
-container matrix, and the remaining modern and legacy targets are
-pending.
+container matrix, one (PHP as a **Zend extension**, `bindings/phpext`)
+is under construction — its container compiles it with phpize and the
+`Connection` methods of `bindings/CONTRACT.md` §3 are still unwritten —
+and the remaining modern and legacy targets are pending.
 
 ---
 
@@ -49,23 +51,29 @@ flat.
 
 | # | Language | Binding + example | Technique | Checks | Container base |
 |---|----------|-------------------|-----------|--------|----------------|
-| 1 | Python | `python/binding.py` + `example_full.py` | `ctypes` | 19 | `python:3.12-bookworm` |
-| 2 | C# | `csharp/LibSqlite.cs` + `ExampleFull.cs` | P/Invoke | 19 | `mcr.microsoft.com/dotnet/sdk:8.0` |
-| 3 | C++ | `cpp/libsqlite.hpp` + `example_full.cpp` | direct C ABI | 28 | `gcc:14-bookworm` |
-| 4 | Swift | `swift/LibSqlite.swift` + `ExampleFull.swift` | direct C ABI | 32 | `swift:6.0-jammy` |
+| 1 | Python | `python/binding.py` + `example_full.py` | `ctypes` | 23 | `python:3.12-bookworm` |
+| 2 | C# | `csharp/LibSqlite.cs` + `ExampleFull.cs` | P/Invoke | 23 | `mcr.microsoft.com/dotnet/sdk:8.0` |
+| 3 | C++ | `cpp/libsqlite.hpp` + `example_full.cpp` | direct C ABI | 30 | `gcc:14-bookworm` |
+| 4 | Swift | `swift/LibSqlite.swift` + `ExampleFull.swift` | direct C ABI | 34 | `swift:6.0-jammy` |
 | 5 | Ruby | `ruby/libsqlite.rb` + `example_full.rb` | `ffi` (Fiddle::Closure is broken on Ruby 3.x) | 29 | `ruby:3.3-bookworm` |
 | 6 | Julia | `julia/libsqlite.jl` + `example_full.jl` | `ccall` + `@cfunction`, `RTLD_GLOBAL` | 32 | `julia:1.11-bookworm` |
 | 7 | Kotlin | `kotlin/libsqlite.kt` + `ExampleFull.kt` | JNA (`jna.encoding=UTF-8`) | 31 | `eclipse-temurin:17-jammy` + kotlinc |
 | 8 | Nim | `nim/libsqlite.nim` + `example_full.nim` | `{.importc, dynlib.}` + `{.union.}` | 34 | `nimlang/nim:2.0.14` |
 | 9 | Fortran | `fortran/libsqlite.f90` + `example_full.f90` | `iso_c_binding`, `c_loc` needs `target` | 33 | `ubuntu:24.04` + gfortran |
 | 10 | Go | `go/example_full.go` (+ `go.mod`) | cgo | 19 | `golang:1.22-bookworm` |
-| 11 | Rust | `rust/libsqlite.rs` + `example_full.rs` | `extern "C"` + `#[no_mangle]` callback | 19 | `rust:1-bookworm` |
-| 12 | Node.js | `nodejs/libsqlite.js` + `example_full.js` | koffi | 18 | `node:24-bookworm` |
-| 13 | Java | `java/LibSqlite.java` + `ExampleFull.java` | JNA | 20 | `eclipse-temurin:17-jammy` |
-| 14 | R | `r/libsqlite.R` + `example_full.R` | `.Call` via `dyn.load` | 21 | `r-base:latest` |
-| 15 | PHP | `php/libsqlite.php` + `example_full.php` | FFI (no closure → C callback: the reader goes through `execute_reader_to_json`) | 19 | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` |
+| 11 | Rust | `rust/libsqlite.rs` + `example_full.rs` | `extern "C"` + `#[no_mangle]` callback | 23 | `rust:1-bookworm` |
+| 12 | Node.js | `nodejs/libsqlite.js` + `example_full.js` | koffi | 22 | `node:24-bookworm` |
+| 13 | Java | `java/LibSqlite.java` + `ExampleFull.java` | JNA | 24 | `eclipse-temurin:17-jammy` |
+| 14 | R | `r/libsqlite.R` + `example_full.R` | `.Call` via `dyn.load` | 25 | `r-base:latest` |
+| 15 | PHP | `php/libsqlite.php` + `example_full.php` | FFI + the C shim (`php/src/php_shim.c`), which closes the callback mechanism FFI lacks | 26 | `debian:bookworm-slim` + `php-cli`/`php8.2-ffi` |
 
-*Verified in the last full run (`docker/build_all.cmd`): all 14 PASSED.*
+*Checks are from the last container run of each language; Fortran (33) and Go
+(19) were re-measured at the documentation sync, the rest come from their
+original verification run. All 15 PASSED.*
+
+The check counters differ because each example asserts a different subset of
+the same 34 symbols — that is what makes a lower number (Go, 19) perfectly
+compatible with full 17/17 compliance in `bindings/CONTRACT.md` §8.
 
 ## 4. Declared but not in the matrix
 
@@ -80,9 +88,13 @@ request.
 
 | Stage | Targets | Notes |
 |---|---|---|
-| Modern | **D**, Haskell, Perl | one at a time |
+| **In progress** | **PHP (Zend extension)** — `bindings/phpext` | step 2 of the PHP plan: the container exists, the `Connection` methods of `CONTRACT.md` §3 are not written yet |
+| Modern | **D**, Haskell, Perl, Zig, LuaJIT, Tcl, MATLAB | one at a time |
 | Modern (last) | Dart / Flutter | deferred by the user |
 | Legacy | Delphi / FPC, VB6, COBOL, PowerBuilder, RPG | the *verification method* must be agreed (most of these cannot run in a Linux container) |
+
+The full list, with the folder each one will occupy, is in
+`bindings/README.md` → *Coverage* → *Pending*.
 
 Housekeeping:
 

@@ -19,6 +19,13 @@ separately by `sqlite_core_sqlite_version()`.
   and prints a pass/fail matrix; each image is removed after its run so
   docker disk usage stays flat. FoxPro and Clipper are excluded on purpose
   (Windows-only 16/32-bit consumers of the DLL).
+- **Container for the Zend extension** (`docker/bindings/phpext.Dockerfile`):
+  builds `bindings/phpext` with phpize, reaching the extension's own code
+  instead of stopping at configure. It fixed an include-path bug in
+  `config.m4` (the headers were not reachable from the build directory), and
+  it now fails at `make` **on purpose**: the `Connection` class methods of
+  `bindings/CONTRACT.md` §3 are still unwritten, so the container reports
+  exactly which method is missing. Not part of CI.
 
 ### Fixed
 
@@ -247,6 +254,28 @@ separately by `sqlite_core_sqlite_version()`.
   UTF-8 passthrough is verified instead (this was the CI macOS failure).
 
 ### Documentation
+
+- **Error diagnostics are engine-level, and that is now written where the
+  functions live.** `error_code`, `error_code_extended` and `error_message`
+  wrap `sqlite3_errcode` / `sqlite3_errmsg`, so they report what the
+  **engine** last did, not what the library last did. A library guard
+  (multi-statement text, plain-text transaction control, NULL arguments)
+  returns `SQLITE_MISUSE` and writes its reason to `err_buf` **without
+  reaching the engine**, so at that moment the return value and `err_buf`
+  carry a real error while `error_code` reads `SQLITE_OK` and
+  `error_message` reads `"not an error"` — a **non-empty string**, which is
+  why `strlen(error_message) > 0` is not a failure test.
+
+  The precedence rule: **the return value is authoritative** and alone
+  decides success or failure; the two accessors add engine detail only
+  after a failure the engine actually produced. Documented in
+  `src/sqlite/core/sqlite_core_error.h` (Doxygen on the three accessors,
+  comments only — no declaration changed), `src/sqlite/core/sqlite_core_command.h`
+  (the same rule at the guard), `bindings/cpp/README.md`,
+  `bindings/php/README.md` + `README.es.md`, and `docs/behavior.md` +
+  `behavior.es.md`. Three bindings (C#, R, Node.js) had asserted
+  `error_code != 0` right after a multi-statement rejection until each
+  provoked a real engine error first.
 
 - The project is referred to as **libsqlite** in all documentation
   (the repository name); the produced artifacts keep their historical

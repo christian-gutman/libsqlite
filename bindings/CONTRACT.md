@@ -167,22 +167,27 @@ Checked by scanning every `example_full.*` for the names it calls.
 | Binding | Observed coverage | Known gaps |
 |---------|-------------------|------------|
 | C++ | 17/17 | — |
+| C# | 17/17 | — |
 | Fortran | 17/17 | — |
 | Go | 17/17 | — |
 | Java | 17/17 | — |
 | Julia | 17/17 | — |
 | Kotlin | 17/17 | — |
 | Nim | 17/17 | — |
+| PHP (FFI) | 17/17 | — (the reader reaches the C API through `php/src/php_shim.c`, which closes FFI's missing callback mechanism) |
 | Python | 17/17 | — |
+| R | 17/17 | — (the three wrappers were added to the R-facing surface; see `bindings/r/README.md`) |
 | Ruby | 17/17 | — |
+| Rust | 17/17 | — |
 | Swift | 17/17 | — |
-| FoxPro | 15/17 | `error_code`, `error_message` |
-| C# | 14/17 | `set_busy_timeout`, `error_code`, `error_message` |
-| PHP (FFI) | 14/17 | same, plus `execute_reader`/`json_writer_callback` via the shim |
-| R | 14/17 | same |
-| Rust | 14/17 | same |
 | Node.js | 16/17 | `execute_scalar` is avoided **on purpose and documented** — it reads the scalar through JSON "avoids the out-struct in this example" |
+| FoxPro | 15/17 | `error_code`, `error_message` |
+| PHP (Zend) | 0/17 | `bindings/phpext` is step 2 of the PHP plan. The container (`docker/bindings/phpext.Dockerfile`) builds it with phpize, and §3 above fixes every method name and signature — but the `Connection` methods are unwritten, so `make` fails inside the container. No example exists yet, hence 0/17 rather than a gap list. |
 | Clipper | 0/17 | `libsqlite.prg` declares the frozen surface (34/34 per `verify_symbols.py`), but `example_full.prg` is a **stub**: it contains only the helpers (`Check`, `FnLoad`, `Fixture`, `RowCount`) and calls **no symbol at all**, so the canonical flow is not implemented. The README's claim that `example_full.prg` "implements the canonical flow" is wrong. |
+
+**Fourteen bindings reach 17/17**, each verified by running its canonical
+example against the built library — in a Linux container for the modern ones
+(see `docker/readme.md`), and by declaration only for the legacy ones.
 
 **The obligations this table creates:** every row with a gap either
 (a) extends its example to close it, or (b) records in its README why the
@@ -194,21 +199,24 @@ the next person assumes the symbol was tested.
 reading them after the deliberate multi-statement failure it already provokes),
 and C++ and Swift gained `error_code`/`error_code_extended`. R also needed
 those three wrappers added to its R-facing surface — the shim had them
-(`sqlite_r_connection` op 2/3/4/5) but nothing exposed them. Fourteen bindings
-now reach 17/17.
+(`sqlite_r_connection` op 2/3/4/5) but nothing exposed them.
 
-**What remains needs a toolchain this repository cannot exercise:**
-FoxPro's `error_code`/`error_message`, whose string handling is VFP-specific
-(and whose example declares `sqlite_core_string_free` as `STRING` while
-`binding.prg` declares it `void`); and Clipper, whose canonical flow is a stub
-and needs Harbour/xHarbour to write and run. Both are recorded as documented
-limitations under 8(b), because writing them blind risks breaking an example
-that currently stands.
+**What remains needs either a toolchain or code this repository does not have
+yet:**
 
-**The obligations this table creates:** every row with a gap either
-(a) extends its example to close it, or (b) records in its README why the
-language cannot reach that symbol. A silent gap is not acceptable, because
-the next person assumes the symbol was tested.
+- **Node.js `execute_scalar`** — a documented 16/17: the out-struct is
+  avoided and the value is read through `execute_reader_to_json` instead.
+  Closing it means allocating the `sqlite_core_param_t` out-parameter from
+  koffi, which the binding does not do today.
+- **FoxPro's `error_code`/`error_message`** — the string handling is
+  VFP-specific (and its example declares `sqlite_core_string_free` as
+  `STRING` while `binding.prg` declares it `void`). Needs VFP 9.
+- **Clipper's canonical flow** — a stub that needs Harbour/xHarbour to write
+  and run.
+- **PHP (Zend)** — code, not toolchain: the `Connection` methods listed in §3.
+
+All four are recorded as documented limitations under 8(b), because writing
+them blind risks breaking an example that currently stands.
 
 ## 9. Adding a binding (checklist)
 

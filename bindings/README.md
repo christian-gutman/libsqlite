@@ -83,20 +83,25 @@ Legend: ✅ verified (example compiles and runs green against the built
 library — "container" means the same example also ran in its Linux
 container) · 🟡 written, needs toolchain · ⬜ planned.
 
-### ✅ Verified in container (14/14)
+### ✅ Verified in container (15/15)
+
+Checks are the number printed by the last container run of each language.
+They differ by design: every example asserts a different subset of the same
+34 frozen symbols, so a lower number is **not** lower coverage — the
+compliance per language is in [`CONTRACT.md`](CONTRACT.md) §8.
 
 | Language | Binding | Example | Technique | Checks | Container base |
 |----------|---------|---------|-----------|--------|----------------|
-| Python | `python/binding.py` | `python/example_full.py` | ctypes | 19 | `python:3.12-bookworm` |
-| C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | P/Invoke | 19 | `mcr.microsoft.com/dotnet/sdk:8.0` |
-| C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | direct C ABI | 28 | `gcc:14-bookworm` |
-| Swift | `swift/LibSqlite.swift` | `swift/ExampleFull.swift` | direct C ABI + modulemap | 32 | `swift:6.0-jammy` |
-| Go | `go/libsqlite.go` | `go/example_full.go` | cgo | 19 | `golang:1.22-bookworm` |
-| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | `extern "C"` | 19 | `rust:1-bookworm` |
-| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | koffi | 18 | `node:24-bookworm` |
-| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | JNA | 20 | `eclipse-temurin:17-jammy` |
-| PHP | `php/libsqlite.php` | `php/example_full.php` | FFI (native, no packages) | 19 | `debian:bookworm-slim` + php-cli/php8.2-ffi |
-| R | `r/libsqlite.R` | `r/example_full.R` | shim + `R CMD SHLIB` | 21 | `r-base:latest` |
+| Python | `python/binding.py` | `python/example_full.py` | ctypes | 23 | `python:3.12-bookworm` |
+| C# / .NET | `csharp/LibSqlite.cs` | `csharp/ExampleFull.cs` | P/Invoke | 23 | `mcr.microsoft.com/dotnet/sdk:8.0` |
+| C++ | `cpp/libsqlite.hpp` | `cpp/example_full.cpp` | direct C ABI | 30 | `gcc:14-bookworm` |
+| Swift | `swift/LibSqlite.swift` | `swift/ExampleFull.swift` | direct C ABI + modulemap | 34 | `swift:6.0-jammy` |
+| Go | `go/example_full.go` (+ `go.mod`) | `go/example_full.go` | cgo | 19 | `golang:1.22-bookworm` |
+| Rust | `rust/libsqlite.rs` | `rust/example_full.rs` | `extern "C"` | 23 | `rust:1-bookworm` |
+| Node.js | `nodejs/libsqlite.js` | `nodejs/example_full.js` | koffi | 22 | `node:24-bookworm` |
+| Java | `java/LibSqlite.java` | `java/ExampleFull.java` | JNA | 24 | `eclipse-temurin:17-jammy` |
+| PHP | `php/libsqlite.php` | `php/example_full.php` | FFI + the C shim (`php/src/php_shim.c`, compiled in-container) | 26 | `debian:bookworm-slim` + php-cli/php8.2-ffi |
+| R | `r/libsqlite.R` | `r/example_full.R` | shim + `R CMD SHLIB` | 25 | `r-base:latest` |
 | Ruby | `ruby/libsqlite.rb` | `ruby/example_full.rb` | ffi gem | 29 | `ruby:3.3-bookworm` |
 | Julia | `julia/libsqlite.jl` | `julia/example_full.jl` | `ccall` + `@cfunction` | 32 | `julia:1.11-bookworm` |
 | Kotlin | `kotlin/libsqlite.kt` | `kotlin/ExampleFull.kt` | JNA | 31 | `eclipse-temurin:17` + kotlinc |
@@ -118,10 +123,10 @@ have no Linux container — they consume the Win32/x64 DLL from a legacy
 
 | Language | Binding | Example | Status |
 |----------|---------|---------|--------|
+| PHP (Zend extension) | `phpext/libsqlite.c` | — (no example yet) | 🟡 **in progress**: `bindings/phpext` already has a container (`docker/bindings/phpext.Dockerfile`) that compiles it with phpize, and `CONTRACT.md` §3 gives the exact `Connection` method names; the methods themselves are still unwritten, so `make` fails inside the container until they are. This is step 2 of the PHP plan — step 1 (the C shim) is done and verified. |
 | Dart / Flutter | `dart/libsqlite.dart` | `dart/example_full.dart` | ⬜ deferred by the user |
 | D | `d/libsqlite.d` | `d/example_full.d` | ⬜ |
 | Haskell | `haskell/LibSqlite.hs` | `haskell/ExampleFull.hs` | ⬜ |
-| PHP | `php/libsqlite.php` | `php/example_full.php` | 🟡 written, needs container verification |
 | Perl | `perl/libsqlite.pl` | `perl/example_full.pl` | ⬜ |
 | Zig | `zig/libsqlite.zig` | `zig/example_full.zig` | ⬜ |
 | LuaJIT | `lua/libsqlite.lua` | `lua/example_full.lua` | ⬜ |
@@ -176,9 +181,13 @@ docker\build.cmd nodejs   :: npm install koffi inside the container
 docker\build.cmd java     :: also fetches the JNA jar from Maven Central
 docker\build.cmd kotlin  :: Kotlin compiler + JNA jar, kotlinc + kotlin
 docker\build.cmd r        :: compiles the R shim (R CMD SHLIB) + runs it
+docker\build.cmd php      :: FFI + the C shim compiled in-container
 
-docker\build_all.cmd      :: the thirteen of them in sequence + pass/fail matrix
+docker\build_all.cmd      :: the fifteen of them in sequence + pass/fail matrix
 ```
+
+`phpext` is **not** in that matrix: its container is a compile probe for the
+Zend extension, which is not finished (see *Pending — Modern*).
 
 FoxPro and Clipper are deliberately **not** containerized: they consume
 the Windows DLL from a 16/32-bit legacy runtime and cannot run in a Linux

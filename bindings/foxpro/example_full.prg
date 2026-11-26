@@ -169,9 +169,8 @@ PROCEDURE CheckWith(tlCond, tcMsg)
     IF tlCond 
      ?? "  ok   - " + tcMsg
     Else
-     ?tcMsg
-     ?lnFail 
-     *lnFail = lnFail + 1 AND ?? "  FAIL - " + tcMsg
+     ? "  FAIL - " + tcMsg
+     lnFail = lnFail + 1
     EndIf  
 ENDPROC
 
